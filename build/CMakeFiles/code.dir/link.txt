@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/code.dir/src/AST/ASTBuilder.cpp.o CMakeFiles/code.dir/src/AST/print.cpp.o -o code  MxAntlr/libMxAntlr.a -lantlr4-runtime 

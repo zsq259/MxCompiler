@@ -1,0 +1,6 @@
+/home/zsq259/桌面/项目/MxCompiler/build/CMakeFiles/code.dir
+/home/zsq259/桌面/项目/MxCompiler/build/CMakeFiles/edit_cache.dir
+/home/zsq259/桌面/项目/MxCompiler/build/CMakeFiles/rebuild_cache.dir
+/home/zsq259/桌面/项目/MxCompiler/build/MxAntlr/CMakeFiles/MxAntlr.dir
+/home/zsq259/桌面/项目/MxCompiler/build/MxAntlr/CMakeFiles/edit_cache.dir
+/home/zsq259/桌面/项目/MxCompiler/build/MxAntlr/CMakeFiles/rebuild_cache.dir

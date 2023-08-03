@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "cstdarg": "cpp",
+        "cstdio": "cpp",
+        "any": "cpp",
+        "iostream": "cpp",
+        "new": "cpp",
+        "bitset": "cpp"
+    }
+}

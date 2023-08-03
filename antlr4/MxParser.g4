@@ -18,7 +18,6 @@ functionDef: typeName Identifier '(' parameters? ')' block;
 parameters: varDef (',' varDef)*;
 
 varDef: typeName Identifier;
-varDefInit: Identifier ('=' expression)?;
 
 suite: block | stmt;
 block: '{' stmt* '}';
@@ -50,10 +49,10 @@ expression
     : '(' expression ')'                                               # ParentheseExpr
     | expression '(' exprList? ')'                                     # FunctionExpr
     | expression '[' expression ']'                                    # ArrayExpr
-    | expression '.' expression                                        # MemberExpr
-    | expression      op = ('++' | '--')                               # RightSingleExpr
-    | <assoc = right> op = ('++' | '--')       expression              # LeftSingleExpr
-    | <assoc = right> op = ('!' | '~' | '-')   expression              # LeftSingleExpr
+    | expression '.' Identifier                                        # MemberExpr
+    | lhs = expression op = ('++' | '--')                              # RightSingleExpr
+    | <assoc = right>  op = ('++' | '--')             rhs = expression # LeftSingleExpr
+    | <assoc = right>  op = ('!' | '~' | '-')         rhs = expression # LeftSingleExpr
     | New newTypeName ('(' ')')?                                       # NewExpr
     | lhs = expression op = ('*' | '/' | '%')         rhs = expression # BinaryExpr
     | lhs = expression op = ('+' | '-')               rhs = expression # BinaryExpr
@@ -72,6 +71,7 @@ expression
     ;
 
 varDefStmt: typeName (varDefInit ',')* varDefInit ';';
+varDefInit: Identifier ('=' expression)?;
 
 typeName
     : basicType        # Basic

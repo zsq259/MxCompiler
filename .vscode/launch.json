@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug Current Grammar",
             "input": "${file}",
-            "grammar": "/home/zsq259/桌面/项目/MxCompiler/src/MxParser.g4",
+            "grammar": "/home/zsq259/桌面/项目/MxCompiler/antlr4/MxParser.g4",
             "startRule": "program",
             "visualParseTree": true
         }

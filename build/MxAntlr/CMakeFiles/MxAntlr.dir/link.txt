@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMxAntlr.a CMakeFiles/MxAntlr.dir/MxLexer.cpp.o CMakeFiles/MxAntlr.dir/MxParser.cpp.o CMakeFiles/MxAntlr.dir/MxParserBaseVisitor.cpp.o CMakeFiles/MxAntlr.dir/MxParserVisitor.cpp.o
+/usr/bin/ranlib libMxAntlr.a
