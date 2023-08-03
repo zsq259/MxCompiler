@@ -1,1 +1,3 @@
 testcases/
+build/
+.vscode/
