@@ -42,7 +42,7 @@ ifStmt
     ;
 
 whileStmt: While '(' expression ')' suite;
-forStmt: For '(' (exprStmt | varDefStmt)? expression? ';' expression? ')' suite;
+forStmt: For '(' (exprStmt | varDefStmt)? condition = expression? ';' step = expression? ')' suite;
 flowStmt: (Continue | Break | (Return expression?)) ';';
 
 expression
@@ -80,9 +80,9 @@ typeName
     ;
 
 newTypeName
-    : Identifier                                                     # NewClass
-    | Identifier newArrayExpr+ newArrayEmpty* (fail = newArrayExpr)* # NewClassArray
-    | basicType newArrayExpr+ newArrayEmpty* (fail = newArrayExpr)*  # NewBasicArray
+    : Identifier                                                              # NewClass
+    | Identifier (good = newArrayExpr+) newArrayEmpty* (fail = newArrayExpr*) # NewClassArray
+    | basicType  (good = newArrayExpr+) newArrayEmpty* (fail = newArrayExpr*) # NewBasicArray
     ;
 
 newArrayExpr: '[' expression ']';

@@ -303,6 +303,8 @@ public:
 
   class  ForStmtContext : public antlr4::ParserRuleContext {
   public:
+    MxParser::ExpressionContext *condition = nullptr;
+    MxParser::ExpressionContext *step = nullptr;
     ForStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *For();
@@ -589,12 +591,13 @@ public:
   public:
     NewBasicArrayContext(NewTypeNameContext *ctx);
 
+    MxParser::NewArrayExprContext *good = nullptr;
     MxParser::NewArrayExprContext *fail = nullptr;
     BasicTypeContext *basicType();
-    std::vector<NewArrayExprContext *> newArrayExpr();
-    NewArrayExprContext* newArrayExpr(size_t i);
     std::vector<NewArrayEmptyContext *> newArrayEmpty();
     NewArrayEmptyContext* newArrayEmpty(size_t i);
+    std::vector<NewArrayExprContext *> newArrayExpr();
+    NewArrayExprContext* newArrayExpr(size_t i);
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
@@ -610,12 +613,13 @@ public:
   public:
     NewClassArrayContext(NewTypeNameContext *ctx);
 
+    MxParser::NewArrayExprContext *good = nullptr;
     MxParser::NewArrayExprContext *fail = nullptr;
     antlr4::tree::TerminalNode *Identifier();
-    std::vector<NewArrayExprContext *> newArrayExpr();
-    NewArrayExprContext* newArrayExpr(size_t i);
     std::vector<NewArrayEmptyContext *> newArrayEmpty();
     NewArrayEmptyContext* newArrayEmpty(size_t i);
+    std::vector<NewArrayExprContext *> newArrayExpr();
+    NewArrayExprContext* newArrayExpr(size_t i);
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 

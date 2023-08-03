@@ -348,9 +348,12 @@ class ASTNewTypeNode: public ASTNode {
 public:
     string name;
     vector<ASTExprNode*> size;
-    int dim;
+    int dim = 0;
 
     ~ASTNewTypeNode() {
         for (auto s:size) delete s;
     }
+    std::string NodeType() override { return "ASTNewTypeNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitNewTypeNode(this); }
+    void print() override;
 };

@@ -1513,7 +1513,7 @@ MxParser::ForStmtContext* MxParser::forStmt() {
     if ((((_la & ~ 0x3fULL) == 0) &&
       ((1ULL << _la) & 1155247800737464352) != 0)) {
       setState(169);
-      expression(0);
+      antlrcpp::downCast<ForStmtContext *>(_localctx)->condition = expression(0);
     }
     setState(172);
     match(MxParser::Semicolon);
@@ -1524,7 +1524,7 @@ MxParser::ForStmtContext* MxParser::forStmt() {
     if ((((_la & ~ 0x3fULL) == 0) &&
       ((1ULL << _la) & 1155247800737464352) != 0)) {
       setState(173);
-      expression(0);
+      antlrcpp::downCast<ForStmtContext *>(_localctx)->step = expression(0);
     }
     setState(176);
     match(MxParser::RightParen);
@@ -2811,20 +2811,20 @@ MxParser::BasicTypeContext* MxParser::NewBasicArrayContext::basicType() {
   return getRuleContext<MxParser::BasicTypeContext>(0);
 }
 
-std::vector<MxParser::NewArrayExprContext *> MxParser::NewBasicArrayContext::newArrayExpr() {
-  return getRuleContexts<MxParser::NewArrayExprContext>();
-}
-
-MxParser::NewArrayExprContext* MxParser::NewBasicArrayContext::newArrayExpr(size_t i) {
-  return getRuleContext<MxParser::NewArrayExprContext>(i);
-}
-
 std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewBasicArrayContext::newArrayEmpty() {
   return getRuleContexts<MxParser::NewArrayEmptyContext>();
 }
 
 MxParser::NewArrayEmptyContext* MxParser::NewBasicArrayContext::newArrayEmpty(size_t i) {
   return getRuleContext<MxParser::NewArrayEmptyContext>(i);
+}
+
+std::vector<MxParser::NewArrayExprContext *> MxParser::NewBasicArrayContext::newArrayExpr() {
+  return getRuleContexts<MxParser::NewArrayExprContext>();
+}
+
+MxParser::NewArrayExprContext* MxParser::NewBasicArrayContext::newArrayExpr(size_t i) {
+  return getRuleContext<MxParser::NewArrayExprContext>(i);
 }
 
 MxParser::NewBasicArrayContext::NewBasicArrayContext(NewTypeNameContext *ctx) { copyFrom(ctx); }
@@ -2855,20 +2855,20 @@ tree::TerminalNode* MxParser::NewClassArrayContext::Identifier() {
   return getToken(MxParser::Identifier, 0);
 }
 
-std::vector<MxParser::NewArrayExprContext *> MxParser::NewClassArrayContext::newArrayExpr() {
-  return getRuleContexts<MxParser::NewArrayExprContext>();
-}
-
-MxParser::NewArrayExprContext* MxParser::NewClassArrayContext::newArrayExpr(size_t i) {
-  return getRuleContext<MxParser::NewArrayExprContext>(i);
-}
-
 std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewClassArrayContext::newArrayEmpty() {
   return getRuleContexts<MxParser::NewArrayEmptyContext>();
 }
 
 MxParser::NewArrayEmptyContext* MxParser::NewClassArrayContext::newArrayEmpty(size_t i) {
   return getRuleContext<MxParser::NewArrayEmptyContext>(i);
+}
+
+std::vector<MxParser::NewArrayExprContext *> MxParser::NewClassArrayContext::newArrayExpr() {
+  return getRuleContexts<MxParser::NewArrayExprContext>();
+}
+
+MxParser::NewArrayExprContext* MxParser::NewClassArrayContext::newArrayExpr(size_t i) {
+  return getRuleContext<MxParser::NewArrayExprContext>(i);
 }
 
 MxParser::NewClassArrayContext::NewClassArrayContext(NewTypeNameContext *ctx) { copyFrom(ctx); }
@@ -2908,6 +2908,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
       enterOuterAlt(_localctx, 2);
       setState(299);
       match(MxParser::Identifier);
+
       setState(301); 
       _errHandler->sync(this);
       alt = 1;
@@ -2915,7 +2916,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         switch (alt) {
           case 1: {
                 setState(300);
-                newArrayExpr();
+                antlrcpp::downCast<NewClassArrayContext *>(_localctx)->good = newArrayExpr();
                 break;
               }
 
@@ -2938,6 +2939,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 28, _ctx);
       }
+
       setState(314);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 29, _ctx);
@@ -2958,6 +2960,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
       enterOuterAlt(_localctx, 3);
       setState(317);
       basicType();
+
       setState(319); 
       _errHandler->sync(this);
       alt = 1;
@@ -2965,7 +2968,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         switch (alt) {
           case 1: {
                 setState(318);
-                newArrayExpr();
+                antlrcpp::downCast<NewBasicArrayContext *>(_localctx)->good = newArrayExpr();
                 break;
               }
 
@@ -2988,6 +2991,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 31, _ctx);
       }
+
       setState(332);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 32, _ctx);

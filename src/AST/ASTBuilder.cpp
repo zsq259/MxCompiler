@@ -53,9 +53,9 @@ std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {
 
 std::any ASTBuilder::visitParameters(MxParser::ParametersContext *ctx) {
     vector<pair<ASTTypeNode*, string>> paras;
-    for (auto Var: ctx->varDef()) {
-        auto type = any_cast<ASTTypeNode*>(visit(Var->typeName()));
-        paras.emplace_back(type, Var->Identifier()->getText());
+    for (auto var: ctx->varDef()) {
+        auto type = any_cast<ASTTypeNode*>(visit(var->typeName()));
+        paras.emplace_back(type, var->Identifier()->getText());
     }
     return paras;
 }
@@ -97,37 +97,212 @@ std::any ASTBuilder::visitBlock(MxParser::BlockContext *ctx) {
     return node;
 }
 
-std::any ASTBuilder::visitStmt(MxParser::StmtContext *ctx) {
-    auto node 
+std::any ASTBuilder::visitExprStmt(MxParser::ExprStmtContext *ctx) {
+    auto node = new ASTExprStmtNode;
+    auto list = ctx->exprList();
+    for (auto child: list->children) {
+        auto res = visit(child);
+        if (!res.has_value()) continue;
+        node->exprs.push_back(any_cast<ASTExprNode*>(res));
+    }
+    return static_cast<ASTStmtNode*>(node);
+}
+
+std::any ASTBuilder::visitIfStmt(MxParser::IfStmtContext *ctx) {
+    auto node = new ASTIfStmtNode;
+    for (auto cond: ctx->expression()) {
+        node->conds.push_back(any_cast<ASTExprNode*>(visit(cond)));
+    }
+    for (auto block: ctx->suite()) {
+        node->blocks.push_back(any_cast<ASTBlockNode*>(visit(block)));
+    }
+    return static_cast<ASTStmtNode*>(node);
+}
+
+std::any ASTBuilder::visitWhileStmt(MxParser::WhileStmtContext *ctx) {
+    auto node = new ASTWhileStmtNode;
+    node->cond = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    node->block = any_cast<ASTBlockNode*>(visit(ctx->suite()));
+    return static_cast<ASTStmtNode*>(node);
+}
+
+std::any ASTBuilder::visitForStmt(MxParser::ForStmtContext *ctx) {
+    auto node = new ASTForStmtNode;
+    if (auto init = ctx->exprStmt()) {
+        auto res = visit(init);
+        if (res.has_value()) {
+            node->init = any_cast<ASTStmtNode*>(res);
+        }
+    }
+    if (auto init = ctx->varDefStmt()) {
+        auto res = visit(init);
+        if (res.has_value()) {
+            node->init = any_cast<ASTStmtNode*>(res);
+        }
+    }
+    if (auto cond = ctx->condition) {
+        auto res = visit(cond);
+        if (res.has_value()) {
+            node->cond = any_cast<ASTExprNode*>(res);
+        }
+    }
+    if (auto step = ctx->step) {
+        auto res = visit(step);
+        if (res.has_value()) {
+            node->step = any_cast<ASTExprNode*>(res);
+        }
+    }
+    auto res = visit(ctx->suite());
+    node->block = any_cast<ASTBlockNode*>(res);
+    return static_cast<ASTStmtNode*>(node);
+}
+
+std::any ASTBuilder::visitFlowStmt(MxParser::FlowStmtContext *ctx) {
+    ASTStmtNode* node = nullptr;
+    if (ctx->Continue()) node = new ASTContinueStmtNode;
+    else if (ctx->Break()) node = new ASTBreakStmtNode;
+    else {
+        auto node_ = new ASTReturnStmtNode;
+        node_->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
+        node = node_;
+    }
+    return node;
+}
+
+std::any ASTBuilder::visitVarDefStmt(MxParser::VarDefStmtContext *ctx) {
+    auto node = new ASTVarStmtNode;
+    node->type = any_cast<ASTTypeNode*>(visit(ctx->typeName()));
+    for (auto var: ctx->varDefInit()) {
+        node->vars.emplace_back(var->Identifier()->getText(), nullptr);
+        if (auto expr = var->expression()) {
+            auto res = visit(expr);
+            node->vars.back().second = any_cast<ASTExprNode*>(res);
+        }
+    }
+    return static_cast<ASTStmtNode*>(node);
+}
+
+std::any ASTBuilder::visitParentheseExpr(MxParser::ParentheseExprContext *ctx) {
+    return visit(ctx->expression());
+}
+
+std::any ASTBuilder::visitArrayExpr(MxParser::ArrayExprContext *ctx) {
+    auto node = new ASTArrayExprNode;
+    node->array = any_cast<ASTExprNode*>(visit(ctx->expression()[0]));
+    node->index = any_cast<ASTExprNode*>(visit(ctx->expression()[1]));
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitFunctionExpr(MxParser::FunctionExprContext *ctx) {
+    auto node = new ASTFuncExprNode;
+    node->func = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    for (auto expr: ctx->exprList()->children) {
+        node->args.push_back(any_cast<ASTExprNode*>(visit(expr)));
+    }
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitMemberExpr(MxParser::MemberExprContext *ctx) {
+    auto node = new ASTMemberExprNode;
+    node->name = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    node->member = ctx->Identifier()->getText();
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitLeftSingleExpr(MxParser::LeftSingleExprContext *ctx) {
+    auto node = new ASTSingleExprNode;
+    node->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    node->op = ctx->op->getText();
+    node->right = false;
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitRightSingleExpr(MxParser::RightSingleExprContext *ctx) {
+    auto node = new ASTSingleExprNode;
+    node->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    node->op = ctx->op->getText();
+    node->right = true;
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitBinaryExpr(MxParser::BinaryExprContext *ctx) {
+    auto node = new ASTBinaryExprNode;
+    node->lhs = any_cast<ASTExprNode*>(visit(ctx->lhs));
+    node->rhs = any_cast<ASTExprNode*>(visit(ctx->rhs));
+    node->op = ctx->op->getText();
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitNewExpr(MxParser::NewExprContext *ctx) {
+    auto node = new ASTNewExprNode;
+    node->type = any_cast<ASTNewTypeNode*>(visit(ctx->newTypeName()));
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitLiterExpr(MxParser::LiterExprContext *ctx) {
+    return visit(ctx->literalExpr());
+}
+
+std::any ASTBuilder::visitLiteralExpr(MxParser::LiteralExprContext *ctx) {
+    auto node = new ASTLiterExprNode;
+    node->value = ctx->getText();
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitAtomExpr(MxParser::AtomExprContext *ctx) {
+    auto node = new ASTAtomExprNode;
+    node->name = ctx->getText();
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitTernaryExpr(MxParser::TernaryExprContext *ctx) {
+    auto node = new ASTTernaryExprNode;
+    node->cond = any_cast<ASTExprNode*>(visit(ctx->expression()[0]));
+    node->True = any_cast<ASTExprNode*>(visit(ctx->expression()[1]));
+    node->False = any_cast<ASTExprNode*>(visit(ctx->expression()[2]));
+    return static_cast<ASTExprNode*>(node);
+}
+
+std::any ASTBuilder::visitAssignExpr(MxParser::AssignExprContext *ctx) {
+    auto node = new ASTAssignExprNode;
+    node->lhs = any_cast<ASTExprNode*>(visit(ctx->expression()[0]));
+    node->rhs = any_cast<ASTExprNode*>(visit(ctx->expression()[1]));
+    return static_cast<ASTExprNode*>(node);
 }
 
 
+std::any ASTBuilder::visitNewClass(MxParser::NewClassContext *ctx) {
+    auto node = new ASTNewTypeNode;
+    node->name = ctx->Identifier()->getText();
+    node->dim = 0;
+    return node;
+}
 
-std::any ASTBuilder::visitVarDefInit(MxParser::VarDefInitContext *ctx) {}
-std::any ASTBuilder::visitExprStmt(MxParser::ExprStmtContext *ctx) {}
-std::any ASTBuilder::visitExprList(MxParser::ExprListContext *ctx) {}
-std::any ASTBuilder::visitIfStmt(MxParser::IfStmtContext *ctx) {}
-std::any ASTBuilder::visitWhileStmt(MxParser::WhileStmtContext *ctx) {}
-std::any ASTBuilder::visitForStmt(MxParser::ForStmtContext *ctx) {}
-std::any ASTBuilder::visitFlowStmt(MxParser::FlowStmtContext *ctx) {}
-std::any ASTBuilder::visitArrayExpr(MxParser::ArrayExprContext *ctx) {}
-std::any ASTBuilder::visitFunctionExpr(MxParser::FunctionExprContext *ctx) {}
-std::any ASTBuilder::visitMemberExpr(MxParser::MemberExprContext *ctx) {}
-std::any ASTBuilder::visitParentheseExpr(MxParser::ParentheseExprContext *ctx) {}
-std::any ASTBuilder::visitLeftSingleExpr(MxParser::LeftSingleExprContext *ctx) {}
-std::any ASTBuilder::visitBinaryExpr(MxParser::BinaryExprContext *ctx) {}
-std::any ASTBuilder::visitNewExpr(MxParser::NewExprContext *ctx) {}
-std::any ASTBuilder::visitLiterExpr(MxParser::LiterExprContext *ctx) {}
-std::any ASTBuilder::visitRightSingleExpr(MxParser::RightSingleExprContext *ctx) {}
-std::any ASTBuilder::visitAtomExpr(MxParser::AtomExprContext *ctx) {}
-std::any ASTBuilder::visitTernaryExpr(MxParser::TernaryExprContext *ctx) {}
-std::any ASTBuilder::visitAssignExpr(MxParser::AssignExprContext *ctx) {}
-std::any ASTBuilder::visitVarDefStmt(MxParser::VarDefStmtContext *ctx) {}
+std::any ASTBuilder::visitNewClassArray(MxParser::NewClassArrayContext *ctx) {
+    auto node = new ASTNewTypeNode;
+    node->name = ctx->Identifier()->getText();
+    if (ctx->fail) throw std::exception();
+    node->size = any_cast<vector<ASTExprNode*>>(visit(ctx->newArrayExpr(0)));
+    node->dim = ctx->good->children.size() + ctx->newArrayEmpty().size();
+    return node;
+}
 
-std::any ASTBuilder::visitNewClass(MxParser::NewClassContext *ctx) {}
-std::any ASTBuilder::visitNewClassArray(MxParser::NewClassArrayContext *ctx) {}
-std::any ASTBuilder::visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) {}
-std::any ASTBuilder::visitNewArrayExpr(MxParser::NewArrayExprContext *ctx) {}
-std::any ASTBuilder::visitNewArrayEmpty(MxParser::NewArrayEmptyContext *ctx) {}
-std::any ASTBuilder::visitLiteralExpr(MxParser::LiteralExprContext *ctx) {}
-std::any ASTBuilder::visitBasicType(MxParser::BasicTypeContext *ctx) {}
+std::any ASTBuilder::visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) {
+    auto node = new ASTNewTypeNode;
+    node->name = ctx->basicType()->getText();
+    if (ctx->fail) throw std::exception();
+    node->size = any_cast<vector<ASTExprNode*>>(visit(ctx->newArrayExpr(0)));
+    node->dim = ctx->good->children.size() + ctx->newArrayEmpty().size();
+    return node;
+}
+
+std::any ASTBuilder::visitNewArrayExpr(MxParser::NewArrayExprContext *ctx) {
+    vector<ASTExprNode*> size;
+    for (auto expr: ctx->children) {
+        auto res = visit(expr);
+        size.push_back(any_cast<ASTExprNode*>(res));
+    }
+    return size;
+}
+
+

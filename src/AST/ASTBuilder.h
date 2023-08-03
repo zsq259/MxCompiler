@@ -9,12 +9,12 @@ private:
     virtual std::any visitFunctionDef(MxParser::FunctionDefContext *ctx) override;
     virtual std::any visitParameters(MxParser::ParametersContext *ctx) override;
     // virtual std::any visitVarDef(MxParser::VarDefContext *ctx) override;
-    virtual std::any visitVarDefInit(MxParser::VarDefInitContext *ctx) override;
+    // virtual std::any visitVarDefInit(MxParser::VarDefInitContext *ctx) override;
     virtual std::any visitSuite(MxParser::SuiteContext *ctx) override;
     virtual std::any visitBlock(MxParser::BlockContext *ctx) override;
-    virtual std::any visitStmt(MxParser::StmtContext *ctx) override;
+    // virtual std::any visitStmt(MxParser::StmtContext *ctx) override;
     virtual std::any visitExprStmt(MxParser::ExprStmtContext *ctx) override;
-    virtual std::any visitExprList(MxParser::ExprListContext *ctx) override;
+    // virtual std::any visitExprList(MxParser::ExprListContext *ctx) override;
     virtual std::any visitIfStmt(MxParser::IfStmtContext *ctx) override;
     virtual std::any visitWhileStmt(MxParser::WhileStmtContext *ctx) override;
     virtual std::any visitForStmt(MxParser::ForStmtContext *ctx) override;
@@ -41,7 +41,7 @@ private:
     virtual std::any visitNewArrayExpr(MxParser::NewArrayExprContext *ctx) override;
     virtual std::any visitNewArrayEmpty(MxParser::NewArrayEmptyContext *ctx) override;
     virtual std::any visitLiteralExpr(MxParser::LiteralExprContext *ctx) override;
-    virtual std::any visitBasicType(MxParser::BasicTypeContext *ctx) override;
+    // virtual std::any visitBasicType(MxParser::BasicTypeContext *ctx) override;
 
 
 };
