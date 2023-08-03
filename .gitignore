@@ -1,3 +1,5 @@
 testcases/
 build/
 .vscode/
+bugs.md
+test.txt

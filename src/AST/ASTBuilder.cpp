@@ -45,7 +45,8 @@ std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {
     node->name = ctx->Identifier()->getText();
     node->returnType = any_cast<ASTTypeNode*>(visit(ctx->typeName()));
     if (auto paras = ctx->parameters()) {
-        node->paras = *any_cast<vector<pair<ASTTypeNode*, string>>>(&visit(paras));
+        auto res = visit(paras);
+        node->paras = *any_cast<vector<pair<ASTTypeNode*, string>>>(&res);
     }
     node->block = any_cast<ASTBlockNode*>(visit(ctx->block()));
     return node;
@@ -80,11 +81,13 @@ std::any ASTBuilder::visitClass(MxParser::ClassContext *ctx) {
 
 std::any ASTBuilder::visitSuite(MxParser::SuiteContext *ctx) {
     if (ctx->block()) {
-        if (auto node = *any_cast<ASTBlockNode*>(&visit(ctx->block()))) return node;
+        auto res = visit(ctx->block());
+        if (auto node = *any_cast<ASTBlockNode*>(&res)) return node;
     }
     auto node = new ASTBlockNode;
     if (ctx->stmt()) {
-        if (auto st = *any_cast<ASTStmtNode*>(&visit(ctx->stmt()))) node->stmts.push_back(st);
+        auto res = visit(ctx->stmt());
+        if (auto st = *any_cast<ASTStmtNode*>(&res)) node->stmts.push_back(st);
     }
     return node;
 }

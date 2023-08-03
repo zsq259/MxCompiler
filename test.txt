@@ -1,8 +1,0 @@
-int f(int a, int b) {
-    
-}
-
-int main() {
-
-    new int[3][4][][5];
-}

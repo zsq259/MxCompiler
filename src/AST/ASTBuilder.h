@@ -39,7 +39,7 @@ private:
     virtual std::any visitNewClassArray(MxParser::NewClassArrayContext *ctx) override;
     virtual std::any visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) override;
     virtual std::any visitNewArrayExpr(MxParser::NewArrayExprContext *ctx) override;
-    virtual std::any visitNewArrayEmpty(MxParser::NewArrayEmptyContext *ctx) override;
+    // virtual std::any visitNewArrayEmpty(MxParser::NewArrayEmptyContext *ctx) override;
     virtual std::any visitLiteralExpr(MxParser::LiteralExprContext *ctx) override;
     // virtual std::any visitBasicType(MxParser::BasicTypeContext *ctx) override;
 
