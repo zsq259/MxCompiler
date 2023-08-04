@@ -9,7 +9,7 @@ include_directories(/usr/local/include/antlr4-runtime/)
 include_directories(MxAntlr/)
 include_directories(src/)
 
-file(GLOB_RECURSE sources src/*.cpp)
+file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
 add_executable(code ${sources})
 
