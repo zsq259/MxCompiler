@@ -199,7 +199,7 @@ std::any ASTBuilder::visitArrayExpr(MxParser::ArrayExprContext *ctx) {
 std::any ASTBuilder::visitFunctionExpr(MxParser::FunctionExprContext *ctx) {
     auto node = new ASTFuncExprNode;
     node->func = any_cast<ASTExprNode*>(visit(ctx->expression()));
-    for (auto expr: ctx->exprList()->children) {
+    for (auto expr: ctx->exprList()->expression()) {
         node->args.push_back(any_cast<ASTExprNode*>(visit(expr)));
     }
     return static_cast<ASTExprNode*>(node);
@@ -237,6 +237,7 @@ std::any ASTBuilder::visitBinaryExpr(MxParser::BinaryExprContext *ctx) {
 }
 
 std::any ASTBuilder::visitNewExpr(MxParser::NewExprContext *ctx) {
+    
     auto node = new ASTNewExprNode;
     node->type = any_cast<ASTNewTypeNode*>(visit(ctx->newTypeName()));
     return static_cast<ASTExprNode*>(node);
@@ -285,8 +286,10 @@ std::any ASTBuilder::visitNewClassArray(MxParser::NewClassArrayContext *ctx) {
     auto node = new ASTNewTypeNode;
     node->name = ctx->Identifier()->getText();
     if (ctx->fail) throw std::exception();
-    node->size = any_cast<vector<ASTExprNode*>>(visit(ctx->newArrayExpr(0)));
-    node->dim = ctx->good->children.size() + ctx->newArrayEmpty().size();
+    for (auto e: ctx->newArrayExpr()) {
+        node->size.push_back(any_cast<ASTExprNode*>(visit(e)));
+    }
+    node->dim = ctx->newArrayExpr().size() + ctx->newArrayEmpty().size();
     return node;
 }
 
@@ -294,18 +297,15 @@ std::any ASTBuilder::visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) {
     auto node = new ASTNewTypeNode;
     node->name = ctx->basicType()->getText();
     if (ctx->fail) throw std::exception();
-    node->size = any_cast<vector<ASTExprNode*>>(visit(ctx->newArrayExpr(0)));
-    node->dim = ctx->good->children.size() + ctx->newArrayEmpty().size();
+    for (auto e: ctx->newArrayExpr()) {
+        node->size.push_back(any_cast<ASTExprNode*>(visit(e)));
+    }
+    node->dim = ctx->newArrayExpr().size() + ctx->newArrayEmpty().size();
     return node;
 }
 
 std::any ASTBuilder::visitNewArrayExpr(MxParser::NewArrayExprContext *ctx) {
-    vector<ASTExprNode*> size;
-    for (auto expr: ctx->children) {
-        auto res = visit(expr);
-        size.push_back(any_cast<ASTExprNode*>(res));
-    }
-    return size;
+    return visit(ctx->expression());
 }
 
 

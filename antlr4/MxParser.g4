@@ -81,8 +81,8 @@ typeName
 
 newTypeName
     : Identifier                                                              # NewClass
-    | Identifier (good = newArrayExpr+) newArrayEmpty* (fail = newArrayExpr*) # NewClassArray
-    | basicType  (good = newArrayExpr+) newArrayEmpty* (fail = newArrayExpr*) # NewBasicArray
+    | Identifier newArrayExpr+ newArrayEmpty* (fail = newArrayExpr*) # NewClassArray
+    | basicType  newArrayExpr+ newArrayEmpty* (fail = newArrayExpr*) # NewBasicArray
     ;
 
 newArrayExpr: '[' expression ']';

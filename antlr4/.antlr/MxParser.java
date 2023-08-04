@@ -1925,22 +1925,21 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class NewBasicArrayContext extends NewTypeNameContext {
-		public NewArrayExprContext good;
 		public NewArrayExprContext fail;
 		public BasicTypeContext basicType() {
 			return getRuleContext(BasicTypeContext.class,0);
-		}
-		public List<NewArrayEmptyContext> newArrayEmpty() {
-			return getRuleContexts(NewArrayEmptyContext.class);
-		}
-		public NewArrayEmptyContext newArrayEmpty(int i) {
-			return getRuleContext(NewArrayEmptyContext.class,i);
 		}
 		public List<NewArrayExprContext> newArrayExpr() {
 			return getRuleContexts(NewArrayExprContext.class);
 		}
 		public NewArrayExprContext newArrayExpr(int i) {
 			return getRuleContext(NewArrayExprContext.class,i);
+		}
+		public List<NewArrayEmptyContext> newArrayEmpty() {
+			return getRuleContexts(NewArrayEmptyContext.class);
+		}
+		public NewArrayEmptyContext newArrayEmpty(int i) {
+			return getRuleContext(NewArrayEmptyContext.class,i);
 		}
 		public NewBasicArrayContext(NewTypeNameContext ctx) { copyFrom(ctx); }
 	}
@@ -1949,20 +1948,19 @@ public class MxParser extends Parser {
 		public NewClassContext(NewTypeNameContext ctx) { copyFrom(ctx); }
 	}
 	public static class NewClassArrayContext extends NewTypeNameContext {
-		public NewArrayExprContext good;
 		public NewArrayExprContext fail;
 		public TerminalNode Identifier() { return getToken(MxParser.Identifier, 0); }
-		public List<NewArrayEmptyContext> newArrayEmpty() {
-			return getRuleContexts(NewArrayEmptyContext.class);
-		}
-		public NewArrayEmptyContext newArrayEmpty(int i) {
-			return getRuleContext(NewArrayEmptyContext.class,i);
-		}
 		public List<NewArrayExprContext> newArrayExpr() {
 			return getRuleContexts(NewArrayExprContext.class);
 		}
 		public NewArrayExprContext newArrayExpr(int i) {
 			return getRuleContext(NewArrayExprContext.class,i);
+		}
+		public List<NewArrayEmptyContext> newArrayEmpty() {
+			return getRuleContexts(NewArrayEmptyContext.class);
+		}
+		public NewArrayEmptyContext newArrayEmpty(int i) {
+			return getRuleContext(NewArrayEmptyContext.class,i);
 		}
 		public NewClassArrayContext(NewTypeNameContext ctx) { copyFrom(ctx); }
 	}
@@ -1989,7 +1987,6 @@ public class MxParser extends Parser {
 				{
 				setState(299);
 				match(Identifier);
-				{
 				setState(301); 
 				_errHandler.sync(this);
 				_alt = 1;
@@ -1999,7 +1996,7 @@ public class MxParser extends Parser {
 						{
 						{
 						setState(300);
-						((NewClassArrayContext)_localctx).good = newArrayExpr();
+						newArrayExpr();
 						}
 						}
 						break;
@@ -2010,7 +2007,6 @@ public class MxParser extends Parser {
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,27,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
-				}
 				setState(308);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,28,_ctx);
@@ -2053,7 +2049,6 @@ public class MxParser extends Parser {
 				{
 				setState(317);
 				basicType();
-				{
 				setState(319); 
 				_errHandler.sync(this);
 				_alt = 1;
@@ -2063,7 +2058,7 @@ public class MxParser extends Parser {
 						{
 						{
 						setState(318);
-						((NewBasicArrayContext)_localctx).good = newArrayExpr();
+						newArrayExpr();
 						}
 						}
 						break;
@@ -2074,7 +2069,6 @@ public class MxParser extends Parser {
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,30,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
-				}
 				setState(326);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,31,_ctx);

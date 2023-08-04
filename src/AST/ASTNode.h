@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cstring>
 #include "ASTBaseVisitor.h"
-#include "ASTDeclaration.h"
 using std::string;
 using std::vector;
 using std::pair;
@@ -15,66 +14,6 @@ public:
     virtual std::string NodeType() { return "ASTNode"; }
 	virtual void accept(ASTBaseVisitor *visitor) {}
     virtual void print() = 0;
-};
-
-class ASTProgramNode: public ASTNode {
-public:
-    vector<ASTNode*> children;
-
-    ASTProgramNode() = default;
-    ~ASTProgramNode() override {
-        for (auto child: children) delete child;
-    }
-    std::string NodeType() override { return "ASTProgramNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitProgramNode(this); }
-    void print() override;  
-};
-
-class ASTClassNode: public ASTNode {
-public:
-    string name;
-    vector<ASTVarStmtNode*> variables;
-    vector<ASTConstructNode*> constructors;
-    vector<ASTFunctionNode*> functions;
-
-    ~ASTClassNode() override {
-        for (auto v: variables) delete v;
-        for (auto c: constructors) delete c;
-        for (auto f: functions) delete f;
-    }
-    std::string NodeType() override { return "ASTClassNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitClassNode(this); }
-    void print() override;  
-};
-
-class ASTConstructNode: public ASTNode {
-public:
-    string name;
-    ASTBlockNode* block;
-
-    ~ASTConstructNode() override {
-        delete block;
-    }
-    std::string NodeType() override { return "ASTConstructNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitConstructNode(this); }
-    void print() override;  
-};
-
-class ASTFunctionNode: public ASTNode {
-public:
-    string name;
-    vector<pair<ASTTypeNode*, string>> paras;
-    ASTBlockNode* block;
-    ASTTypeNode* returnType;
-
-    ~ASTFunctionNode() override {
-        for (auto p: paras) delete p.first;
-        delete block;
-        delete returnType;
-    }
-    std::string NodeType() override { return "ASTFunctionNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitFunctionNode(this); }
-    void print() override;  
 };
 
 class ASTTypeNode: public ASTNode {
@@ -91,6 +30,14 @@ public:
     void print() override;  
 };
 
+class ASTStmtNode: public ASTNode {
+public:
+    ~ASTStmtNode() override = default;
+    std::string NodeType() override { return "ASTStmtNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitStmtNode(this); }
+    // void print() override;
+};
+
 class ASTBlockNode: public ASTNode {
 public:
     vector<ASTStmtNode*> stmts;
@@ -103,12 +50,13 @@ public:
     void print() override;  
 };
 
-class ASTStmtNode: public ASTNode {
+class ASTExprNode: public ASTNode {
 public:
-    ~ASTStmtNode() override = default;
-    std::string NodeType() override { return "ASTStmtNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitStmtNode(this); }
-    void print() override;
+
+    ~ASTExprNode() override = default;
+    std::string NodeType() override { return "ASTExprNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitExprNode(this); }
+    // void print() override;
 };
 
 class ASTExprStmtNode: public ASTStmtNode {
@@ -120,15 +68,6 @@ public:
     }
     std::string NodeType() override { return "ASTExprStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitExprStmtNode(this); }
-    void print() override;
-};
-
-class ASTExprNode: public ASTNode {
-public:
-
-    ~ASTExprNode() override = default;
-    std::string NodeType() override { return "ASTExprNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitExprNode(this); }
     void print() override;
 };
 
@@ -183,6 +122,20 @@ public:
     }  
     std::string NodeType() override { return "ASTSingleExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitSingleExprNode(this); }
+    void print() override;
+};
+
+class ASTNewTypeNode: public ASTNode {
+public:
+    string name;
+    vector<ASTExprNode*> size;
+    int dim = 0;
+
+    ~ASTNewTypeNode() {
+        for (auto s:size) delete s;
+    }
+    std::string NodeType() override { return "ASTNewTypeNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitNewTypeNode(this); }
     void print() override;
 };
 
@@ -301,7 +254,7 @@ public:
     ~ASTFlowStmtNode() override = default;
     std::string NodeType() override { return "ASTFlowStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitFlowStmtNode(this); }
-    void print() override;
+    // void print() override;
 };
 
 class ASTContinueStmtNode: public ASTFlowStmtNode {
@@ -344,16 +297,62 @@ public:
     void print() override;
 };
 
-class ASTNewTypeNode: public ASTNode {
+class ASTConstructNode: public ASTNode {
 public:
     string name;
-    vector<ASTExprNode*> size;
-    int dim = 0;
+    ASTBlockNode* block;
 
-    ~ASTNewTypeNode() {
-        for (auto s:size) delete s;
+    ~ASTConstructNode() override {
+        delete block;
     }
-    std::string NodeType() override { return "ASTNewTypeNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitNewTypeNode(this); }
-    void print() override;
+    std::string NodeType() override { return "ASTConstructNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitConstructNode(this); }
+    void print() override;  
+};
+
+class ASTFunctionNode: public ASTNode {
+public:
+    string name;
+    vector<pair<ASTTypeNode*, string>> paras;
+    ASTBlockNode* block;
+    ASTTypeNode* returnType;
+
+    ~ASTFunctionNode() override {
+        for (auto p: paras) delete p.first;
+        delete block;
+        delete returnType;
+    }
+    std::string NodeType() override { return "ASTFunctionNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitFunctionNode(this); }
+    void print() override;  
+};
+
+class ASTClassNode: public ASTNode {
+public:
+    string name;
+    vector<ASTVarStmtNode*> variables;
+    vector<ASTConstructNode*> constructors;
+    vector<ASTFunctionNode*> functions;
+
+    ~ASTClassNode() override {
+        for (auto v: variables) delete v;
+        for (auto c: constructors) delete c;
+        for (auto f: functions) delete f;
+    }
+    std::string NodeType() override { return "ASTClassNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitClassNode(this); }
+    void print() override;  
+};
+
+class ASTProgramNode: public ASTNode {
+public:
+    vector<ASTNode*> children;
+
+    ASTProgramNode() = default;
+    ~ASTProgramNode() override {
+        for (auto child: children) delete child;
+    }
+    std::string NodeType() override { return "ASTProgramNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitProgramNode(this); }
+    void print() override;  
 };

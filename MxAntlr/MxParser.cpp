@@ -2811,20 +2811,20 @@ MxParser::BasicTypeContext* MxParser::NewBasicArrayContext::basicType() {
   return getRuleContext<MxParser::BasicTypeContext>(0);
 }
 
-std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewBasicArrayContext::newArrayEmpty() {
-  return getRuleContexts<MxParser::NewArrayEmptyContext>();
-}
-
-MxParser::NewArrayEmptyContext* MxParser::NewBasicArrayContext::newArrayEmpty(size_t i) {
-  return getRuleContext<MxParser::NewArrayEmptyContext>(i);
-}
-
 std::vector<MxParser::NewArrayExprContext *> MxParser::NewBasicArrayContext::newArrayExpr() {
   return getRuleContexts<MxParser::NewArrayExprContext>();
 }
 
 MxParser::NewArrayExprContext* MxParser::NewBasicArrayContext::newArrayExpr(size_t i) {
   return getRuleContext<MxParser::NewArrayExprContext>(i);
+}
+
+std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewBasicArrayContext::newArrayEmpty() {
+  return getRuleContexts<MxParser::NewArrayEmptyContext>();
+}
+
+MxParser::NewArrayEmptyContext* MxParser::NewBasicArrayContext::newArrayEmpty(size_t i) {
+  return getRuleContext<MxParser::NewArrayEmptyContext>(i);
 }
 
 MxParser::NewBasicArrayContext::NewBasicArrayContext(NewTypeNameContext *ctx) { copyFrom(ctx); }
@@ -2855,20 +2855,20 @@ tree::TerminalNode* MxParser::NewClassArrayContext::Identifier() {
   return getToken(MxParser::Identifier, 0);
 }
 
-std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewClassArrayContext::newArrayEmpty() {
-  return getRuleContexts<MxParser::NewArrayEmptyContext>();
-}
-
-MxParser::NewArrayEmptyContext* MxParser::NewClassArrayContext::newArrayEmpty(size_t i) {
-  return getRuleContext<MxParser::NewArrayEmptyContext>(i);
-}
-
 std::vector<MxParser::NewArrayExprContext *> MxParser::NewClassArrayContext::newArrayExpr() {
   return getRuleContexts<MxParser::NewArrayExprContext>();
 }
 
 MxParser::NewArrayExprContext* MxParser::NewClassArrayContext::newArrayExpr(size_t i) {
   return getRuleContext<MxParser::NewArrayExprContext>(i);
+}
+
+std::vector<MxParser::NewArrayEmptyContext *> MxParser::NewClassArrayContext::newArrayEmpty() {
+  return getRuleContexts<MxParser::NewArrayEmptyContext>();
+}
+
+MxParser::NewArrayEmptyContext* MxParser::NewClassArrayContext::newArrayEmpty(size_t i) {
+  return getRuleContext<MxParser::NewArrayEmptyContext>(i);
 }
 
 MxParser::NewClassArrayContext::NewClassArrayContext(NewTypeNameContext *ctx) { copyFrom(ctx); }
@@ -2908,7 +2908,6 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
       enterOuterAlt(_localctx, 2);
       setState(299);
       match(MxParser::Identifier);
-
       setState(301); 
       _errHandler->sync(this);
       alt = 1;
@@ -2916,7 +2915,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         switch (alt) {
           case 1: {
                 setState(300);
-                antlrcpp::downCast<NewClassArrayContext *>(_localctx)->good = newArrayExpr();
+                newArrayExpr();
                 break;
               }
 
@@ -2960,7 +2959,6 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
       enterOuterAlt(_localctx, 3);
       setState(317);
       basicType();
-
       setState(319); 
       _errHandler->sync(this);
       alt = 1;
@@ -2968,7 +2966,7 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         switch (alt) {
           case 1: {
                 setState(318);
-                antlrcpp::downCast<NewBasicArrayContext *>(_localctx)->good = newArrayExpr();
+                newArrayExpr();
                 break;
               }
 
