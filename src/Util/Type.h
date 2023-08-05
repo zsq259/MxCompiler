@@ -1,13 +1,13 @@
+#ifndef __TYPE_H__
+#define __TYPE_H__
 #include <vector>
 #include <string>
 using std::vector;
 using std::string;
 
 class TypeName {
-private:
-    friend class Type;
-    friend class ClassType;
-    friend class FuncType;
+// private:
+    
 public:
     string name;
     TypeName() = default;
@@ -41,10 +41,11 @@ public:
 class FuncType: public TypeName {
 private:
     Type returnType;
-    vector<Type> args;
-    friend class Scope;
+    vector<Type> paras;
+    friend class FunctionCollector;
 public:
-    FuncType(const string &name): TypeName(name) {
-
-    }
+    FuncType() = default;
+    FuncType(const string &name): TypeName(name) {}
+    FuncType(const FuncType &) = default;
 };
+#endif

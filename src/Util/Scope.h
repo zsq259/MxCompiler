@@ -1,3 +1,5 @@
+#ifndef SCOPE_H
+#define SCOPE_H
 #include <map>
 #include <vector>
 #include <string>
@@ -16,7 +18,6 @@ private:
 
 public:
     Scope(Scope* parentScope_): parentScope(parentScope_) {}
-    Scope* parentScope() { return parentScope; }
     void addVariable(string name, Type t) {
         if (vars.count(name)) throw semantic_error("variable redefine: " + name);
         if (t.is_void()) throw semantic_error("variable type cannot be void: " + name);
@@ -34,7 +35,14 @@ public:
         if (funcs.count(func.name)) throw semantic_error("function exists: " + func.name);
         funcs.emplace(func.name, func);
     }
-    
+    FuncType getFunction(const string &name) {
+        auto s = this;
+        while (s) {
+            if (s->funcs.count(name)) return s->funcs[name];
+            s = s->parentScope;
+        }
+        throw semantic_error("function not found " + name);
+    }
 };
 
 class GlobalScope: public Scope {
@@ -57,3 +65,4 @@ public:
         return types[name];
     }
 };
+#endif

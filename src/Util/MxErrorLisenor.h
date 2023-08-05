@@ -1,3 +1,5 @@
+#ifndef MX_ERROR_LISTENER_H
+#define MX_ERROR_LISTENER_H
 #include "MxParser.h"
 #include "Exception.h"
 
@@ -7,3 +9,4 @@ class MxParserErrorListener : public antlr4::BaseErrorListener {
 		throw syntax_error{"syntaxError: " + msg};
 	}
 };
+#endif

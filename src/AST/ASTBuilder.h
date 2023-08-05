@@ -1,3 +1,5 @@
+#ifndef AST_BUILDER_H
+#define AST_BUILDER_H
 #include "MxParserBaseVisitor.h"
 
 class ASTBuilder: public MxParserBaseVisitor {
@@ -45,3 +47,4 @@ private:
 
 
 };
+#endif

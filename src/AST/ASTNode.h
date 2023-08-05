@@ -1,20 +1,14 @@
+#ifndef ASTNODE_H
+#define ASTNODE_H
 #include <vector>
 #include <iostream>
 #include <cstdio>
 #include <cstring>
 #include "ASTBaseVisitor.h"
+#include "../Util/Scope.h"
 using std::string;
 using std::vector;
 using std::pair;
-
-class ASTNode {
-public:
-    ASTNode() = default;
-    virtual ~ASTNode() = default;
-    virtual std::string NodeType() { return "ASTNode"; }
-	virtual void accept(ASTBaseVisitor *visitor) {}
-    virtual void print() = 0;
-};
 
 class ASTTypeNode: public ASTNode {
 public:
@@ -297,19 +291,6 @@ public:
     void print() override;
 };
 
-class ASTConstructNode: public ASTNode {
-public:
-    string name;
-    ASTBlockNode* block;
-
-    ~ASTConstructNode() override {
-        delete block;
-    }
-    std::string NodeType() override { return "ASTConstructNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitConstructNode(this); }
-    void print() override;  
-};
-
 class ASTFunctionNode: public ASTNode {
 public:
     string name;
@@ -327,13 +308,24 @@ public:
     void print() override;  
 };
 
+class ASTConstructNode: public ASTFunctionNode {
+public:
+
+    ~ASTConstructNode() override {
+        delete block;
+    }
+    std::string NodeType() override { return "ASTConstructNode"; }
+    void accept(ASTBaseVisitor *visitor) override { return visitor->visitConstructNode(this); }
+    void print() override;  
+};
+
 class ASTClassNode: public ASTNode {
 public:
     string name;
     vector<ASTVarStmtNode*> variables;
     vector<ASTConstructNode*> constructors;
     vector<ASTFunctionNode*> functions;
-
+    Scope *scope;
     ~ASTClassNode() override {
         for (auto v: variables) delete v;
         for (auto c: constructors) delete c;
@@ -356,3 +348,5 @@ public:
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitProgramNode(this); }
     void print() override;  
 };
+
+#endif

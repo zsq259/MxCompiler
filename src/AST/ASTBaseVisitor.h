@@ -1,4 +1,18 @@
-class ASTNode;
+#ifndef AST_BASE_VISITOR_H
+#define AST_BASE_VISITOR_H
+#include "../Util/Scope.h"
+
+class ASTBaseVisitor;
+
+class ASTNode {
+public:
+    ASTNode() = default;
+    virtual ~ASTNode() = default;
+    virtual std::string NodeType() { return "ASTNode"; }
+	virtual void accept(ASTBaseVisitor *visitor) {}
+    virtual void print() = 0;
+};
+
 class ASTProgramNode;
 class ASTClassNode;
 class ASTConstructNode;
@@ -32,6 +46,7 @@ class ASTBaseVisitor {
 public:
     ASTBaseVisitor() = default;
     virtual ~ASTBaseVisitor() = default;
+    virtual void visit(ASTNode *node) { node->accept(this); }
     virtual void visitProgramNode(ASTProgramNode *node) = 0;
     virtual void visitClassNode(ASTClassNode *node) = 0;
     virtual void visitConstructNode(ASTConstructNode *node) = 0;
@@ -61,3 +76,4 @@ public:
     virtual void visitVarStmtNode(ASTVarStmtNode *node) = 0;
     virtual void visitNewTypeNode(ASTNewTypeNode *node) = 0;
 };
+#endif
