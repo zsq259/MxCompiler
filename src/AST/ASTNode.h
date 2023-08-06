@@ -6,6 +6,7 @@
 #include <cstring>
 #include "ASTBaseVisitor.h"
 #include "../Util/Scope.h"
+#include "../Util/Type.h"
 using std::string;
 using std::vector;
 using std::pair;
@@ -46,7 +47,7 @@ public:
 
 class ASTExprNode: public ASTNode {
 public:
-
+    Type type;
     ~ASTExprNode() override = default;
     std::string NodeType() override { return "ASTExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitExprNode(this); }
@@ -135,10 +136,10 @@ public:
 
 class ASTNewExprNode: public ASTExprNode {
 public:
-    ASTNewTypeNode* type;
+    ASTNewTypeNode* newType;
 
     ~ASTNewExprNode() override {
-        delete type;
+        delete newType;
     }
     std::string NodeType() override { return "ASTNewExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitNewExprNode(this); }
@@ -315,7 +316,6 @@ public:
         delete block;
     }
     std::string NodeType() override { return "ASTConstructNode"; }
-    void accept(ASTBaseVisitor *visitor) override { return visitor->visitConstructNode(this); }
     void print() override;  
 };
 

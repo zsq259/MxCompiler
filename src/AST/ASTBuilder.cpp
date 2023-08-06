@@ -239,7 +239,7 @@ std::any ASTBuilder::visitBinaryExpr(MxParser::BinaryExprContext *ctx) {
 std::any ASTBuilder::visitNewExpr(MxParser::NewExprContext *ctx) {
     
     auto node = new ASTNewExprNode;
-    node->type = any_cast<ASTNewTypeNode*>(visit(ctx->newTypeName()));
+    node->newType = any_cast<ASTNewTypeNode*>(visit(ctx->newTypeName()));
     return static_cast<ASTExprNode*>(node);
 }
 

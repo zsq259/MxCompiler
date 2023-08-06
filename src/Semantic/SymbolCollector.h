@@ -12,8 +12,8 @@ public:
         for (auto c: node->children) c->accept(this);
     }
     void visitClassNode(ASTClassNode *node) override {
-        if (globalScope->hasType(node->name)) throw semantic_error("class exists: " + node->name);
-        globalScope->addType(node->name);
+        if (globalScope->hasClassType(node->name)) throw semantic_error("class exists: " + node->name);
+        globalScope->addClassType(node->name);
     }
 };
 
@@ -29,7 +29,7 @@ public:
         visitFunc(node, globalScope);
     }
     void visitFunc(ASTFunctionNode *node, Scope *scope, bool is_constructor = false) {
-        if (!is_constructor && globalScope->hasType(node->name)) 
+        if (!is_constructor && globalScope->hasClassType(node->name)) 
             throw semantic_error("function name conflicts with class: " + node->name);
         FuncType f(node->name);
         for (auto p: node->paras) {

@@ -86,7 +86,7 @@ void ASTSingleExprNode::print() {
 
 void ASTNewExprNode::print() {
     cout << "new ";
-    type->print();
+    newType->print();
 }
 
 void ASTBinaryExprNode::print() {

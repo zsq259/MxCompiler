@@ -49,7 +49,6 @@ public:
     virtual void visit(ASTNode *node) { node->accept(this); }
     virtual void visitProgramNode(ASTProgramNode *node) = 0;
     virtual void visitClassNode(ASTClassNode *node) = 0;
-    virtual void visitConstructNode(ASTConstructNode *node) = 0;
     virtual void visitFunctionNode(ASTFunctionNode *node) = 0;
     virtual void visitTypeNode(ASTTypeNode *node) = 0;
     virtual void visitBlockNode(ASTBlockNode *node) = 0;

@@ -18,6 +18,7 @@ private:
 
 public:
     Scope(Scope* parentScope_): parentScope(parentScope_) {}
+    bool hasVar(string name) { return vars.count(name); }
     void addVariable(string name, Type t) {
         if (vars.count(name)) throw semantic_error("variable redefine: " + name);
         if (t.is_void()) throw semantic_error("variable type cannot be void: " + name);
@@ -53,15 +54,15 @@ public:
     ~GlobalScope() {
         for (auto t: types) delete t.second;
     }
-    bool hasType(const string &name) { return types.count(name); }
-    TypeName* addType(const string &name) {
-        if (hasType(name)) throw semantic_error("class exists: " + name);
+    bool hasClassType(const string &name) { return types.count(name); }
+    TypeName* addClassType(const string &name) {
+        if (hasClassType(name)) throw semantic_error("class exists: " + name);
         auto type = new ClassType(name);
         types.emplace(name, type);
         return type;
     }
-    ClassType* getType(const string &name) {
-        if (!hasType(name)) throw semantic_error("class not found: " + name);
+    ClassType* getClassType(const string &name) {
+        if (!hasClassType(name)) throw semantic_error("class not found: " + name);
         return types[name];
     }
 };
