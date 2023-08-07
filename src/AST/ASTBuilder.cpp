@@ -10,22 +10,22 @@ std::any ASTBuilder::visitProgram(MxParser::ProgramContext *ctx) {
         if (!res.has_value()) continue;
         if (auto Class = any_cast<ASTClassNode*>(&res)) node->children.push_back(*Class);
         else if (auto Func = any_cast<ASTFunctionNode*>(&res)) node->children.push_back(*Func);
-        else if (auto Var = any_cast<ASTVarStmtNode*>(&res)) node->children.push_back(*Var);
-        else throw std::exception();
+        else if (auto Var = any_cast<ASTStmtNode*>(&res)) node->children.push_back(*Var);
+        else throw std::runtime_error("program unknown node type");
     }
     return static_cast<ASTNode*>(node);
 }
 
 std::any ASTBuilder::visitClassDef(MxParser::ClassDefContext *ctx) {
     auto node = new ASTClassNode;
-    auto suite = ctx->classSuite();
     node->name = ctx->Identifier()->getText();
+    auto suite = ctx->classSuite();
     for (auto v: suite) {
         auto children = v->children;
         for (auto child: children) {
             auto res = visit(child);
             if (!res.has_value()) continue;
-            if (auto Var = any_cast<ASTVarStmtNode*>(&res)) node->variables.push_back(*Var);
+            if (auto Var = any_cast<ASTStmtNode*>(&res)) node->variables.push_back(dynamic_cast<ASTVarStmtNode*>(*Var));
             if (auto Cons = any_cast<ASTConstructNode*>(&res)) node->constructors.push_back(*Cons);
             if (auto Func = any_cast<ASTFunctionNode*>(&res)) node->functions.push_back(*Func);
         }
@@ -214,7 +214,7 @@ std::any ASTBuilder::visitFunctionExpr(MxParser::FunctionExprContext *ctx) {
 
 std::any ASTBuilder::visitMemberExpr(MxParser::MemberExprContext *ctx) {
     auto node = new ASTMemberExprNode;
-    node->name = any_cast<ASTExprNode*>(visit(ctx->expression()));
+    node->object = any_cast<ASTExprNode*>(visit(ctx->expression()));
     node->member = ctx->Identifier()->getText();
     return static_cast<ASTExprNode*>(node);
 }
@@ -292,7 +292,7 @@ std::any ASTBuilder::visitNewClass(MxParser::NewClassContext *ctx) {
 std::any ASTBuilder::visitNewClassArray(MxParser::NewClassArrayContext *ctx) {
     auto node = new ASTNewTypeNode;
     node->name = ctx->Identifier()->getText();
-    if (ctx->fail) throw std::exception();
+    if (ctx->fail) throw std::runtime_error("new class array error");
     for (auto e: ctx->newArrayExpr()) {
         node->size.push_back(any_cast<ASTExprNode*>(visit(e)));
     }
@@ -303,7 +303,7 @@ std::any ASTBuilder::visitNewClassArray(MxParser::NewClassArrayContext *ctx) {
 std::any ASTBuilder::visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) {
     auto node = new ASTNewTypeNode;
     node->name = ctx->basicType()->getText();
-    if (ctx->fail) throw std::exception();
+    if (ctx->fail) throw std::runtime_error("new basic array error");
     for (auto e: ctx->newArrayExpr()) {
         node->size.push_back(any_cast<ASTExprNode*>(visit(e)));
     }

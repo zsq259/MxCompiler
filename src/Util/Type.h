@@ -41,7 +41,7 @@ public:
     }
     bool is(const string &name_) { return dim == 0 && name == name_; }
     bool is_int()    const { return dim == 0 &&  name == "int"; }
-    bool is_bool()   const { return dim == 0 && (name == "true" || name == "false"); }
+    bool is_bool()   const { return dim == 0 &&  name == "bool"; }
     bool is_null()   const { return dim == 0 &&  name == "null"; }
     bool is_void()   const { return dim == 0 &&  name == "void"; }
     bool is_string() const { return dim == 0 &&  name == "string"; }
@@ -55,6 +55,7 @@ class ClassType: public Type {
 private:
     Scope *scope = nullptr;
     friend class SemanticChecker;
+    friend class FunctionCollector;
 public:
     ClassType(const string &name): Type(name) {}
 };
@@ -63,6 +64,7 @@ class FuncType: public Type {
 private:
     Type returnType;
     vector<Type> paras;
+    friend class Scope;
     friend class FunctionCollector;
     friend class SemanticChecker;
 public:

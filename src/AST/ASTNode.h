@@ -33,7 +33,7 @@ public:
     // void print() override;
 };
 
-class ASTBlockNode: public ASTNode {
+class ASTBlockNode: public ASTStmtNode {
 public:
     vector<ASTStmtNode*> stmts;
 
@@ -95,11 +95,11 @@ public:
 
 class ASTMemberExprNode: public ASTExprNode {
 public:
-    ASTExprNode* name = nullptr;
+    ASTExprNode* object = nullptr;
     std::string member;
 
     ~ASTMemberExprNode() override {
-        delete name;
+        delete object;
     }
     std::string NodeType() override { return "ASTMemberExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitMemberExprNode(this); }
@@ -294,6 +294,7 @@ public:
 
 class ASTFunctionNode: public ASTNode {
 public:
+    Type type;
     string name;
     vector<pair<ASTTypeNode*, string>> paras;
     ASTBlockNode* block = nullptr;

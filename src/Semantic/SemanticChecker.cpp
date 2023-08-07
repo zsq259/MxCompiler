@@ -1,7 +1,16 @@
+#include <iostream>
 #include "SemanticChecker.h"
 #include "../AST/ASTNode.h"
 void SemanticChecker::visitProgramNode(ASTProgramNode *node) {
     for (auto c: node->children) c->accept(this);
+    auto f = globalScope->getFunction("main");
+    if (f.paras.size() != 0) {
+        throw semantic_error("main function parameter sum error");
+    }
+    if (f.returnType != Type("int", 0)) {
+        throw semantic_error("main function return type error");
+    }
+    
 }
 
 void SemanticChecker::visitClassNode(ASTClassNode *node) {
@@ -17,10 +26,14 @@ void visitBlockWithScope(ASTBlockNode *node, ASTBaseVisitor *visitor) {
 }
 
 void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
-    scope->addFunction(node->name);
     auto currentScope = scope;
     scope = new Scope(scope);
     currentFunction = node;
+    if (node->returnType) {
+        node->returnType->accept(this);
+        node->type = Type(node->returnType->name, node->returnType->dim, true);
+    }
+    else node->type = Type("void", 0, true);
     for (auto p: node->paras) {
         p.first->accept(this);
         scope->addVariable(p.second, Type(p.first->name, p.first->dim));
@@ -56,16 +69,18 @@ void SemanticChecker::visitFuncExprNode(ASTFuncExprNode *node) {
     FuncType ft;
     if (!f) {
         auto f1 = dynamic_cast<ASTMemberExprNode*>(node->func);
-        ft = scope->getFunction(f1->member);
+        if (!f1) throw semantic_error("function call type error");
+        if (f1->object->type.is_string() || f1->object->type.dim) ft = scope->getFunction(f1->member);
+        else ft = globalScope->getClassType(f1->object->type.name)->scope->getFunction(f1->member);
     }
-    else {
+    else {        
         ft = scope->getFunction(f->name);
     }
-    if (!f) throw semantic_error("function call type error");
     if (ft.paras.size() != node->args.size()) {
         throw semantic_error("function call parameter sum error");
     }
     for (int i = 0; i < ft.paras.size(); ++i) {
+        node->args[i]->accept(this);
         if (ft.paras[i] != node->args[i]->type) {
             throw semantic_error("function call parameter type error");
         }
@@ -88,14 +103,22 @@ void SemanticChecker::visitArrayExprNode(ASTArrayExprNode *node) {
 }
 
 void SemanticChecker::visitMemberExprNode(ASTMemberExprNode *node) {
-    node->name->accept(this);
-    if (node->type.is_basic()) {
-        throw semantic_error("basic type has no member");
+    node->object->accept(this);
+    if (node->object->type.is_basic()) {
+        if (node->object->type.is_string()) {
+            node->type = globalScope->getVarType(node->member);
+            return ;
+        }
+        else throw semantic_error("basic type has no member");
     }
-    if (node->type.dim) {
-        throw semantic_error("array has no member");
+    if (node->object->type.dim) {
+        if (node->member == "size") {
+            node->type = Type("int", 0, true);
+            return ;
+        }
+        else throw semantic_error("array has no member");
     }
-    auto c = globalScope->getClassType(node->type.name);
+    auto c = globalScope->getClassType(node->object->type.name);
     if (c->scope->hasVar(node->member)) node->type = c->scope->getVarType(node->member);
 }
 
@@ -137,18 +160,61 @@ void SemanticChecker::visitNewExprNode(ASTNewExprNode *node) {
     if (!globalScope->hasClassType(node->newType->name)) {
         throw semantic_error("type " + node->newType->name + " not defined");
     }
-    node->type = Type(node->newType->name, node->newType->dim, true);
+    node->type = Type(node->newType->name, node->newType->dim, false);
     if (node->type.is_void()) throw semantic_error("cannot new void");
-
 }
 
 void SemanticChecker::visitBinaryExprNode(ASTBinaryExprNode *node) {
     node->lhs->accept(this);
     node->rhs->accept(this);
-    if (node->lhs->type == node->rhs->type) {
-        node->type = node->lhs->type;
+    auto tl = node->lhs->type, tr = node->rhs->type;
+    if (tl.is_int() || tr.is_int() || tl.is_bool() || tr.is_bool()) {
+        if (tl != tr) throw semantic_error("type not match");
     }
-    else throw semantic_error("type mismatch in binary expression");
+    if (node->op == "==" || node->op == "!=") {
+        if (!tl.is_basic() || !tr.is_basic()) {
+            if ((tl != tr) && (!tl.is_null() && !tr.is_null())) {
+                throw semantic_error("== or != must be applied to same type or null");
+            }
+        }
+        else if (tl != tr) {
+            throw semantic_error("== or != must be applied to same type");
+        }
+        node->type = Type("bool", 0, true);
+    }
+    else if (node->op == ">" || node->op == "<" || node->op == ">=" || node->op == "<=") {
+        if (!tl.is_basic() || !tr.is_basic()) {
+            throw semantic_error("> or < must be applied to basic type");
+        }
+        if (tl != tr) {
+            throw semantic_error("> or < must be applied to same type");
+        }
+        if (tl.is_bool() || tl.is_void()) {
+            throw semantic_error("> or < cannot be applied to bool or void");
+        }
+        node->type = Type("bool", 0, true);
+    }
+    else {
+        if (!tl.is_basic() || !tr.is_basic()) {
+            throw semantic_error("binary operator must be applied to basic type");
+        }
+        if (tl.is_bool() || tr.is_bool()) {
+            if (node->op != "&&" && node->op != "||") 
+                throw semantic_error("bool can only be applied to && or ||, but: " + node->op);
+            if (!tl.is_bool() || !tr.is_bool())
+                throw semantic_error("bool can only be applied to bool");
+        }
+        if (tl.is_string() || tr.is_string()) {
+            if (node->op != "+") {
+                throw semantic_error("string can only be added");
+            }
+            if (!tl.is_string() || !tr.is_string()) {
+                throw semantic_error("string can only be added to string");
+            }
+        }
+        node->type = tl;
+        node->type.setConst();
+    }
 }
 
 void SemanticChecker::visitTernaryExprNode(ASTTernaryExprNode *node) {
@@ -250,9 +316,14 @@ void SemanticChecker::visitReturnStmtNode(ASTReturnStmtNode *node) {
 
 void SemanticChecker::visitVarStmtNode(ASTVarStmtNode *node) {
     node->type->accept(this);
+    auto type = Type(node->type->name, node->type->dim);
     for (auto v: node->vars) {
-        if (v.second) v.second->accept(this);
-        
+        if (v.second) {
+            v.second->accept(this);
+            if (!type.assignable(v.second->type)) {
+                throw semantic_error("type mismatch in variable declaration");
+            }
+        }
         scope->addVariable(v.first, Type(node->type->name, node->type->dim));
     }
 }

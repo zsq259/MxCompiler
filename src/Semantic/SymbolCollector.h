@@ -117,6 +117,8 @@ public:
     }
     void visitClassNode(ASTClassNode *node) override {
         node->scope = new Scope(globalScope);
+        globalScope->getClassType(node->name)->scope = node->scope;
+        node->scope->addVariable("this", Type(node->name, 0));
         for (auto v: node->variables) {
             if (!v->type) throw semantic_error("class type not found");
             auto t = Type(v->type->name, v->type->dim);

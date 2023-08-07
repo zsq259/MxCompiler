@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 #include "Type.h"
 #include "Exception.h"
 
@@ -17,24 +18,25 @@ private:
     Scope* parentScope;
 
 public:
-    Scope(Scope* parentScope_): parentScope(parentScope_) {}
+    explicit Scope(Scope* parentScope_): parentScope(parentScope_) {}
     bool hasVar(string name) { return vars.count(name); }
     void addVariable(string name, Type t) {
         if (vars.count(name)) throw semantic_error("variable redefine: " + name);
-        if (t.is_void()) throw semantic_error("variable type cannot be void: " + name);
+        if (t.name == "void") throw semantic_error("variable type cannot be void: " + name);
         vars.emplace(name, t);
     }
     Type getVarType(const string &name) {
         auto s = this;
         while (s) {
             if (s->vars.count(name)) return s->vars[name];
-            s = s->parentScope;
+            s = s->parentScope;   
         }
-        throw semantic_error("variable not found " + name);
+        throw semantic_error("variable not found: " + name);
     }
     void addFunction(FuncType func) {
         if (funcs.count(func.name)) throw semantic_error("function exists: " + func.name);
         funcs.emplace(func.name, func);
+        vars.emplace(func.name, func.returnType);
     }
     FuncType getFunction(const string &name) {
         auto s = this;
@@ -42,7 +44,7 @@ public:
             if (s->funcs.count(name)) return s->funcs[name];
             s = s->parentScope;
         }
-        throw semantic_error("function not found " + name);
+        throw semantic_error("function not found: " + name);
     }
 };
 

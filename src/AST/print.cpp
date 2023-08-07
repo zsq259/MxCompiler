@@ -69,7 +69,7 @@ void ASTArrayExprNode::print() {
 }
 
 void ASTMemberExprNode::print() {
-    name->print();
+    object->print();
     cout << '.' << member;
 }
 
