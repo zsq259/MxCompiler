@@ -101,10 +101,10 @@ void mxparserParserInitialize() {
   	1,16,1,16,1,16,5,16,264,8,16,10,16,12,16,267,9,16,1,17,1,17,1,17,1,17,
   	5,17,273,8,17,10,17,12,17,276,9,17,1,17,1,17,1,17,1,18,1,18,1,18,3,18,
   	284,8,18,1,19,1,19,1,19,3,19,289,8,19,1,19,1,19,1,19,5,19,294,8,19,10,
-  	19,12,19,297,9,19,1,20,1,20,1,20,4,20,302,8,20,11,20,12,20,303,1,20,5,
-  	20,307,8,20,10,20,12,20,310,9,20,1,20,5,20,313,8,20,10,20,12,20,316,9,
-  	20,1,20,1,20,4,20,320,8,20,11,20,12,20,321,1,20,5,20,325,8,20,10,20,12,
-  	20,328,9,20,1,20,5,20,331,8,20,10,20,12,20,334,9,20,3,20,336,8,20,1,21,
+  	19,12,19,297,9,19,1,20,1,20,4,20,301,8,20,11,20,12,20,302,1,20,5,20,306,
+  	8,20,10,20,12,20,309,9,20,1,20,5,20,312,8,20,10,20,12,20,315,9,20,1,20,
+  	1,20,4,20,319,8,20,11,20,12,20,320,1,20,5,20,324,8,20,10,20,12,20,327,
+  	9,20,1,20,5,20,330,8,20,10,20,12,20,333,9,20,1,20,3,20,336,8,20,1,21,
   	1,21,1,21,1,21,1,22,1,22,1,22,1,23,1,23,1,24,1,24,1,24,0,2,32,38,25,0,
   	2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,0,
   	10,1,0,25,26,3,0,5,5,17,17,23,23,2,0,51,51,60,60,1,0,6,8,1,0,4,5,1,0,
@@ -183,23 +183,23 @@ void mxparserParserInitialize() {
   	0,284,37,1,0,0,0,285,286,6,19,-1,0,286,289,3,48,24,0,287,289,5,60,0,0,
   	288,285,1,0,0,0,288,287,1,0,0,0,289,295,1,0,0,0,290,291,10,1,0,0,291,
   	292,5,30,0,0,292,294,5,31,0,0,293,290,1,0,0,0,294,297,1,0,0,0,295,293,
-  	1,0,0,0,295,296,1,0,0,0,296,39,1,0,0,0,297,295,1,0,0,0,298,336,5,60,0,
-  	0,299,301,5,60,0,0,300,302,3,42,21,0,301,300,1,0,0,0,302,303,1,0,0,0,
-  	303,301,1,0,0,0,303,304,1,0,0,0,304,308,1,0,0,0,305,307,3,44,22,0,306,
-  	305,1,0,0,0,307,310,1,0,0,0,308,306,1,0,0,0,308,309,1,0,0,0,309,314,1,
-  	0,0,0,310,308,1,0,0,0,311,313,3,42,21,0,312,311,1,0,0,0,313,316,1,0,0,
-  	0,314,312,1,0,0,0,314,315,1,0,0,0,315,336,1,0,0,0,316,314,1,0,0,0,317,
-  	319,3,48,24,0,318,320,3,42,21,0,319,318,1,0,0,0,320,321,1,0,0,0,321,319,
-  	1,0,0,0,321,322,1,0,0,0,322,326,1,0,0,0,323,325,3,44,22,0,324,323,1,0,
-  	0,0,325,328,1,0,0,0,326,324,1,0,0,0,326,327,1,0,0,0,327,332,1,0,0,0,328,
-  	326,1,0,0,0,329,331,3,42,21,0,330,329,1,0,0,0,331,334,1,0,0,0,332,330,
-  	1,0,0,0,332,333,1,0,0,0,333,336,1,0,0,0,334,332,1,0,0,0,335,298,1,0,0,
-  	0,335,299,1,0,0,0,335,317,1,0,0,0,336,41,1,0,0,0,337,338,5,30,0,0,338,
-  	339,3,32,16,0,339,340,5,31,0,0,340,43,1,0,0,0,341,342,5,30,0,0,342,343,
-  	5,31,0,0,343,45,1,0,0,0,344,345,7,8,0,0,345,47,1,0,0,0,346,347,7,9,0,
-  	0,347,49,1,0,0,0,34,53,55,66,75,86,96,104,110,122,125,134,150,155,167,
-  	170,174,183,185,202,206,250,263,265,274,283,288,295,303,308,314,321,326,
-  	332,335
+  	1,0,0,0,295,296,1,0,0,0,296,39,1,0,0,0,297,295,1,0,0,0,298,300,5,60,0,
+  	0,299,301,3,42,21,0,300,299,1,0,0,0,301,302,1,0,0,0,302,300,1,0,0,0,302,
+  	303,1,0,0,0,303,307,1,0,0,0,304,306,3,44,22,0,305,304,1,0,0,0,306,309,
+  	1,0,0,0,307,305,1,0,0,0,307,308,1,0,0,0,308,313,1,0,0,0,309,307,1,0,0,
+  	0,310,312,3,42,21,0,311,310,1,0,0,0,312,315,1,0,0,0,313,311,1,0,0,0,313,
+  	314,1,0,0,0,314,336,1,0,0,0,315,313,1,0,0,0,316,318,3,48,24,0,317,319,
+  	3,42,21,0,318,317,1,0,0,0,319,320,1,0,0,0,320,318,1,0,0,0,320,321,1,0,
+  	0,0,321,325,1,0,0,0,322,324,3,44,22,0,323,322,1,0,0,0,324,327,1,0,0,0,
+  	325,323,1,0,0,0,325,326,1,0,0,0,326,331,1,0,0,0,327,325,1,0,0,0,328,330,
+  	3,42,21,0,329,328,1,0,0,0,330,333,1,0,0,0,331,329,1,0,0,0,331,332,1,0,
+  	0,0,332,336,1,0,0,0,333,331,1,0,0,0,334,336,5,60,0,0,335,298,1,0,0,0,
+  	335,316,1,0,0,0,335,334,1,0,0,0,336,41,1,0,0,0,337,338,5,30,0,0,338,339,
+  	3,32,16,0,339,340,5,31,0,0,340,43,1,0,0,0,341,342,5,30,0,0,342,343,5,
+  	31,0,0,343,45,1,0,0,0,344,345,7,8,0,0,345,47,1,0,0,0,346,347,7,9,0,0,
+  	347,49,1,0,0,0,34,53,55,66,75,86,96,104,110,122,125,134,150,155,167,170,
+  	174,183,185,202,206,250,263,265,274,283,288,295,302,307,313,320,325,331,
+  	335
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -2896,25 +2896,17 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 33, _ctx)) {
     case 1: {
-      _localctx = _tracker.createInstance<MxParser::NewClassContext>(_localctx);
+      _localctx = _tracker.createInstance<MxParser::NewClassArrayContext>(_localctx);
       enterOuterAlt(_localctx, 1);
       setState(298);
       match(MxParser::Identifier);
-      break;
-    }
-
-    case 2: {
-      _localctx = _tracker.createInstance<MxParser::NewClassArrayContext>(_localctx);
-      enterOuterAlt(_localctx, 2);
-      setState(299);
-      match(MxParser::Identifier);
-      setState(301); 
+      setState(300); 
       _errHandler->sync(this);
       alt = 1;
       do {
         switch (alt) {
           case 1: {
-                setState(300);
+                setState(299);
                 newArrayExpr();
                 break;
               }
@@ -2922,50 +2914,50 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         default:
           throw NoViableAltException(this);
         }
-        setState(303); 
+        setState(302); 
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 27, _ctx);
       } while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER);
-      setState(308);
+      setState(307);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 28, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(305);
+          setState(304);
           newArrayEmpty(); 
         }
-        setState(310);
+        setState(309);
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 28, _ctx);
       }
 
-      setState(314);
+      setState(313);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 29, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(311);
+          setState(310);
           antlrcpp::downCast<NewClassArrayContext *>(_localctx)->fail = newArrayExpr(); 
         }
-        setState(316);
+        setState(315);
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 29, _ctx);
       }
       break;
     }
 
-    case 3: {
+    case 2: {
       _localctx = _tracker.createInstance<MxParser::NewBasicArrayContext>(_localctx);
-      enterOuterAlt(_localctx, 3);
-      setState(317);
+      enterOuterAlt(_localctx, 2);
+      setState(316);
       basicType();
-      setState(319); 
+      setState(318); 
       _errHandler->sync(this);
       alt = 1;
       do {
         switch (alt) {
           case 1: {
-                setState(318);
+                setState(317);
                 newArrayExpr();
                 break;
               }
@@ -2973,35 +2965,43 @@ MxParser::NewTypeNameContext* MxParser::newTypeName() {
         default:
           throw NoViableAltException(this);
         }
-        setState(321); 
+        setState(320); 
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 30, _ctx);
       } while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER);
-      setState(326);
+      setState(325);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 31, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(323);
+          setState(322);
           newArrayEmpty(); 
         }
-        setState(328);
+        setState(327);
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 31, _ctx);
       }
 
-      setState(332);
+      setState(331);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 32, _ctx);
       while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
         if (alt == 1) {
-          setState(329);
+          setState(328);
           antlrcpp::downCast<NewBasicArrayContext *>(_localctx)->fail = newArrayExpr(); 
         }
-        setState(334);
+        setState(333);
         _errHandler->sync(this);
         alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 32, _ctx);
       }
+      break;
+    }
+
+    case 3: {
+      _localctx = _tracker.createInstance<MxParser::NewClassContext>(_localctx);
+      enterOuterAlt(_localctx, 3);
+      setState(334);
+      match(MxParser::Identifier);
       break;
     }
 

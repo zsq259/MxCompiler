@@ -36,7 +36,7 @@ std::any ASTBuilder::visitClassDef(MxParser::ClassDefContext *ctx) {
 std::any ASTBuilder::visitConstructDef(MxParser::ConstructDefContext *ctx) {
     auto node = new ASTConstructNode;
     node->name = ctx->Identifier()->getText();
-    node->block = any_cast<ASTBlockNode*>(visit(ctx->block()));
+    node->block = dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(visit(ctx->block())));
     return node;
 }
 
@@ -48,7 +48,7 @@ std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {
         auto res = visit(paras);
         node->paras = *any_cast<vector<pair<ASTTypeNode*, string>>>(&res);
     }
-    node->block = any_cast<ASTBlockNode*>(visit(ctx->block()));
+    node->block = dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(visit(ctx->block())));
     return node;
 }
 
@@ -82,22 +82,23 @@ std::any ASTBuilder::visitClass(MxParser::ClassContext *ctx) {
 std::any ASTBuilder::visitSuite(MxParser::SuiteContext *ctx) {
     if (ctx->block()) {
         auto res = visit(ctx->block());
-        if (auto node = *any_cast<ASTBlockNode*>(&res)) return node;
+        if (auto node = *any_cast<ASTStmtNode*>(&res)) return node;
     }
     auto node = new ASTBlockNode;
     if (ctx->stmt()) {
         auto res = visit(ctx->stmt());
         if (auto st = *any_cast<ASTStmtNode*>(&res)) node->stmts.push_back(st);
     }
-    return node;
+    return static_cast<ASTStmtNode*>(node);
 }
 
 std::any ASTBuilder::visitBlock(MxParser::BlockContext *ctx) {
     auto node = new ASTBlockNode;
     for (auto st:ctx->stmt()) {
-        node->stmts.push_back(any_cast<ASTStmtNode*>(visit(st)));
+        auto res = any_cast<ASTStmtNode*>(visit(st));
+        node->stmts.push_back(res);
     }
-    return node;
+    return static_cast<ASTStmtNode*>(node);
 }
 
 std::any ASTBuilder::visitExprStmt(MxParser::ExprStmtContext *ctx) {
@@ -119,7 +120,7 @@ std::any ASTBuilder::visitIfStmt(MxParser::IfStmtContext *ctx) {
         node->conds.push_back(any_cast<ASTExprNode*>(visit(cond)));
     }
     for (auto block: ctx->suite()) {
-        node->blocks.push_back(any_cast<ASTBlockNode*>(visit(block)));
+        node->blocks.push_back(dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(visit(block))));
     }
     
     return static_cast<ASTStmtNode*>(node);
@@ -128,7 +129,7 @@ std::any ASTBuilder::visitIfStmt(MxParser::IfStmtContext *ctx) {
 std::any ASTBuilder::visitWhileStmt(MxParser::WhileStmtContext *ctx) {
     auto node = new ASTWhileStmtNode;
     node->cond = any_cast<ASTExprNode*>(visit(ctx->expression()));
-    node->block = any_cast<ASTBlockNode*>(visit(ctx->suite()));
+    node->block = dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(visit(ctx->suite())));
     return static_cast<ASTStmtNode*>(node);
 }
 
@@ -160,7 +161,7 @@ std::any ASTBuilder::visitForStmt(MxParser::ForStmtContext *ctx) {
         }
     }
     auto res = visit(ctx->suite());
-    node->block = any_cast<ASTBlockNode*>(res);
+    node->block = dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(res));
     return static_cast<ASTStmtNode*>(node);
 }
 

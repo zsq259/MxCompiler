@@ -70,30 +70,32 @@ public:
         globalScope->addFunction(f);
         f.paras.clear();
 
+        auto scope = globalScope->getClassType("string")->scope = new Scope(globalScope);
+
         f.name = "length";
         f.returnType = Type("int", 0, true);
-        globalScope->addFunction(f);
+        scope->addFunction(f);
         f.paras.clear();
 
         f.name = "substring";
         f.returnType = Type("string", 0, true);
         f.paras.emplace_back("int", 0);
         f.paras.emplace_back("int", 0);
-        globalScope->addFunction(f);
+        scope->addFunction(f);
         f.paras.clear();
 
         f.name = "parseInt";
         f.returnType = Type("int", 0, true);
-        globalScope->addFunction(f);
+        scope->addFunction(f);
         f.paras.clear();
 
         f.name = "ord";
         f.returnType = Type("int", 0, true);
         f.paras.emplace_back("int", 0);
-        globalScope->addFunction(f);
+        scope->addFunction(f);
         f.paras.clear();
 
-        f.name = "size";
+        f.name = "__size";
         f.returnType = Type("int", 0, true);
         globalScope->addFunction(f);
         f.paras.clear();

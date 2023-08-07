@@ -79,10 +79,10 @@ typeName
     | typeName '[' ']' # Array
     ;
 
-newTypeName
-    : Identifier                                                              # NewClass
-    | Identifier newArrayExpr+ newArrayEmpty* (fail = newArrayExpr*) # NewClassArray
+newTypeName                                                              
+    : Identifier newArrayExpr+ newArrayEmpty* (fail = newArrayExpr*) # NewClassArray
     | basicType  newArrayExpr+ newArrayEmpty* (fail = newArrayExpr*) # NewBasicArray
+    | Identifier                                                     # NewClass
     ;
 
 newArrayExpr: '[' expression ']';

@@ -85,11 +85,11 @@ public:
 
     virtual std::any visitClass(MxParser::ClassContext *context) = 0;
 
-    virtual std::any visitNewClass(MxParser::NewClassContext *context) = 0;
-
     virtual std::any visitNewClassArray(MxParser::NewClassArrayContext *context) = 0;
 
     virtual std::any visitNewBasicArray(MxParser::NewBasicArrayContext *context) = 0;
+
+    virtual std::any visitNewClass(MxParser::NewClassContext *context) = 0;
 
     virtual std::any visitNewArrayExpr(MxParser::NewArrayExprContext *context) = 0;
 

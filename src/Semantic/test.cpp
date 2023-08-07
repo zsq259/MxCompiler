@@ -39,7 +39,6 @@ int main(int argc, char const *argv[]) {
 			in.close();
 		}
 		// ast.root->print();
-		
 		GlobalScope globalscope(nullptr);
 		
 		ClassColletor classcollector(&globalscope);

@@ -1974,20 +1974,12 @@ public class MxParser extends Parser {
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,33,_ctx) ) {
 			case 1:
-				_localctx = new NewClassContext(_localctx);
+				_localctx = new NewClassArrayContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(298);
 				match(Identifier);
-				}
-				break;
-			case 2:
-				_localctx = new NewClassArrayContext(_localctx);
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(299);
-				match(Identifier);
-				setState(301); 
+				setState(300); 
 				_errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -1995,7 +1987,7 @@ public class MxParser extends Parser {
 					case 1:
 						{
 						{
-						setState(300);
+						setState(299);
 						newArrayExpr();
 						}
 						}
@@ -2003,53 +1995,53 @@ public class MxParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(303); 
+					setState(302); 
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,27,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
-				setState(308);
+				setState(307);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,28,_ctx);
 				while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						setState(305);
+						setState(304);
 						newArrayEmpty();
 						}
 						} 
 					}
-					setState(310);
+					setState(309);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,28,_ctx);
 				}
 				{
-				setState(314);
+				setState(313);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,29,_ctx);
 				while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						setState(311);
+						setState(310);
 						((NewClassArrayContext)_localctx).fail = newArrayExpr();
 						}
 						} 
 					}
-					setState(316);
+					setState(315);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,29,_ctx);
 				}
 				}
 				}
 				break;
-			case 3:
+			case 2:
 				_localctx = new NewBasicArrayContext(_localctx);
-				enterOuterAlt(_localctx, 3);
+				enterOuterAlt(_localctx, 2);
 				{
-				setState(317);
+				setState(316);
 				basicType();
-				setState(319); 
+				setState(318); 
 				_errHandler.sync(this);
 				_alt = 1;
 				do {
@@ -2057,7 +2049,7 @@ public class MxParser extends Parser {
 					case 1:
 						{
 						{
-						setState(318);
+						setState(317);
 						newArrayExpr();
 						}
 						}
@@ -2065,44 +2057,52 @@ public class MxParser extends Parser {
 					default:
 						throw new NoViableAltException(this);
 					}
-					setState(321); 
+					setState(320); 
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,30,_ctx);
 				} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
-				setState(326);
+				setState(325);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
 				while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						setState(323);
+						setState(322);
 						newArrayEmpty();
 						}
 						} 
 					}
-					setState(328);
+					setState(327);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,31,_ctx);
 				}
 				{
-				setState(332);
+				setState(331);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,32,_ctx);
 				while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						setState(329);
+						setState(328);
 						((NewBasicArrayContext)_localctx).fail = newArrayExpr();
 						}
 						} 
 					}
-					setState(334);
+					setState(333);
 					_errHandler.sync(this);
 					_alt = getInterpreter().adaptivePredict(_input,32,_ctx);
 				}
 				}
+				}
+				break;
+			case 3:
+				_localctx = new NewClassContext(_localctx);
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(334);
+				match(Identifier);
 				}
 				break;
 			}
@@ -2347,10 +2347,10 @@ public class MxParser extends Parser {
 		"\f\22\16\22\u010d\13\22\3\23\3\23\3\23\3\23\7\23\u0113\n\23\f\23\16\23"+
 		"\u0116\13\23\3\23\3\23\3\23\3\24\3\24\3\24\5\24\u011e\n\24\3\25\3\25\3"+
 		"\25\5\25\u0123\n\25\3\25\3\25\3\25\7\25\u0128\n\25\f\25\16\25\u012b\13"+
-		"\25\3\26\3\26\3\26\6\26\u0130\n\26\r\26\16\26\u0131\3\26\7\26\u0135\n"+
-		"\26\f\26\16\26\u0138\13\26\3\26\7\26\u013b\n\26\f\26\16\26\u013e\13\26"+
-		"\3\26\3\26\6\26\u0142\n\26\r\26\16\26\u0143\3\26\7\26\u0147\n\26\f\26"+
-		"\16\26\u014a\13\26\3\26\7\26\u014d\n\26\f\26\16\26\u0150\13\26\5\26\u0152"+
+		"\25\3\26\3\26\6\26\u012f\n\26\r\26\16\26\u0130\3\26\7\26\u0134\n\26\f"+
+		"\26\16\26\u0137\13\26\3\26\7\26\u013a\n\26\f\26\16\26\u013d\13\26\3\26"+
+		"\3\26\6\26\u0141\n\26\r\26\16\26\u0142\3\26\7\26\u0146\n\26\f\26\16\26"+
+		"\u0149\13\26\3\26\7\26\u014c\n\26\f\26\16\26\u014f\13\26\3\26\5\26\u0152"+
 		"\n\26\3\27\3\27\3\27\3\27\3\30\3\30\3\30\3\31\3\31\3\32\3\32\3\32\2\4"+
 		"\"(\33\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\2\f\3\2\33"+
 		"\34\5\2\7\7\23\23\31\31\4\2\65\65>>\3\2\b\n\3\2\6\7\3\2\24\25\3\2\13\16"+
@@ -2433,25 +2433,25 @@ public class MxParser extends Parser {
 		"\2\2\2\u0122\u0121\3\2\2\2\u0123\u0129\3\2\2\2\u0124\u0125\f\3\2\2\u0125"+
 		"\u0126\7 \2\2\u0126\u0128\7!\2\2\u0127\u0124\3\2\2\2\u0128\u012b\3\2\2"+
 		"\2\u0129\u0127\3\2\2\2\u0129\u012a\3\2\2\2\u012a)\3\2\2\2\u012b\u0129"+
-		"\3\2\2\2\u012c\u0152\7>\2\2\u012d\u012f\7>\2\2\u012e\u0130\5,\27\2\u012f"+
-		"\u012e\3\2\2\2\u0130\u0131\3\2\2\2\u0131\u012f\3\2\2\2\u0131\u0132\3\2"+
-		"\2\2\u0132\u0136\3\2\2\2\u0133\u0135\5.\30\2\u0134\u0133\3\2\2\2\u0135"+
-		"\u0138\3\2\2\2\u0136\u0134\3\2\2\2\u0136\u0137\3\2\2\2\u0137\u013c\3\2"+
-		"\2\2\u0138\u0136\3\2\2\2\u0139\u013b\5,\27\2\u013a\u0139\3\2\2\2\u013b"+
-		"\u013e\3\2\2\2\u013c\u013a\3\2\2\2\u013c\u013d\3\2\2\2\u013d\u0152\3\2"+
-		"\2\2\u013e\u013c\3\2\2\2\u013f\u0141\5\62\32\2\u0140\u0142\5,\27\2\u0141"+
-		"\u0140\3\2\2\2\u0142\u0143\3\2\2\2\u0143\u0141\3\2\2\2\u0143\u0144\3\2"+
-		"\2\2\u0144\u0148\3\2\2\2\u0145\u0147\5.\30\2\u0146\u0145\3\2\2\2\u0147"+
-		"\u014a\3\2\2\2\u0148\u0146\3\2\2\2\u0148\u0149\3\2\2\2\u0149\u014e\3\2"+
-		"\2\2\u014a\u0148\3\2\2\2\u014b\u014d\5,\27\2\u014c\u014b\3\2\2\2\u014d"+
-		"\u0150\3\2\2\2\u014e\u014c\3\2\2\2\u014e\u014f\3\2\2\2\u014f\u0152\3\2"+
-		"\2\2\u0150\u014e\3\2\2\2\u0151\u012c\3\2\2\2\u0151\u012d\3\2\2\2\u0151"+
-		"\u013f\3\2\2\2\u0152+\3\2\2\2\u0153\u0154\7 \2\2\u0154\u0155\5\"\22\2"+
+		"\3\2\2\2\u012c\u012e\7>\2\2\u012d\u012f\5,\27\2\u012e\u012d\3\2\2\2\u012f"+
+		"\u0130\3\2\2\2\u0130\u012e\3\2\2\2\u0130\u0131\3\2\2\2\u0131\u0135\3\2"+
+		"\2\2\u0132\u0134\5.\30\2\u0133\u0132\3\2\2\2\u0134\u0137\3\2\2\2\u0135"+
+		"\u0133\3\2\2\2\u0135\u0136\3\2\2\2\u0136\u013b\3\2\2\2\u0137\u0135\3\2"+
+		"\2\2\u0138\u013a\5,\27\2\u0139\u0138\3\2\2\2\u013a\u013d\3\2\2\2\u013b"+
+		"\u0139\3\2\2\2\u013b\u013c\3\2\2\2\u013c\u0152\3\2\2\2\u013d\u013b\3\2"+
+		"\2\2\u013e\u0140\5\62\32\2\u013f\u0141\5,\27\2\u0140\u013f\3\2\2\2\u0141"+
+		"\u0142\3\2\2\2\u0142\u0140\3\2\2\2\u0142\u0143\3\2\2\2\u0143\u0147\3\2"+
+		"\2\2\u0144\u0146\5.\30\2\u0145\u0144\3\2\2\2\u0146\u0149\3\2\2\2\u0147"+
+		"\u0145\3\2\2\2\u0147\u0148\3\2\2\2\u0148\u014d\3\2\2\2\u0149\u0147\3\2"+
+		"\2\2\u014a\u014c\5,\27\2\u014b\u014a\3\2\2\2\u014c\u014f\3\2\2\2\u014d"+
+		"\u014b\3\2\2\2\u014d\u014e\3\2\2\2\u014e\u0152\3\2\2\2\u014f\u014d\3\2"+
+		"\2\2\u0150\u0152\7>\2\2\u0151\u012c\3\2\2\2\u0151\u013e\3\2\2\2\u0151"+
+		"\u0150\3\2\2\2\u0152+\3\2\2\2\u0153\u0154\7 \2\2\u0154\u0155\5\"\22\2"+
 		"\u0155\u0156\7!\2\2\u0156-\3\2\2\2\u0157\u0158\7 \2\2\u0158\u0159\7!\2"+
 		"\2\u0159/\3\2\2\2\u015a\u015b\t\n\2\2\u015b\61\3\2\2\2\u015c\u015d\t\13"+
 		"\2\2\u015d\63\3\2\2\2$\679DMXbjp|\177\u0088\u0098\u009d\u00a9\u00ac\u00b0"+
-		"\u00b9\u00bb\u00cc\u00d0\u00fc\u0109\u010b\u0114\u011d\u0122\u0129\u0131"+
-		"\u0136\u013c\u0143\u0148\u014e\u0151";
+		"\u00b9\u00bb\u00cc\u00d0\u00fc\u0109\u010b\u0114\u011d\u0122\u0129\u0130"+
+		"\u0135\u013b\u0142\u0147\u014d\u0151";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

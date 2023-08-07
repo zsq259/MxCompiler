@@ -147,15 +147,15 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitNewClass(MxParser::NewClassContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitNewClassArray(MxParser::NewClassArrayContext *ctx) override {
     return visitChildren(ctx);
   }
 
   virtual std::any visitNewBasicArray(MxParser::NewBasicArrayContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNewClass(MxParser::NewClassContext *ctx) override {
     return visitChildren(ctx);
   }
 

@@ -9,8 +9,7 @@ void SemanticChecker::visitProgramNode(ASTProgramNode *node) {
     }
     if (f.returnType != Type("int", 0)) {
         throw semantic_error("main function return type error");
-    }
-    
+    }    
 }
 
 void SemanticChecker::visitClassNode(ASTClassNode *node) {
@@ -70,7 +69,10 @@ void SemanticChecker::visitFuncExprNode(ASTFuncExprNode *node) {
     if (!f) {
         auto f1 = dynamic_cast<ASTMemberExprNode*>(node->func);
         if (!f1) throw semantic_error("function call type error");
-        if (f1->object->type.is_string() || f1->object->type.dim) ft = scope->getFunction(f1->member);
+        if (f1->object->type.dim) {
+            if (f1->member != "size") throw semantic_error("array function call type error: " + f1->member);
+            ft = globalScope->getFunction("__size");
+        }
         else ft = globalScope->getClassType(f1->object->type.name)->scope->getFunction(f1->member);
     }
     else {        
@@ -81,7 +83,7 @@ void SemanticChecker::visitFuncExprNode(ASTFuncExprNode *node) {
     }
     for (int i = 0; i < ft.paras.size(); ++i) {
         node->args[i]->accept(this);
-        if (ft.paras[i] != node->args[i]->type) {
+        if (!ft.paras[i].assignable(node->args[i]->type)) {
             throw semantic_error("function call parameter type error");
         }
     }
@@ -90,7 +92,7 @@ void SemanticChecker::visitFuncExprNode(ASTFuncExprNode *node) {
 }
 
 void SemanticChecker::visitArrayExprNode(ASTArrayExprNode *node) {
-    node->array->accept(this);
+    node->array->accept(this);    
     if (!node->array->type.dim) {
         throw semantic_error("[] must be applied to array");
     }
@@ -106,7 +108,7 @@ void SemanticChecker::visitMemberExprNode(ASTMemberExprNode *node) {
     node->object->accept(this);
     if (node->object->type.is_basic()) {
         if (node->object->type.is_string()) {
-            node->type = globalScope->getVarType(node->member);
+            node->type = globalScope->getClassType("string")->scope->getVarType(node->member);
             return ;
         }
         else throw semantic_error("basic type has no member");
@@ -305,12 +307,18 @@ void SemanticChecker::visitBreakStmtNode(ASTBreakStmtNode *node) {
 }
 void SemanticChecker::visitReturnStmtNode(ASTReturnStmtNode *node) {
     if (!currentFunction) throw semantic_error("return must be in function");
-    if (node->expr) {
-        node->expr->accept(this);
-        if (node->expr->type.name != currentFunction->returnType->name) throw semantic_error("return type not match");
+    if (currentFunction->returnType) {
+        if (node->expr) {
+            node->expr->accept(this);
+            if (!Type(currentFunction->returnType->name, currentFunction->returnType->dim).assignable(node->expr->type))
+                throw semantic_error("return type not match");
+        }
+        else {
+            if (currentFunction->returnType->name != "void") throw semantic_error("return type not match");
+        }
     }
     else {
-        if (currentFunction->returnType->name != "void") throw semantic_error("return type not match");
+        if (node->expr) throw semantic_error("return type not match");
     }
 }
 
@@ -324,7 +332,7 @@ void SemanticChecker::visitVarStmtNode(ASTVarStmtNode *node) {
                 throw semantic_error("type mismatch in variable declaration");
             }
         }
-        scope->addVariable(v.first, Type(node->type->name, node->type->dim));
+        scope->addVariable(v.first, type);
     }
 }
 
