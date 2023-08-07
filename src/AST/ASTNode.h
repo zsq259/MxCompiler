@@ -68,7 +68,7 @@ public:
 
 class ASTFuncExprNode: public ASTExprNode {
 public:
-    ASTExprNode* func;
+    ASTExprNode* func = nullptr;
     vector<ASTExprNode*> args;
 
     ~ASTFuncExprNode() override {
@@ -82,7 +82,7 @@ public:
 
 class ASTArrayExprNode: public ASTExprNode {
 public:
-    ASTExprNode *array, *index;
+    ASTExprNode *array = nullptr, *index = nullptr;
 
     ~ASTArrayExprNode() override {
         delete array;
@@ -95,7 +95,7 @@ public:
 
 class ASTMemberExprNode: public ASTExprNode {
 public:
-    ASTExprNode* name;
+    ASTExprNode* name = nullptr;
     std::string member;
 
     ~ASTMemberExprNode() override {
@@ -108,7 +108,7 @@ public:
 
 class ASTSingleExprNode: public ASTExprNode {
 public:
-    ASTExprNode* expr;
+    ASTExprNode* expr = nullptr;
     string op;
     bool right;
 
@@ -136,7 +136,7 @@ public:
 
 class ASTNewExprNode: public ASTExprNode {
 public:
-    ASTNewTypeNode* newType;
+    ASTNewTypeNode* newType = nullptr;
 
     ~ASTNewExprNode() override {
         delete newType;
@@ -148,7 +148,7 @@ public:
 
 class ASTBinaryExprNode: public ASTExprNode {
 public:
-    ASTExprNode *lhs, *rhs;
+    ASTExprNode *lhs = nullptr, *rhs = nullptr;
     string op;
 
     ~ASTBinaryExprNode() {
@@ -161,7 +161,7 @@ public:
 
 class ASTTernaryExprNode: public ASTExprNode {
 public:
-    ASTExprNode *cond, *True, *False;
+    ASTExprNode *cond = nullptr, *True = nullptr, *False = nullptr;
 
     ~ASTTernaryExprNode() override {
         delete cond, True, False;
@@ -173,7 +173,7 @@ public:
 
 class ASTAssignExprNode: public ASTExprNode {
 public:
-    ASTExprNode *lhs, *rhs;
+    ASTExprNode *lhs = nullptr, *rhs = nullptr;
 
     ~ASTAssignExprNode() {
         delete lhs, rhs;
@@ -219,8 +219,8 @@ public:
 
 class ASTWhileStmtNode: public ASTStmtNode {
 public:
-    ASTExprNode* cond;
-    ASTBlockNode* block;
+    ASTExprNode* cond = nullptr;
+    ASTBlockNode* block = nullptr;
 
     ~ASTWhileStmtNode() {
         delete cond, block;
@@ -232,9 +232,9 @@ public:
 
 class ASTForStmtNode: public ASTStmtNode {
 public:
-    ASTStmtNode* init;
-    ASTExprNode *cond, *step;
-    ASTBlockNode* block;
+    ASTStmtNode* init = nullptr;
+    ASTExprNode *cond = nullptr, *step = nullptr;
+    ASTBlockNode* block = nullptr;
 
     ~ASTForStmtNode() {
         delete init, cond, step, block;
@@ -270,7 +270,7 @@ public:
 
 class ASTReturnStmtNode: public ASTFlowStmtNode {
 public:
-    ASTExprNode* expr;
+    ASTExprNode* expr = nullptr;
 
     ~ASTReturnStmtNode() override = default;
     std::string NodeType() override { return "ASTReturnStmtNode"; }
@@ -280,7 +280,7 @@ public:
 
 class ASTVarStmtNode: public ASTStmtNode {
 public:
-    ASTTypeNode *type;
+    ASTTypeNode *type = nullptr;
     vector<pair<string, ASTExprNode*>> vars;
 
     ~ASTVarStmtNode() override {
@@ -296,8 +296,8 @@ class ASTFunctionNode: public ASTNode {
 public:
     string name;
     vector<pair<ASTTypeNode*, string>> paras;
-    ASTBlockNode* block;
-    ASTTypeNode* returnType;
+    ASTBlockNode* block = nullptr;
+    ASTTypeNode* returnType = nullptr;
 
     ~ASTFunctionNode() override {
         for (auto p: paras) delete p.first;
@@ -312,9 +312,7 @@ public:
 class ASTConstructNode: public ASTFunctionNode {
 public:
 
-    ~ASTConstructNode() override {
-        delete block;
-    }
+    ~ASTConstructNode() override = default;
     std::string NodeType() override { return "ASTConstructNode"; }
     void print() override;  
 };
@@ -325,7 +323,7 @@ public:
     vector<ASTVarStmtNode*> variables;
     vector<ASTConstructNode*> constructors;
     vector<ASTFunctionNode*> functions;
-    Scope *scope;
+    Scope *scope = nullptr;
     ~ASTClassNode() override {
         for (auto v: variables) delete v;
         for (auto c: constructors) delete c;

@@ -40,7 +40,7 @@ std::any ASTBuilder::visitConstructDef(MxParser::ConstructDefContext *ctx) {
     return node;
 }
 
-std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {
+std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {    
     auto node = new ASTFunctionNode;
     node->name = ctx->Identifier()->getText();
     node->returnType = any_cast<ASTTypeNode*>(visit(ctx->typeName()));
@@ -103,10 +103,12 @@ std::any ASTBuilder::visitBlock(MxParser::BlockContext *ctx) {
 std::any ASTBuilder::visitExprStmt(MxParser::ExprStmtContext *ctx) {
     auto node = new ASTExprStmtNode;
     auto list = ctx->exprList();
-    for (auto child: list->children) {
-        auto res = visit(child);
-        if (!res.has_value()) continue;
-        node->exprs.push_back(any_cast<ASTExprNode*>(res));
+    if (list) {
+        for (auto child: list->children) {
+            auto res = visit(child);
+            if (!res.has_value()) continue;
+            node->exprs.push_back(any_cast<ASTExprNode*>(res));
+        }
     }
     return static_cast<ASTStmtNode*>(node);
 }
@@ -119,6 +121,7 @@ std::any ASTBuilder::visitIfStmt(MxParser::IfStmtContext *ctx) {
     for (auto block: ctx->suite()) {
         node->blocks.push_back(any_cast<ASTBlockNode*>(visit(block)));
     }
+    
     return static_cast<ASTStmtNode*>(node);
 }
 
@@ -137,6 +140,7 @@ std::any ASTBuilder::visitForStmt(MxParser::ForStmtContext *ctx) {
             node->init = any_cast<ASTStmtNode*>(res);
         }
     }
+    
     if (auto init = ctx->varDefStmt()) {
         auto res = visit(init);
         if (res.has_value()) {
@@ -166,7 +170,8 @@ std::any ASTBuilder::visitFlowStmt(MxParser::FlowStmtContext *ctx) {
     else if (ctx->Break()) node = new ASTBreakStmtNode;
     else {
         auto node_ = new ASTReturnStmtNode;
-        node_->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
+        if (ctx->expression()) node_->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
+        else node_->expr = nullptr;
         node = node_;
     }
     return node;
@@ -199,8 +204,10 @@ std::any ASTBuilder::visitArrayExpr(MxParser::ArrayExprContext *ctx) {
 std::any ASTBuilder::visitFunctionExpr(MxParser::FunctionExprContext *ctx) {
     auto node = new ASTFuncExprNode;
     node->func = any_cast<ASTExprNode*>(visit(ctx->expression()));
-    for (auto expr: ctx->exprList()->expression()) {
-        node->args.push_back(any_cast<ASTExprNode*>(visit(expr)));
+    if (ctx->exprList()) {
+        for (auto expr: ctx->exprList()->expression()) {
+            node->args.push_back(any_cast<ASTExprNode*>(visit(expr)));
+        }
     }
     return static_cast<ASTExprNode*>(node);
 }

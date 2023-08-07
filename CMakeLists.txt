@@ -7,7 +7,9 @@ add_subdirectory(MxAntlr)
 
 include_directories(/usr/local/include/antlr4-runtime/)
 include_directories(MxAntlr/)
-include_directories(src/)
+include_directories(SYSTEM src)
+include_directories(src/AST)
+include_directories(src/Util)
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
@@ -23,8 +25,9 @@ foreach (test_file ${test_files})
     set(testname "sema|${filename}")
     execute_process(COMMAND grep "Verdict: " "${SemaPath}/${test_file}" COMMAND sed "s/Verdict: //"
             OUTPUT_VARIABLE verdict)
+    # message(STATUS "$<TARGET_FILE:code> <${SemaPath}/${test_file}")            
     add_test(NAME ${testname}
-            COMMAND $<TARGET_FILE:code> ${SemaPath}/${test_file} -fsyntax-only
+            COMMAND $<TARGET_FILE:code> ${SemaPath}/${test_file}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
     set_tests_properties(${testname} PROPERTIES LABELS "sema")
     if (NOT "${verdict}" STREQUAL "Success\n")

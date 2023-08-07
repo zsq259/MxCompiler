@@ -13,6 +13,13 @@ public:
     virtual void print() = 0;
 };
 
+class AST {
+public:
+    ASTNode *root = nullptr;
+    AST() = default;
+    ~AST() { delete root; }
+};
+
 class ASTProgramNode;
 class ASTClassNode;
 class ASTConstructNode;
@@ -47,32 +54,32 @@ public:
     ASTBaseVisitor() = default;
     virtual ~ASTBaseVisitor() = default;
     virtual void visit(ASTNode *node) { node->accept(this); }
-    virtual void visitProgramNode(ASTProgramNode *node) = 0;
-    virtual void visitClassNode(ASTClassNode *node) = 0;
-    virtual void visitFunctionNode(ASTFunctionNode *node) = 0;
-    virtual void visitTypeNode(ASTTypeNode *node) = 0;
-    virtual void visitBlockNode(ASTBlockNode *node) = 0;
-    virtual void visitStmtNode(ASTStmtNode *node) = 0;
-    virtual void visitExprStmtNode(ASTExprStmtNode *node) = 0;
-    virtual void visitExprNode(ASTExprNode *node) = 0;
-    virtual void visitFuncExprNode(ASTFuncExprNode *node) = 0;
-    virtual void visitArrayExprNode(ASTArrayExprNode *node) = 0;
-    virtual void visitMemberExprNode(ASTMemberExprNode *node) = 0;
-    virtual void visitSingleExprNode(ASTSingleExprNode *node) = 0;
-    virtual void visitNewExprNode(ASTNewExprNode *node) = 0;
-    virtual void visitBinaryExprNode(ASTBinaryExprNode *node) = 0;
-    virtual void visitTernaryExprNode(ASTTernaryExprNode *node) = 0;
-    virtual void visitAssignExprNode(ASTAssignExprNode *node) = 0;
-    virtual void visitLiterExprNode(ASTLiterExprNode *node) = 0;
-    virtual void visitAtomExprNode(ASTAtomExprNode *node) = 0;
-    virtual void visitIfStmtNode(ASTIfStmtNode *node) = 0;
-    virtual void visitWhileStmtNode(ASTWhileStmtNode *node) = 0;
-    virtual void visitForStmtNode(ASTForStmtNode *node) = 0;
-    virtual void visitFlowStmtNode(ASTFlowStmtNode *node) = 0;
-    virtual void visitContinueStmtNode(ASTContinueStmtNode *node) = 0;
-    virtual void visitBreakStmtNode(ASTBreakStmtNode *node) = 0;
-    virtual void visitReturnStmtNode(ASTReturnStmtNode *node) = 0;
-    virtual void visitVarStmtNode(ASTVarStmtNode *node) = 0;
-    virtual void visitNewTypeNode(ASTNewTypeNode *node) = 0;
+    virtual void visitProgramNode(ASTProgramNode *node) {}
+    virtual void visitClassNode(ASTClassNode *node) {}
+    virtual void visitFunctionNode(ASTFunctionNode *node) {}
+    virtual void visitTypeNode(ASTTypeNode *node) {}
+    virtual void visitBlockNode(ASTBlockNode *node) {}
+    virtual void visitStmtNode(ASTStmtNode *node) {}
+    virtual void visitExprStmtNode(ASTExprStmtNode *node) {}
+    virtual void visitExprNode(ASTExprNode *node) {}
+    virtual void visitFuncExprNode(ASTFuncExprNode *node) {}
+    virtual void visitArrayExprNode(ASTArrayExprNode *node) {}
+    virtual void visitMemberExprNode(ASTMemberExprNode *node) {}
+    virtual void visitSingleExprNode(ASTSingleExprNode *node) {}
+    virtual void visitNewExprNode(ASTNewExprNode *node) {}
+    virtual void visitBinaryExprNode(ASTBinaryExprNode *node) {}
+    virtual void visitTernaryExprNode(ASTTernaryExprNode *node) {}
+    virtual void visitAssignExprNode(ASTAssignExprNode *node) {}
+    virtual void visitLiterExprNode(ASTLiterExprNode *node) {}
+    virtual void visitAtomExprNode(ASTAtomExprNode *node) {}
+    virtual void visitIfStmtNode(ASTIfStmtNode *node) {}
+    virtual void visitWhileStmtNode(ASTWhileStmtNode *node) {}
+    virtual void visitForStmtNode(ASTForStmtNode *node) {}
+    virtual void visitFlowStmtNode(ASTFlowStmtNode *node) {}
+    virtual void visitContinueStmtNode(ASTContinueStmtNode *node) {}
+    virtual void visitBreakStmtNode(ASTBreakStmtNode *node) {}
+    virtual void visitReturnStmtNode(ASTReturnStmtNode *node) {}
+    virtual void visitVarStmtNode(ASTVarStmtNode *node) {}
+    virtual void visitNewTypeNode(ASTNewTypeNode *node) {}
 };
 #endif
