@@ -27,17 +27,26 @@ void visitBlockWithScope(ASTBlockNode *node, ASTBaseVisitor *visitor) {
 void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
     auto currentScope = scope;
     scope = new Scope(scope);
-    currentFunction = node;
-    if (node->returnType) {
-        node->returnType->accept(this);
-        node->type = Type(node->returnType->name, node->returnType->dim, true);
+    try {
+        currentFunction = node;
+        if (node->returnType) {
+            node->returnType->accept(this);
+            node->type = Type(node->returnType->name, node->returnType->dim, true);
+        }
+        else node->type = Type("void", 0, true);
+        for (auto p: node->paras) {
+            p.first->accept(this);
+            scope->addVariable(p.second, Type(p.first->name, p.first->dim));
+        }
+        visitBlockWithScope(node->block, this);
+    } 
+    catch (semantic_error &e) {
+        delete scope;
+        scope = currentScope;
+        currentFunction = nullptr;
+        throw;
     }
-    else node->type = Type("void", 0, true);
-    for (auto p: node->paras) {
-        p.first->accept(this);
-        scope->addVariable(p.second, Type(p.first->name, p.first->dim));
-    }
-    visitBlockWithScope(node->block, this);
+    delete scope;
     scope = currentScope;
     currentFunction = nullptr;
 }
@@ -52,7 +61,15 @@ void SemanticChecker::visitTypeNode(ASTTypeNode *node) {
 void SemanticChecker::visitBlockNode(ASTBlockNode *node) {
     auto currentScope = scope;
     scope = new Scope(scope);
-    for (auto s: node->stmts) s->accept(this);
+    try {
+        for (auto s: node->stmts) s->accept(this);
+    } 
+    catch (semantic_error &e) {
+        delete scope;
+        scope = currentScope;
+        throw;
+    }
+    delete scope;
     scope = currentScope;
 }
 
@@ -274,26 +291,42 @@ void SemanticChecker::visitIfStmtNode(ASTIfStmtNode *node) {
 void SemanticChecker::visitWhileStmtNode(ASTWhileStmtNode *node) {
     auto currentScope = scope;
     scope = new Scope(scope);
-    node->cond->accept(this);
-    if (!node->cond->type.is_bool()) throw semantic_error("while condition must be bool");
-    ++loopDepth;
-    visitBlockWithScope(node->block, this);
-    --loopDepth;
+    try {
+        node->cond->accept(this);
+        if (!node->cond->type.is_bool()) throw semantic_error("while condition must be bool");
+        ++loopDepth;
+        visitBlockWithScope(node->block, this);
+        --loopDepth;
+    }
+    catch (semantic_error &e) {
+        delete scope;
+        scope = currentScope;
+        throw;
+    }
+    delete scope;
     scope = currentScope;
 }
 
 void SemanticChecker::visitForStmtNode(ASTForStmtNode *node) {
     auto currentScope = scope;
     scope = new Scope(scope);
-    if (node->init) node->init->accept(this);
-    if (node->cond) {
-        node->cond->accept(this);
-        if (!node->cond->type.is_bool()) throw semantic_error("for condition must be bool");
+    try {
+        if (node->init) node->init->accept(this);
+        if (node->cond) {
+            node->cond->accept(this);
+            if (!node->cond->type.is_bool()) throw semantic_error("for condition must be bool");
+        }
+        if (node->step) node->step->accept(this);
+        ++loopDepth;
+        visitBlockWithScope(node->block, this);
+        --loopDepth;
     }
-    if (node->step) node->step->accept(this);
-    ++loopDepth;
-    visitBlockWithScope(node->block, this);
-    --loopDepth;
+    catch (semantic_error &e) {
+        delete scope;
+        scope = currentScope;
+        throw;
+    }
+    delete scope;
     scope = currentScope;
 }
 

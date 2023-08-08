@@ -56,8 +56,10 @@ private:
     Scope *scope = nullptr;
     friend class SemanticChecker;
     friend class FunctionCollector;
+    friend class GlobalScope;
 public:
     ClassType(const string &name): Type(name) {}
+    // ~ClassType() { delete scope; }
 };
 
 class FuncType: public Type {

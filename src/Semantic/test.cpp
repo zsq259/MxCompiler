@@ -48,6 +48,7 @@ int main(int argc, char const *argv[]) {
 		FunctionCollector functioncollector(&globalscope);
 		functioncollector.init();
 		functioncollector.visit(ast.root);
+
 		SemanticChecker semanticchecker(&globalscope);
 		semanticchecker.visit(ast.root);
 		

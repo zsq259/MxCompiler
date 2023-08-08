@@ -54,7 +54,10 @@ private:
 public:
     GlobalScope(Scope* parentScope): Scope(parentScope) {}
     ~GlobalScope() {
-        for (auto t: types) delete t.second;
+        for (auto t: types) {
+            delete t.second->scope;
+            delete t.second;
+        }
     }
     bool hasClassType(const string &name) { return types.count(name); }
     TypeName* addClassType(const string &name) {

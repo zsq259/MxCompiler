@@ -27,7 +27,7 @@ public:
 
 class ASTStmtNode: public ASTNode {
 public:
-    ~ASTStmtNode() override = default;
+    virtual ~ASTStmtNode() override = default;
     std::string NodeType() override { return "ASTStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitStmtNode(this); }
     // void print() override;
@@ -48,7 +48,7 @@ public:
 class ASTExprNode: public ASTNode {
 public:
     Type type;
-    ~ASTExprNode() override = default;
+    virtual ~ASTExprNode() override = default;
     std::string NodeType() override { return "ASTExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitExprNode(this); }
     // void print() override;
@@ -152,7 +152,8 @@ public:
     string op;
 
     ~ASTBinaryExprNode() {
-        delete lhs, rhs;
+        delete lhs;
+        delete rhs;
     }
     std::string NodeType() override { return "ASTBinaryExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitBinaryExprNode(this); }
@@ -164,7 +165,9 @@ public:
     ASTExprNode *cond = nullptr, *True = nullptr, *False = nullptr;
 
     ~ASTTernaryExprNode() override {
-        delete cond, True, False;
+        delete cond;
+        delete True;
+        delete False;
     }
     std::string NodeType() override { return "ASTTernaryExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitTernaryExprNode(this); }
@@ -176,7 +179,8 @@ public:
     ASTExprNode *lhs = nullptr, *rhs = nullptr;
 
     ~ASTAssignExprNode() {
-        delete lhs, rhs;
+        delete lhs;
+        delete rhs;
     }
     std::string NodeType() override { return "ASTAssignExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitAssignExprNode(this); }
@@ -223,7 +227,8 @@ public:
     ASTBlockNode* block = nullptr;
 
     ~ASTWhileStmtNode() {
-        delete cond, block;
+        delete cond;
+        delete block;
     }
     std::string NodeType() override { return "ASTWhileStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitWhileStmtNode(this); }
@@ -237,7 +242,10 @@ public:
     ASTBlockNode* block = nullptr;
 
     ~ASTForStmtNode() {
-        delete init, cond, step, block;
+        delete init;
+        delete cond;
+        delete step;
+        delete block;
     }
     std::string NodeType() override { return "ASTForStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitForStmtNode(this); }
@@ -272,7 +280,9 @@ class ASTReturnStmtNode: public ASTFlowStmtNode {
 public:
     ASTExprNode* expr = nullptr;
 
-    ~ASTReturnStmtNode() override = default;
+    ~ASTReturnStmtNode() {
+        delete expr;
+    }
     std::string NodeType() override { return "ASTReturnStmtNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitReturnStmtNode(this); }
     void print() override;
