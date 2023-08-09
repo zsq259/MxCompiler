@@ -46,6 +46,10 @@ void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
         currentFunction = nullptr;
         throw;
     }
+    node->uniqueNameParas = node->paras;
+    for (auto p: node->uniqueNameParas) {
+        p.second = scope->getVarUniqueName(p.second);
+    }
     delete scope;
     scope = currentScope;
     currentFunction = nullptr;
@@ -278,6 +282,7 @@ void SemanticChecker::visitLiterExprNode(ASTLiterExprNode *node) {
 
 void SemanticChecker::visitAtomExprNode(ASTAtomExprNode *node) {
     node->type = scope->getVarType(node->name);
+    node->uniqueName = scope->getVarUniqueName(node->name);
 }
 
 void SemanticChecker::visitIfStmtNode(ASTIfStmtNode *node) {
@@ -366,6 +371,10 @@ void SemanticChecker::visitVarStmtNode(ASTVarStmtNode *node) {
             }
         }
         scope->addVariable(v.first, type);
+    }
+    node->uniqueNameVars = node->vars;
+    for (auto v: node->uniqueNameVars) {
+        v.first = scope->getVarUniqueName(v.first);
     }
 }
 

@@ -200,6 +200,7 @@ public:
 class ASTAtomExprNode: public ASTExprNode {
 public:
     string name;
+    string uniqueName;
 
     ~ASTAtomExprNode() override = default;
     std::string NodeType() override { return "ASTAtomExprNode"; }
@@ -292,6 +293,7 @@ class ASTVarStmtNode: public ASTStmtNode {
 public:
     ASTTypeNode *type = nullptr;
     vector<pair<string, ASTExprNode*>> vars;
+    vector<pair<string, ASTExprNode*>> uniqueNameVars;
 
     ~ASTVarStmtNode() override {
         delete type;
@@ -307,6 +309,7 @@ public:
     Type type;
     string name;
     vector<pair<ASTTypeNode*, string>> paras;
+    vector<pair<ASTTypeNode*, string>> uniqueNameParas;
     ASTBlockNode* block = nullptr;
     ASTTypeNode* returnType = nullptr;
 

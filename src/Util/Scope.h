@@ -15,21 +15,34 @@ class Scope {
 private:
     map<string, Type> vars;
     map<string, FuncType> funcs;
+    map<string, string> uniqueNames;
     Scope* parentScope;
 
 public:
+    string scopeName;
+    int size = 0;
+    
     explicit Scope(Scope* parentScope_): parentScope(parentScope_) {}
     bool hasVar(string name) { return vars.count(name); }
     void addVariable(string name, Type t) {
         if (vars.count(name)) throw semantic_error("variable redefine: " + name);
         if (t.name == "void") throw semantic_error("variable type cannot be void: " + name);
         vars.emplace(name, t);
+        uniqueNames.emplace(name, name + scopeName + "." + std::to_string(++size));
     }
     Type getVarType(const string &name) {
         auto s = this;
         while (s) {
             if (s->vars.count(name)) return s->vars[name];
             s = s->parentScope;   
+        }
+        throw semantic_error("variable not found: " + name);
+    }
+    string getVarUniqueName(const string &name) {
+        auto s = this;
+        while (s) {
+            if (s->uniqueNames.count(name)) return s->uniqueNames[name];
+            s = s->parentScope;
         }
         throw semantic_error("variable not found: " + name);
     }
