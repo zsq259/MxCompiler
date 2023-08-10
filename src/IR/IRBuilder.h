@@ -10,6 +10,7 @@
 class IRBuilder : public ASTBaseVisitor {
 private:
     int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
+    int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
     IRProgramNode *program = nullptr;
     IRClassNode* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
