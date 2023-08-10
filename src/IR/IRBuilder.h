@@ -1,35 +1,55 @@
 #ifndef IRBUILDER_H
 #define IRBUILDER_H
+#include <map>
+#include <vector>
+#include <string>
 #include "ASTBaseVisitor.h"
+#include "Type.h"
+#include "IRNode.h"
 
 class IRBuilder : public ASTBaseVisitor {
-    virtual void visitProgramNode(ASTProgramNode *node) override;
-    virtual void visitClassNode(ASTClassNode *node) override;
-    virtual void visitFunctionNode(ASTFunctionNode *node) override;
-    virtual void visitTypeNode(ASTTypeNode *node) override;
-    virtual void visitBlockNode(ASTBlockNode *node) override;
-    virtual void visitStmtNode(ASTStmtNode *node) override;
-    virtual void visitExprStmtNode(ASTExprStmtNode *node) override;
-    virtual void visitExprNode(ASTExprNode *node) override;
-    virtual void visitFuncExprNode(ASTFuncExprNode *node) override;
-    virtual void visitArrayExprNode(ASTArrayExprNode *node) override;
-    virtual void visitMemberExprNode(ASTMemberExprNode *node) override;
-    virtual void visitSingleExprNode(ASTSingleExprNode *node) override;
-    virtual void visitNewExprNode(ASTNewExprNode *node) override;
-    virtual void visitBinaryExprNode(ASTBinaryExprNode *node) override;
-    virtual void visitTernaryExprNode(ASTTernaryExprNode *node) override;
-    virtual void visitAssignExprNode(ASTAssignExprNode *node) override;
-    virtual void visitLiterExprNode(ASTLiterExprNode *node) override;
-    virtual void visitAtomExprNode(ASTAtomExprNode *node) override;
-    virtual void visitIfStmtNode(ASTIfStmtNode *node) override;
-    virtual void visitWhileStmtNode(ASTWhileStmtNode *node) override;
-    virtual void visitForStmtNode(ASTForStmtNode *node) override;
-    virtual void visitFlowStmtNode(ASTFlowStmtNode *node) override;
-    virtual void visitContinueStmtNode(ASTContinueStmtNode *node) override;
-    virtual void visitBreakStmtNode(ASTBreakStmtNode *node) override;
-    virtual void visitReturnStmtNode(ASTReturnStmtNode *node) override;
-    virtual void visitVarStmtNode(ASTVarStmtNode *node) override;
-    virtual void visitNewTypeNode(ASTNewTypeNode *node) override;
+private:
+    IRProgramNode *program = nullptr;
+    IRClassNode* currentClass = nullptr;
+    IRFunctionNode* currentFunction = nullptr;
+    IRBlockNode* currentBlock = nullptr;
+    std::map<ASTNode*, IRValueNode*> astValueMap;
+    std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
+
+public:
+    void visitContinueStmtNode(ASTContinueStmtNode *node) override;
+    void visitTernaryExprNode(ASTTernaryExprNode *node) override;
+    void visitAssignExprNode(ASTAssignExprNode *node) override;
+    void visitBinaryExprNode(ASTBinaryExprNode *node) override;
+    void visitMemberExprNode(ASTMemberExprNode *node) override;
+    void visitSingleExprNode(ASTSingleExprNode *node) override;
+    void visitReturnStmtNode(ASTReturnStmtNode *node) override;
+    void visitLiterExprNode(ASTLiterExprNode *node) override;
+    void visitWhileStmtNode(ASTWhileStmtNode *node) override;
+    void visitBreakStmtNode(ASTBreakStmtNode *node) override;
+    void visitArrayExprNode(ASTArrayExprNode *node) override;
+    void visitAtomExprNode(ASTAtomExprNode *node) override;
+    void visitFlowStmtNode(ASTFlowStmtNode *node) override;
+    void visitFunctionNode(ASTFunctionNode *node) override;
+    void visitExprStmtNode(ASTExprStmtNode *node) override;
+    void visitFuncExprNode(ASTFuncExprNode *node) override;
+    void visitVarStmtNode(ASTVarStmtNode *node) override;
+    void visitNewTypeNode(ASTNewTypeNode *node) override;
+    void visitNewExprNode(ASTNewExprNode *node) override;
+    void visitForStmtNode(ASTForStmtNode *node) override;
+    void visitProgramNode(ASTProgramNode *node) override;
+    void visitIfStmtNode(ASTIfStmtNode *node) override;
+    void visitClassNode(ASTClassNode *node) override;
+    void visitBlockNode(ASTBlockNode *node) override;
+    void visitTypeNode(ASTTypeNode *node) override;
+    void visitStmtNode(ASTStmtNode *node) override;
+    void visitExprNode(ASTExprNode *node) override;
+    
+    IRLiteralNode* defaultValue(IRType *type);
+    IRType* toIRType(ASTTypeNode *node);
+    IRType* toIRType(Type *type);
+    void print() { program->print(); }
+    
 };
 
 #endif

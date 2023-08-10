@@ -4,48 +4,125 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "Type.h"
 #include "IRType.h"
 
 class IRNode {
 public:
-    virtual ~IRNode() = default;
+    IRNode() = default;
+    ~IRNode() = default;
     virtual void print() = 0;
-    virtual void to_string() = 0;
+    virtual std::string to_string() = 0;
 };
 
 class IRValueNode: public IRNode {
 public:
     IRType* type = nullptr;
-    void print() override;
-    void to_string() override;
+
+    IRValueNode() = default;
+    IRValueNode(IRType* t_): type(t_) {}
+    // void print() { std::cout << to_string(); };
+    // std::string to_string() override;
 };
 
 class IRVarNode: public IRValueNode {
 public:
     std::string name;
+
+    IRVarNode() = default;
     IRVarNode(std::string name_): name(name_) {}
-    void print() override;
-    void to_string() override;
+    void print() { std::cout << to_string(); };
+    std::string to_string() { return ""; }
 };
 
-class IRGlobalVarNode: public IRVarNode {
+class IRStmtNode: public IRValueNode {};
+
+class IRBlockNode: public IRNode {
 public:
-    IRGlobalVarNode(std::string name_): IRVarNode(name_) {}
-    void print() override;
-    void to_string() override;
+    std::string label;
+    std::vector<IRStmtNode*> stmts;
+
+    explicit IRBlockNode(std::string label_): label(label_) {}
+    ~IRBlockNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
 };
 
-class IRClassNode: public IRNode {};
+class IRLiteralNode: public IRValueNode {
+public:
+    int value;
 
-class IRFunctionNode: public IRNode {};
+    IRLiteralNode() = default;
+    IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
+    ~IRLiteralNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
 
-class IRStmtNode: public IRNode {};
+class IRStringNode: public IRLiteralNode {
+public:
+    std::string str;
+
+    ~IRStringNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
 
 class IRGlobalVarStmtNode: public IRStmtNode {
-    IRGlobalVarNode* var;
-    IRValueNode* value;
+public:
+    IRValueNode* value = nullptr;
+    IRVarNode* var = nullptr;
 
+    ~IRGlobalVarStmtNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRVarStmtNode: public IRStmtNode {
+public:
+    IRValueNode* value = nullptr;
+    IRVarNode* var = nullptr;
+
+    ~IRVarStmtNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRFunctionNode: public IRNode {
+public:
+    IRType* retType = nullptr;
+    std::string name;
+    std::vector<std::pair<IRType*, std::string>> args;
+    std::vector<IRBlockNode*> blocks;
+
+    IRFunctionNode() = default;
+    ~IRFunctionNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRClassNode: public IRNode {
+public:
+    std::string name;
+    std::vector<IRVarNode*> vars;
+    std::vector<IRFunctionNode*> functions;
+
+    ~IRClassNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
 };
 
 class IRProgramNode: public IRNode {
@@ -57,8 +134,8 @@ public:
     ~IRProgramNode() { 
         
     }
-    void print() override;
-    void to_string() override;
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
 };
 
 #endif

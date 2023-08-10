@@ -31,12 +31,12 @@ public:
 
 class IRArrayType: public IRType {
 public:
-    int elements;
+    int length;
     IRType *type;
     std::string to_string() override {
-        return "[" + std::to_string(elements) + " x " + type->to_string() + "]";
+        return "[" + std::to_string(length) + " x " + type->to_string() + "]";
     }
-    int size() override { return elements * type->size(); }
+    int size() override { return length * type->size(); }
 };
 
 class IRStructType: public IRType {

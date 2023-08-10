@@ -19,6 +19,7 @@ private:
     int dim = 0;
     bool isConst = false;
     friend class SemanticChecker;
+    friend class IRBuilder;
 public:
     Type() = default;
     Type(const string &name_, const int dim_ = 0, const bool isC = false): TypeName(name_), dim(dim_), isConst(isC) {}

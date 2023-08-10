@@ -10,6 +10,7 @@ include_directories(MxAntlr/)
 include_directories(SYSTEM src)
 include_directories(src/AST)
 include_directories(src/Util)
+include_directories(src/IR)
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
@@ -25,14 +26,13 @@ foreach (test_file ${test_files})
     set(testname "sema|${filename}")
     execute_process(COMMAND grep "Verdict: " "${SemaPath}/${test_file}" COMMAND sed "s/Verdict: //"
             OUTPUT_VARIABLE verdict)
-    # message(STATUS "$<TARGET_FILE:code> <${SemaPath}/${test_file}")            
     add_test(NAME ${testname}
-            COMMAND $<TARGET_FILE:code> ${SemaPath}/${test_file}
+            COMMAND $<TARGET_FILE:code> ${SemaPath}/${test_file} "-fsyntax-only"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
     set_tests_properties(${testname} PROPERTIES LABELS "sema")
     if (NOT "${verdict}" STREQUAL "Success\n")
         set_tests_properties(${testname} PROPERTIES WILL_FAIL true)
-        message(STATUS "Test ${testname} will fail")
+        # message(STATUS "Test ${testname} will fail")
     endif ()
 endforeach ()
 

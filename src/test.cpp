@@ -4,6 +4,7 @@
 #include "../Util/Scope.h"
 #include "../Semantic/SymbolCollector.h"
 #include "../Semantic/SemanticChecker.h"
+#include "../IR/IRBuilder.h"
 #include "MxLexer.h"
 using std::cerr;
 
@@ -38,7 +39,6 @@ int main(int argc, char const *argv[]) {
 			ast.root = getAST(in);
 			in.close();
 		}
-		// ast.root->print();
 		GlobalScope globalscope(nullptr);
 		
 		ClassColletor classcollector(&globalscope);
@@ -51,7 +51,15 @@ int main(int argc, char const *argv[]) {
 
 		SemanticChecker semanticchecker(&globalscope);
 		semanticchecker.visit(ast.root);
+
+		for (int i = 1; i < argc; ++i) 
+			if (argv[i] == "-fsyntax-only") return 0;
 		
+		IRBuilder irbuilder;
+		puts("okkkk1");
+		irbuilder.visit(ast.root);
+		puts("okkkk2");
+		irbuilder.print();
 	}
 	catch (std::exception &e) {
 		cerr << e.what() << '\n';
