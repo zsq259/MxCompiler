@@ -47,7 +47,7 @@ void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
         throw;
     }
     node->uniqueNameParas = node->paras;
-    for (auto p: node->uniqueNameParas) {
+    for (auto &p: node->uniqueNameParas) {
         p.second = scope->getVarUniqueName(p.second);
     }
     delete scope;
@@ -373,7 +373,7 @@ void SemanticChecker::visitVarStmtNode(ASTVarStmtNode *node) {
         scope->addVariable(v.first, type);
     }
     node->uniqueNameVars = node->vars;
-    for (auto v: node->uniqueNameVars) {
+    for (auto &v: node->uniqueNameVars) {
         v.first = scope->getVarUniqueName(v.first);
     }
 }

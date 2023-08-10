@@ -17,18 +17,18 @@ private:
     map<string, FuncType> funcs;
     map<string, string> uniqueNames;
     Scope* parentScope;
-
+    int childCnt = 0;
 public:
-    string scopeName;
-    int size = 0;
-    
-    explicit Scope(Scope* parentScope_): parentScope(parentScope_) {}
+    string scopeName = "";
+    explicit Scope(Scope* parentScope_): parentScope(parentScope_) {
+        if (parentScope) scopeName = parentScope->scopeName + "." + std::to_string(++parentScope->childCnt);
+    }
     bool hasVar(string name) { return vars.count(name); }
     void addVariable(string name, Type t) {
         if (vars.count(name)) throw semantic_error("variable redefine: " + name);
         if (t.name == "void") throw semantic_error("variable type cannot be void: " + name);
         vars.emplace(name, t);
-        uniqueNames.emplace(name, name + scopeName + "." + std::to_string(++size));
+        uniqueNames.emplace(name, name + scopeName);
     }
     Type getVarType(const string &name) {
         auto s = this;
@@ -50,6 +50,7 @@ public:
         if (funcs.count(func.name)) throw semantic_error("function exists: " + func.name);
         funcs.emplace(func.name, func);
         vars.emplace(func.name, func.returnType);
+        uniqueNames.emplace(func.name, func.name);
     }
     FuncType getFunction(const string &name) {
         auto s = this;

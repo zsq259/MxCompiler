@@ -26,7 +26,7 @@ std::string IRStringNode::to_string() {
 
 std::string IRGlobalVarStmtNode::to_string() {
     std::string ret = "";
-    ret += "@" + var->name + " = global " + value->type->to_string() + " " + value->to_string();
+    ret += "@" + var->name + " = global " + value->type->to_string() + " " + value->to_string() + "\n";
     return ret;
 }
 
@@ -63,5 +63,17 @@ std::string IRBlockNode::to_string() {
 
 std::string IRClassNode::to_string() {
     std::string ret = "";
+    return ret;
+}
+
+std::string IRBrCondStmtNode::to_string() {
+    std::string ret = "";
+    ret += "br i1 " + cond->to_string() + ", label %" + trueLabel + ", label %" + falseLabel;
+    return ret;
+}
+
+std::string IRBrStmtNode::to_string() {
+    std::string ret = "";
+    ret += "br label %" + label;
     return ret;
 }

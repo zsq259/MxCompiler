@@ -52,8 +52,9 @@ int main(int argc, char const *argv[]) {
 		SemanticChecker semanticchecker(&globalscope);
 		semanticchecker.visit(ast.root);
 
-		for (int i = 1; i < argc; ++i) 
-			if (argv[i] == "-fsyntax-only") return 0;
+		for (int i = 1; i < argc; ++i) {
+			if (std::string(argv[i]) == "-fsyntax-only") return 0;
+		}
 		
 		IRBuilder irbuilder;
 		puts("okkkk1");

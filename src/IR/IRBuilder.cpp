@@ -111,6 +111,32 @@ void IRBuilder::visitBlockNode(ASTBlockNode *node) {
     for (auto stmt: node->stmts) stmt->accept(this);
 }
 
+void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {
+    int cnt = node->blocks.size();
+    auto endBlock = new IRBlockNode("if.end" + (++ifendCnt));
+    for (int i = 0; i < cnt; ++i) {
+        if (i < node->conds.size()) {
+            auto block = new IRBlockNode("if.else" + (++ifelseCnt));
+            currentFunction->blocks.push_back(block);
+            IRBlockNode* condblock = nullptr;
+            if (i == cnt - 1 && node->conds.size() == node->blocks.size()) condblock = endBlock;
+            else condblock = new IRBlockNode("if.then" + (++ifthenCnt)), currentFunction->blocks.push_back(condblock);
+            node->conds[i]->accept(this);
+            currentBlock->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->conds[i]], block->label, condblock->label));
+            currentBlock = block;
+            node->blocks[i]->accept(this);
+            currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+            currentBlock = condblock;
+        }
+        else {
+            node->blocks[i]->accept(this);
+            currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+        }
+    }
+    currentFunction->blocks.push_back(endBlock);
+    currentBlock = endBlock;
+}
+
 void IRBuilder::visitClassNode(ASTClassNode *node) {}
 
 void IRBuilder::visitTypeNode(ASTTypeNode *node) {}
@@ -128,7 +154,7 @@ void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode *node) {}
 void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {}
 void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {}
 void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {}
-void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {}
+
 void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {}
 void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {}
 void IRBuilder::visitFlowStmtNode(ASTFlowStmtNode *node) {}

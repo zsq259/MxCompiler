@@ -49,6 +49,28 @@ public:
     std::string to_string() override;
 };
 
+class IRBrCondStmtNode: public IRStmtNode {
+public:
+    IRValueNode* cond = nullptr;
+    std::string trueLabel, falseLabel;
+
+    explicit IRBrCondStmtNode(IRValueNode* cond_, std::string trueLabel_, std::string falseLabel_): 
+        cond(cond_), trueLabel(trueLabel_), falseLabel(falseLabel_) {}
+    ~IRBrCondStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRBrStmtNode: public IRStmtNode {
+public:
+    std::string label;
+
+    explicit IRBrStmtNode(std::string label_): label(label_) {}
+    ~IRBrStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLiteralNode: public IRValueNode {
 public:
     int value;
