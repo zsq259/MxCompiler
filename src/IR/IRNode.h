@@ -71,6 +71,16 @@ public:
     std::string to_string() override;
 };
 
+class IRRetStmtNode: public IRStmtNode {
+public:
+    IRValueNode* value = nullptr;
+
+    explicit IRRetStmtNode(IRValueNode* value_): value(value_) {}
+    ~IRRetStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLiteralNode: public IRValueNode {
 public:
     int value;

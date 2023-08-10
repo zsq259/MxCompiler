@@ -77,3 +77,9 @@ std::string IRBrStmtNode::to_string() {
     ret += "br label %" + label;
     return ret;
 }
+
+std::string IRRetStmtNode::to_string() {
+    std::string ret = "";
+    ret += "ret" + (value ? " " + value->type->to_string() + " " + value->to_string() : "void");
+    return ret;
+}

@@ -153,7 +153,7 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
     if (node->init) node->init->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(cond->label));
     currentBlock = cond;
-    
+
     if (node->cond) {
         node->cond->accept(this);
         cond->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->cond], body->label, endBlock->label));
@@ -161,8 +161,12 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
+    currentCondBlock = cond;
+    currentEndBlock = endBlock;
     node->block->accept(this);
     body->stmts.push_back(new IRBrStmtNode(step->label));
+    currentCondBlock = nullptr;
+    currentEndBlock = nullptr;
 
     currentBlock = step;
     if (node->step) node->step->accept(this);
@@ -191,10 +195,30 @@ void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
+    currentCondBlock = cond;
+    currentEndBlock = endBlock;
     node->block->accept(this);
     body->stmts.push_back(new IRBrStmtNode(cond->label));
+    currentCondBlock = nullptr;
+    currentEndBlock = nullptr;
 
     currentBlock = endBlock;
+}
+
+void IRBuilder::visitContinueStmtNode(ASTContinueStmtNode *node) {
+    currentBlock->stmts.push_back(new IRBrStmtNode(currentCondBlock->label));
+}
+
+void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {
+    currentBlock->stmts.push_back(new IRBrStmtNode(currentEndBlock->label));
+}
+
+void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
+    if (node->expr) {
+        node->expr->accept(this);
+        currentBlock->stmts.push_back(new IRRetStmtNode(astValueMap[node->expr]));
+    }
+    else currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
 }
 
 void IRBuilder::visitClassNode(ASTClassNode *node) {}
@@ -217,9 +241,6 @@ void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {}
 
 
 
-void IRBuilder::visitFlowStmtNode(ASTFlowStmtNode *node) {}
-void IRBuilder::visitContinueStmtNode(ASTContinueStmtNode *node) {}
-void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {}
-void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {}
+
 
 void IRBuilder::visitNewTypeNode(ASTNewTypeNode *node) {}

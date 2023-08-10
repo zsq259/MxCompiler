@@ -15,7 +15,7 @@ private:
     IRProgramNode *program = nullptr;
     IRClassNode* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
-    IRBlockNode* currentBlock = nullptr;
+    IRBlockNode *currentBlock = nullptr, *currentCondBlock = nullptr, *currentEndBlock = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
@@ -32,7 +32,7 @@ public:
     void visitBreakStmtNode(ASTBreakStmtNode *node) override;
     void visitArrayExprNode(ASTArrayExprNode *node) override;
     void visitAtomExprNode(ASTAtomExprNode *node) override;
-    void visitFlowStmtNode(ASTFlowStmtNode *node) override;
+    // void visitFlowStmtNode(ASTFlowStmtNode *node) override;
     void visitFunctionNode(ASTFunctionNode *node) override;
     void visitExprStmtNode(ASTExprStmtNode *node) override;
     void visitFuncExprNode(ASTFuncExprNode *node) override;
