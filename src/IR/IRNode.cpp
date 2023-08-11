@@ -38,13 +38,6 @@ std::string IRGlobalVarStmtNode::to_string() {
     return ret;
 }
 
-std::string IRVarStmtNode::to_string() {
-    std::string ret = "";
-    ret += "%" + var->name + " = alloca " + var->type->to_string() + "\n";
-    if (value) ret += "store " + value->type->to_string() + " " + value->to_string() + ", " + "ptr" + var->name + '\n';
-    return ret;
-}
-
 std::string IRFunctionNode::to_string() {
     std::string ret = "";
     ret += "define " + retType->to_string() + " @" + name + "(";
@@ -54,7 +47,7 @@ std::string IRFunctionNode::to_string() {
     }
     ret += ") {\n";
     for (auto b:blocks) {
-        ret += b->to_string() + "\n";
+        ret += b->to_string() + "\n";        
     }
     ret += "}\n";
     return ret;
@@ -99,10 +92,16 @@ std::string IRBinaryStmtNode::to_string() {
     return ret;
 }
 
+std::string IRAllocaStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = alloca " + type->to_string();
+    return ret;
+}
+
 std::string IRLoadStmtNode::to_string() {
     std::string ret = "";
     ret += var->to_string() + " = ";
-    ret += "load " + ptr->type->to_string() + ", " + ptr->type->to_string() + " " + ptr->to_string();
+    ret += "load " + var->type->to_string() + ", " + ptr->type->to_string() + " " + ptr->to_string();
     return ret;
 }
 
@@ -110,4 +109,10 @@ std::string IRStoreStmtNode::to_string() {
     std::string ret = "";
     ret += "store " + value->type->to_string() + " " + value->to_string() + ", " + ptr->type->to_string() + " " + ptr->to_string();
     return ret;
+}
+
+std::string IRIcmpStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = ";
+    ret += "icmp " + op + " " + lhs->type->to_string() + " " + lhs->to_string() + ", " + rhs->to_string();
 }

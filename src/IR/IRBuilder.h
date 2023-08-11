@@ -18,6 +18,7 @@ private:
     IRFunctionNode* currentFunction = nullptr;
     IRBlockNode *currentBlock = nullptr, *currentCondBlock = nullptr, *currentEndBlock = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;
+    std::map<std::string, IRVarNode*> varMap;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:

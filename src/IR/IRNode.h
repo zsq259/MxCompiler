@@ -18,8 +18,7 @@ class IRValueNode: public IRNode {
 public:
     IRType* type = nullptr;
 
-    IRValueNode() = default;
-    IRValueNode(IRType* t_): type(t_) {}
+    explicit IRValueNode(IRType* type_): type(type_) {}
     // void print() { std::cout << to_string(); };
     // std::string to_string() override;
 };
@@ -28,8 +27,7 @@ class IRGlobalVarNode: public IRValueNode {
 public:
     std::string name;
 
-    IRGlobalVarNode() = default;
-    IRGlobalVarNode(std::string name_, std::string init_): name(name_) {}
+    explicit IRGlobalVarNode(IRType* type_, std::string name_): IRValueNode(type_), name(name_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -38,13 +36,15 @@ class IRVarNode: public IRValueNode {
 public:
     std::string name;
 
-    IRVarNode() = default;
-    IRVarNode(std::string name_): name(name_) {}
+    explicit IRVarNode(IRType* type_, std::string name_): IRValueNode(type_), name(name_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
 
-class IRStmtNode: public IRValueNode {};
+class IRStmtNode: public IRNode {
+public:
+    
+};
 
 class IRBlockNode: public IRNode {
 public:
@@ -105,6 +105,18 @@ public:
     std::string to_string() override;
 };
 
+class IRAllocaStmtNode: public IRStmtNode {
+public:
+    IRVarNode* var = nullptr;
+    IRType* type = nullptr;
+    explicit IRAllocaStmtNode(IRVarNode* var_, IRType* type_): var(var_), type(type_) {}
+    ~IRAllocaStmtNode() { 
+        
+    }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLoadStmtNode: public IRStmtNode {
 public:
     IRVarNode *var = nullptr, *ptr = nullptr;
@@ -126,12 +138,25 @@ public:
     std::string to_string() override;
 };
 
+class IRIcmpStmtNode: public IRStmtNode {
+public:
+    std::string op;
+    IRVarNode* var = nullptr;
+    IRValueNode* lhs = nullptr;
+    IRValueNode* rhs = nullptr;
+
+    explicit IRIcmpStmtNode(std::string op_, IRVarNode* var_, IRValueNode* lhs_, IRValueNode* rhs_): 
+        op(op_), var(var_), lhs(lhs_), rhs(rhs_) {}
+    ~IRIcmpStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLiteralNode: public IRValueNode {
 public:
     int value;
 
-    IRLiteralNode() = default;
-    IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
+    explicit IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
     ~IRLiteralNode() { 
         
     }
@@ -158,18 +183,7 @@ public:
     ~IRGlobalVarStmtNode() { 
         
     }
-    void print() { std::cout << to_string(); };
-    std::string to_string() override;
-};
-
-class IRVarStmtNode: public IRStmtNode {
-public:
-    IRValueNode* value = nullptr;
-    IRVarNode* var = nullptr;
-
-    ~IRVarStmtNode() { 
-        
-    }
+    explicit IRGlobalVarStmtNode(IRValueNode* value_, IRVarNode* var_): value(value_), var(var_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -181,7 +195,7 @@ public:
     std::vector<std::pair<IRType*, std::string>> args;
     std::vector<IRBlockNode*> blocks;
 
-    IRFunctionNode() = default;
+    explicit IRFunctionNode(IRType* retType_, std::string name_): retType(retType_), name(name_) {}
     ~IRFunctionNode() { 
         
     }
@@ -195,6 +209,7 @@ public:
     std::vector<IRVarNode*> vars;
     std::vector<IRFunctionNode*> functions;
 
+    explicit IRClassNode(std::string name_): name(name_) {}
     ~IRClassNode() { 
         
     }
