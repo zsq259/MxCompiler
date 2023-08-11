@@ -57,7 +57,7 @@ public:
     IRType* toIRType(ASTTypeNode *node);
     IRType* toIRType(Type *type);
     void print() { program->print(); }
-    
+    void setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2);
 };
 
 #endif

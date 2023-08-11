@@ -134,6 +134,21 @@ void IRBuilder::visitBlockNode(ASTBlockNode *node) {
     for (auto stmt: node->stmts) stmt->accept(this);
 }
 
+void IRBuilder::setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2) {
+    if (cond->type->to_string() != "ptr") {
+        auto tmp = new IRVarNode(&i1Type, std::to_string(count++));
+        currentBlock->stmts.push_back(new IRTruncStmtNode(tmp, cond));
+        currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp, block1->label, block2->label));
+    }
+    else {
+        auto tmp = new IRVarNode(&boolType, std::to_string(count++));
+        currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, dynamic_cast<IRVarNode*>(cond)));
+        auto tmp2 = new IRVarNode(&i1Type, std::to_string(count++));
+        currentBlock->stmts.push_back(new IRTruncStmtNode(tmp2, tmp));
+        currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp2, block1->label, block2->label));
+    }
+}
+
 void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {
     int cnt = node->blocks.size();
     auto endBlock = new IRBlockNode("if.end" + std::to_string(ifendCnt++));
@@ -146,20 +161,7 @@ void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {
             else condblock = new IRBlockNode("if.then" + std::to_string(ifthenCnt++)), currentFunction->blocks.push_back(condblock);
             node->conds[i]->accept(this);
 
-            auto cond = astValueMap[node->conds[i]];
-            if (cond->type->to_string() != "ptr") {
-                auto tmp = new IRVarNode(&i1Type, std::to_string(count++));
-                currentBlock->stmts.push_back(new IRTruncStmtNode(tmp, cond));
-                currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp, block->label, condblock->label));
-            }
-            else {
-                auto tmp = new IRVarNode(&boolType, std::to_string(count++));
-                currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, dynamic_cast<IRVarNode*>(cond)));
-                auto tmp2 = new IRVarNode(&i1Type, std::to_string(count++));
-                currentBlock->stmts.push_back(new IRTruncStmtNode(tmp2, tmp));
-                currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp2, block->label, condblock->label));
-            }
-
+            setCondition(astValueMap[node->conds[i]], block, condblock);
 
             currentBlock = block;
             node->blocks[i]->accept(this);
@@ -194,7 +196,8 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
 
     if (node->cond) {
         node->cond->accept(this);
-        cond->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->cond], body->label, endBlock->label));
+        setCondition(astValueMap[node->cond], body, endBlock);
+        // cond->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->cond], body->label, endBlock->label));
     }
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
@@ -228,7 +231,8 @@ void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {
     
     if (node->cond) {
         node->cond->accept(this);
-        cond->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->cond], body->label, endBlock->label));
+        setCondition(astValueMap[node->cond], body, endBlock);
+        // cond->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->cond], body->label, endBlock->label));
     }
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
