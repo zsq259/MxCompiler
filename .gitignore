@@ -4,3 +4,4 @@ bin/
 .vscode/
 bugs.md
 test.txt
+*.out

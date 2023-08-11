@@ -47,7 +47,7 @@ std::string IRFunctionNode::to_string() {
     }
     ret += ") {\n";
     for (auto b:blocks) {
-        ret += b->to_string() + "\n";        
+        ret += b->to_string() + "\n";
     }
     ret += "}\n";
     return ret;
@@ -81,7 +81,7 @@ std::string IRBrStmtNode::to_string() {
 
 std::string IRRetStmtNode::to_string() {
     std::string ret = "";
-    ret += "ret" + (value ? " " + value->type->to_string() + " " + value->to_string() : "void");
+    ret += "ret" + (var ? " " + var->type->to_string() + " " + var->to_string() : "void");
     return ret;
 }
 
@@ -115,4 +115,12 @@ std::string IRIcmpStmtNode::to_string() {
     std::string ret = "";
     ret += var->to_string() + " = ";
     ret += "icmp " + op + " " + lhs->type->to_string() + " " + lhs->to_string() + ", " + rhs->to_string();
+    return ret;
+}
+
+std::string IRTruncStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = ";
+    ret += "trunc " + value->type->to_string() + " " + value->to_string() + " to " + var->type->to_string();
+    return ret;
 }

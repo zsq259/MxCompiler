@@ -83,9 +83,9 @@ public:
 
 class IRRetStmtNode: public IRStmtNode {
 public:
-    IRValueNode* value = nullptr;
+    IRVarNode* var = nullptr;
 
-    explicit IRRetStmtNode(IRValueNode* value_): value(value_) {}
+    explicit IRRetStmtNode(IRVarNode* var_): var(var_) {}
     ~IRRetStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
@@ -148,6 +148,17 @@ public:
     explicit IRIcmpStmtNode(std::string op_, IRVarNode* var_, IRValueNode* lhs_, IRValueNode* rhs_): 
         op(op_), var(var_), lhs(lhs_), rhs(rhs_) {}
     ~IRIcmpStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRTruncStmtNode: public IRStmtNode {
+public:
+    IRVarNode* var = nullptr;
+    IRValueNode *value = nullptr;
+
+    explicit IRTruncStmtNode(IRVarNode* var_, IRValueNode* value_): var(var_), value(value_) {}
+    ~IRTruncStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };

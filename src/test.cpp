@@ -59,9 +59,9 @@ int main(int argc, char const *argv[]) {
 		}
 		
 		IRBuilder irbuilder;
-		puts("okkkk1");
+		std::cerr << "okkkkk1\n";
 		irbuilder.visit(ast.root);
-		puts("okkkk2\n");
+		std::cerr << "okkkkk2\n";
 		irbuilder.print();
 	}
 	catch (std::exception &e) {

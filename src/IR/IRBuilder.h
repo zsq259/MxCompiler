@@ -13,10 +13,13 @@ private:
     int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
     int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
     int whilecondCnt = 0, whilebodyCnt = 0, whileendCnt = 0;
+    int returnCnt = 0;
     IRProgramNode *program = nullptr;
     IRClassNode* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
     IRBlockNode *currentBlock = nullptr, *currentCondBlock = nullptr, *currentEndBlock = nullptr;
+    IRBlockNode* currentReturnBlock = nullptr;
+    IRVarNode* currentReturnVar = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;
     std::map<std::string, IRVarNode*> varMap;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;

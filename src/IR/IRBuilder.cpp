@@ -6,6 +6,7 @@
 static IRVoidType voidType;
 static IRIntType boolType(32);
 static IRIntType intType(32);
+static IRIntType i1Type(1);
 static IRPtrType ptrType;
 static IRLiteralNode nullNode(&ptrType, 0);
 static IRLiteralNode intZeroNode(&intType, 0);
@@ -96,10 +97,35 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
         func->args.emplace_back(toIRType(arg.first), arg.second);
     }
     program->functions.push_back(func);
+
     func->blocks.push_back(new IRBlockNode("entry"));
     currentFunction = func;
-    currentBlock = func->blocks[0];
+    currentBlock = func->blocks.front();
+
+    IRVarNode* ret = nullptr;
+    if (func->retType->to_string() != "void") {
+        currentBlock->stmts.push_back(new IRAllocaStmtNode(ret = new IRVarNode(&ptrType, std::to_string(count++)), func->retType));
+    }
+    currentReturnVar = ret;
+
     node->block->accept(this);
+
+    auto retBlock = new IRBlockNode("return_block" + std::to_string(returnCnt++));
+    for (auto &b: func->blocks) {
+        if (b->stmts.empty() || (!dynamic_cast<IRBrStmtNode*>(b->stmts.back()) && !dynamic_cast<IRBrCondStmtNode*>(b->stmts.back()))) {
+            b->stmts.push_back(new IRBrStmtNode(retBlock->label));
+        }
+    }
+    currentBlock = retBlock;
+    if (func->retType->to_string() == "Void") {
+        currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
+    }
+    else {
+        auto tmp = new IRVarNode(func->retType, std::to_string(count++));
+        retBlock->stmts.push_back(new IRLoadStmtNode(tmp, ret));
+        currentBlock->stmts.push_back(new IRRetStmtNode(tmp));
+    }
+    func->blocks.push_back(retBlock);
     currentBlock = nullptr;
     currentFunction = nullptr;
 }
@@ -110,16 +136,31 @@ void IRBuilder::visitBlockNode(ASTBlockNode *node) {
 
 void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {
     int cnt = node->blocks.size();
-    auto endBlock = new IRBlockNode("if.end" + (++ifendCnt));
+    auto endBlock = new IRBlockNode("if.end" + std::to_string(ifendCnt++));
     for (int i = 0; i < cnt; ++i) {
         if (i < node->conds.size()) {
-            auto block = new IRBlockNode("if.else" + (++ifelseCnt));
+            auto block = new IRBlockNode("if.else" + std::to_string(ifelseCnt++));
             currentFunction->blocks.push_back(block);
             IRBlockNode* condblock = nullptr;
             if (i == cnt - 1 && node->conds.size() == node->blocks.size()) condblock = endBlock;
-            else condblock = new IRBlockNode("if.then" + (++ifthenCnt)), currentFunction->blocks.push_back(condblock);
+            else condblock = new IRBlockNode("if.then" + std::to_string(ifthenCnt++)), currentFunction->blocks.push_back(condblock);
             node->conds[i]->accept(this);
-            currentBlock->stmts.push_back(new IRBrCondStmtNode(astValueMap[node->conds[i]], block->label, condblock->label));
+
+            auto cond = astValueMap[node->conds[i]];
+            if (cond->type->to_string() != "ptr") {
+                auto tmp = new IRVarNode(&i1Type, std::to_string(count++));
+                currentBlock->stmts.push_back(new IRTruncStmtNode(tmp, cond));
+                currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp, block->label, condblock->label));
+            }
+            else {
+                auto tmp = new IRVarNode(&boolType, std::to_string(count++));
+                currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, dynamic_cast<IRVarNode*>(cond)));
+                auto tmp2 = new IRVarNode(&i1Type, std::to_string(count++));
+                currentBlock->stmts.push_back(new IRTruncStmtNode(tmp2, tmp));
+                currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp2, block->label, condblock->label));
+            }
+
+
             currentBlock = block;
             node->blocks[i]->accept(this);
             currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
@@ -135,16 +176,16 @@ void IRBuilder::visitIfStmtNode(ASTIfStmtNode *node) {
 }
 
 void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
-    auto cond = new IRBlockNode("for.cond" + (++forcondCnt));
+    auto cond = new IRBlockNode("for.cond" + std::to_string(forcondCnt++));
     currentFunction->blocks.push_back(cond);
 
-    auto body = new IRBlockNode("for.body" + (++forbodyCnt));
+    auto body = new IRBlockNode("for.body" + std::to_string(forbodyCnt++));
     currentFunction->blocks.push_back(body);
 
-    auto step = new IRBlockNode("for.step" + (++forstepCnt));
+    auto step = new IRBlockNode("for.step" + std::to_string(forstepCnt++));
     currentFunction->blocks.push_back(step);
 
-    auto endBlock = new IRBlockNode("for.end" + (++forendCnt));
+    auto endBlock = new IRBlockNode("for.end" + std::to_string(forendCnt++));
     currentFunction->blocks.push_back(endBlock);
 
     if (node->init) node->init->accept(this);
@@ -173,13 +214,13 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
 }
 
 void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {
-    auto cond = new IRBlockNode("while.cond" + (++whilecondCnt));
+    auto cond = new IRBlockNode("while.cond" + std::to_string(whilecondCnt++));
     currentFunction->blocks.push_back(cond);
 
-    auto body = new IRBlockNode("while.body" + (++whilebodyCnt));
+    auto body = new IRBlockNode("while.body" + std::to_string(whilebodyCnt++));
     currentFunction->blocks.push_back(body);
 
-    auto endBlock = new IRBlockNode("while.end" + (++whileendCnt));
+    auto endBlock = new IRBlockNode("while.end" + std::to_string(whileendCnt++));
     currentFunction->blocks.push_back(endBlock);
 
     currentBlock->stmts.push_back(new IRBrStmtNode(cond->label));
@@ -213,7 +254,7 @@ void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {
 void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
     if (node->expr) {
         node->expr->accept(this);
-        currentBlock->stmts.push_back(new IRRetStmtNode(astValueMap[node->expr]));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(astValueMap[node->expr], currentReturnVar));
     }
     else currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
 }
