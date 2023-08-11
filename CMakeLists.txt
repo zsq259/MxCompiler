@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(MxAntlr)
 
+include_directories(/usr/include/antlr4-runtime/)
 include_directories(/usr/local/include/antlr4-runtime/)
 include_directories(MxAntlr/)
 include_directories(SYSTEM src)
