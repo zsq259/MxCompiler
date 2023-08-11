@@ -24,6 +24,14 @@ std::string IRStringNode::to_string() {
     return str;
 }
 
+std::string IRGlobalVarNode::to_string() {
+    return "@" + name;
+}
+
+std::string IRVarNode::to_string() {
+    return "%" + name;
+}
+
 std::string IRGlobalVarStmtNode::to_string() {
     std::string ret = "";
     ret += "@" + var->name + " = global " + value->type->to_string() + " " + value->to_string() + "\n";
@@ -81,5 +89,25 @@ std::string IRBrStmtNode::to_string() {
 std::string IRRetStmtNode::to_string() {
     std::string ret = "";
     ret += "ret" + (value ? " " + value->type->to_string() + " " + value->to_string() : "void");
+    return ret;
+}
+
+std::string IRBinaryStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = ";
+    ret += op + " " + lhs->type->to_string() + " " + lhs->to_string() + ", " + rhs->to_string();
+    return ret;
+}
+
+std::string IRLoadStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = ";
+    ret += "load " + ptr->type->to_string() + ", " + ptr->type->to_string() + " " + ptr->to_string();
+    return ret;
+}
+
+std::string IRStoreStmtNode::to_string() {
+    std::string ret = "";
+    ret += "store " + value->type->to_string() + " " + value->to_string() + ", " + ptr->type->to_string() + " " + ptr->to_string();
     return ret;
 }

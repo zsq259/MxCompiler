@@ -24,6 +24,16 @@ public:
     // std::string to_string() override;
 };
 
+class IRGlobalVarNode: public IRValueNode {
+public:
+    std::string name;
+
+    IRGlobalVarNode() = default;
+    IRGlobalVarNode(std::string name_, std::string init_): name(name_) {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRVarNode: public IRValueNode {
 public:
     std::string name;
@@ -31,7 +41,7 @@ public:
     IRVarNode() = default;
     IRVarNode(std::string name_): name(name_) {}
     void print() { std::cout << to_string(); };
-    std::string to_string() { return ""; }
+    std::string to_string() override;
 };
 
 class IRStmtNode: public IRValueNode {};
@@ -77,6 +87,41 @@ public:
 
     explicit IRRetStmtNode(IRValueNode* value_): value(value_) {}
     ~IRRetStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRBinaryStmtNode: public IRStmtNode {
+public:
+    std::string op;
+    IRVarNode* var = nullptr;
+    IRValueNode* lhs = nullptr;
+    IRValueNode* rhs = nullptr;
+
+    explicit IRBinaryStmtNode(std::string op_, IRVarNode* var_, IRValueNode* lhs_, IRValueNode* rhs_): 
+        op(op_), var(var_), lhs(lhs_), rhs(rhs_) {}
+    ~IRBinaryStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRLoadStmtNode: public IRStmtNode {
+public:
+    IRVarNode *var = nullptr, *ptr = nullptr;
+
+    explicit IRLoadStmtNode(IRVarNode* var_, IRVarNode* ptr_): var(var_), ptr(ptr_) {}
+    ~IRLoadStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRStoreStmtNode: public IRStmtNode {
+public:
+    IRValueNode* value = nullptr;
+    IRVarNode* ptr = nullptr;
+
+    explicit IRStoreStmtNode(IRValueNode* value_, IRVarNode* ptr_): value(value_), ptr(ptr_) {}
+    ~IRStoreStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };

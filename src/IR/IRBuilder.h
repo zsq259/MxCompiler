@@ -9,6 +9,7 @@
 
 class IRBuilder : public ASTBaseVisitor {
 private:
+    int count = 0;
     int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
     int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
     int whilecondCnt = 0, whilebodyCnt = 0, whileendCnt = 0;
@@ -45,8 +46,8 @@ public:
     void visitClassNode(ASTClassNode *node) override;
     void visitBlockNode(ASTBlockNode *node) override;
     void visitTypeNode(ASTTypeNode *node) override;
-    void visitStmtNode(ASTStmtNode *node) override;
-    void visitExprNode(ASTExprNode *node) override;
+    // void visitStmtNode(ASTStmtNode *node) override;
+    // void visitExprNode(ASTExprNode *node) override;
     
     IRLiteralNode* defaultValue(IRType *type);
     IRType* toIRType(ASTTypeNode *node);

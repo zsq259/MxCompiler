@@ -9,7 +9,10 @@ static IRIntType intType(32);
 static IRPtrType ptrType;
 static IRLiteralNode nullNode(&ptrType, 0);
 static IRLiteralNode intZeroNode(&intType, 0);
+static IRLiteralNode intOneNode(&intType, 1);
+static IRLiteralNode boolTrueNode(&boolType, 1);
 static IRLiteralNode boolFalseNode(&boolType, 0);
+
 
 IRType* IRBuilder::toIRType(ASTTypeNode *node) {
     if (!node) return &voidType;
@@ -221,17 +224,31 @@ void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
     else currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
 }
 
+void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {
+    auto tmp = new IRVarNode(std::to_string(++count));
+    currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, dynamic_cast<IRVarNode*>(astValueMap[node->expr])));
+    auto ret = new IRVarNode(std::to_string(++count));
+    if (node->op == "++") {
+        currentBlock->stmts.push_back(new IRBinaryStmtNode("add", ret, tmp, &intOneNode));
+    }
+    else {
+        currentBlock->stmts.push_back(new IRBinaryStmtNode("sub", ret, tmp, &intOneNode));
+    }
+    currentBlock->stmts.push_back(new IRStoreStmtNode(dynamic_cast<IRVarNode*>(astValueMap[node->expr]), ret));
+    if (node->right) astValueMap[node] = tmp;
+    else astValueMap[node] = ret;
+}
+
 void IRBuilder::visitClassNode(ASTClassNode *node) {}
 
 void IRBuilder::visitTypeNode(ASTTypeNode *node) {}
 
-void IRBuilder::visitStmtNode(ASTStmtNode *node) {}
 void IRBuilder::visitExprStmtNode(ASTExprStmtNode *node) {}
-void IRBuilder::visitExprNode(ASTExprNode *node) {}
 void IRBuilder::visitFuncExprNode(ASTFuncExprNode *node) {}
 void IRBuilder::visitArrayExprNode(ASTArrayExprNode *node) {}
 void IRBuilder::visitMemberExprNode(ASTMemberExprNode *node) {}
-void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {}
+
+
 void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {}
 void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {}
 void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode *node) {}
