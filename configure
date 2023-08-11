@@ -1,3 +1,6 @@
+cd antlr4
+antlr4 -no-listener -visitor -o ../MxAntlr MxLexer.g4 MxParser.g4 -Dlanguage=Cpp
+cd ..
 mkdir bin
 cd bin
 cmake ..
