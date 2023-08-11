@@ -30,7 +30,9 @@ ASTNode* getAST(std::istream &in = std::cin) {
 
 int main(int argc, char const *argv[]) {
 	vector<string> files;
-	for (int i = 1; i < argc; i++) { files.push_back(argv[i]); }
+	for (int i = 1; i < argc; i++) { 
+		if (argv[i][0] != '-') files.push_back(argv[i]); 
+	}
 	try {
 		AST ast;
     	if (files.empty()) { ast.root = getAST(); }

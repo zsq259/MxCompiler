@@ -14,9 +14,9 @@ include_directories(src/IR)
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
-add_executable(code ${sources})
+add_executable(mxc ${sources})
 
-target_link_libraries(code MxAntlr)
+target_link_libraries(mxc MxAntlr)
 
 set(TestdataPath "${PROJECT_SOURCE_DIR}/testcases")
 set(SemaPath "${TestdataPath}/sema")
@@ -27,7 +27,7 @@ foreach (test_file ${test_files})
     execute_process(COMMAND grep "Verdict: " "${SemaPath}/${test_file}" COMMAND sed "s/Verdict: //"
             OUTPUT_VARIABLE verdict)
     add_test(NAME ${testname}
-            COMMAND $<TARGET_FILE:code> ${SemaPath}/${test_file} "-fsyntax-only"
+            COMMAND $<TARGET_FILE:mxc> ${SemaPath}/${test_file} "-fsyntax-only"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/build")
     set_tests_properties(${testname} PROPERTIES LABELS "sema")
     if (NOT "${verdict}" STREQUAL "Success\n")

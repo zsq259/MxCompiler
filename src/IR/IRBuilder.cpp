@@ -279,7 +279,21 @@ void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {}
 
 void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode *node) {}
 void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {}
-void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {}
+
+void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
+    if (node->type.is_int()) {
+        astValueMap[node] = new IRLiteralNode(&intType, std::stoi(node->value));
+    }
+    else if (node->type.is_bool()) {
+        astValueMap[node] = new IRLiteralNode(&boolType, node->value == "true" ? 1 : 0);
+    }
+    else if (node->type.is_string()) {
+        
+    }
+    else if (node->type.is_null()) {
+        
+    }
+}
 
 void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {
     if (node->name == "this") {
