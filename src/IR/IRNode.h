@@ -146,7 +146,9 @@ public:
     IRValueNode* rhs = nullptr;
 
     explicit IRIcmpStmtNode(std::string op_, IRVarNode* var_, IRValueNode* lhs_, IRValueNode* rhs_): 
-        op(op_), var(var_), lhs(lhs_), rhs(rhs_) {}
+        op(op_), var(var_), lhs(lhs_), rhs(rhs_) {
+            if (op.find("icmp") == std::string::npos) op = "icmp " + op;
+        }
     ~IRIcmpStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
@@ -159,6 +161,17 @@ public:
 
     explicit IRTruncStmtNode(IRVarNode* var_, IRValueNode* value_): var(var_), value(value_) {}
     ~IRTruncStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRZextStmtNode: public IRStmtNode {
+public:
+    IRVarNode* var = nullptr;
+    IRValueNode *value = nullptr;
+
+    explicit IRZextStmtNode(IRVarNode* var_, IRValueNode* value_): var(var_), value(value_) {}
+    ~IRZextStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };

@@ -15,6 +15,24 @@ static IRLiteralNode intMinusOneNode(&intType, -1);
 static IRLiteralNode boolTrueNode(&boolType, 1);
 static IRLiteralNode boolFalseNode(&boolType, 0);
 
+void IRBuilder::init() {
+    opcode["+"] = "add";
+    opcode["-"] = "sub";
+    opcode["*"] = "mul";
+    opcode["/"] = "sdiv";
+    opcode["%"] = "srem";
+    opcode["<<"] = "shl";
+    opcode[">>"] = "ashr";
+    opcode["&"] = "and";
+    opcode["|"] = "or";
+    opcode["^"] = "xor";
+    opcode["<"] = "icmp slt";
+    opcode["<="] = "icmp sle";
+    opcode[">"] = "icmp sgt";
+    opcode[">="] = "icmp sge";
+    opcode["=="] = "icmp eq";
+    opcode["!="] = "icmp ne";
+}
 
 IRType* IRBuilder::toIRType(ASTTypeNode *node) {
     if (!node) return &voidType;
@@ -296,15 +314,61 @@ void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {
     else astValueMap[node] = ret;
 }
 
+IRValueNode* IRBuilder::setVariable(IRType* type, IRValueNode* value) {
+    if (value->type->to_string() != "ptr") return value;
+    auto tmp = new IRVarNode(type, std::to_string(count++));
+    currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, dynamic_cast<IRVarNode*>(value)));
+    return tmp;
+}
+
 void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
     auto type = toIRType(&(node->type));
     node->lhs->accept(this);
     node->rhs->accept(this);
-    auto lhs = astValueMap[node->lhs];
-    auto rhs = astValueMap[node->rhs];
-    auto ret = new IRVarNode(type, std::to_string(count++));
-    
+    auto lhs = setVariable(type, astValueMap[node->lhs]);
+    auto rhs = setVariable(type, astValueMap[node->rhs]);
+    IRVarNode* ret = nullptr;
+    auto op = opcode[node->op];
+    if (op.find("icmp") != std::string::npos) {
+        auto tmp = new IRVarNode(&i1Type, std::to_string(count++));
+        ret = new IRVarNode(type, std::to_string(count++));
+        currentBlock->stmts.push_back(new IRIcmpStmtNode(op, tmp, lhs, rhs));
+        currentBlock->stmts.push_back(new IRZextStmtNode(ret, tmp));
+    }
+    else {
+        ret = new IRVarNode(type, std::to_string(count++));
+        currentBlock->stmts.push_back(new IRBinaryStmtNode(op, ret, lhs, rhs));
+    }
+    astValueMap[node] = ret; 
+}
 
+void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode* node) {
+    auto type = toIRType(&(node->type));
+    node->cond->accept(this);
+    auto trueBlock = new IRBlockNode("ternary.true" + std::to_string(ternartytrueCnt++));
+    auto falseBlock = new IRBlockNode("ternary.false" + std::to_string(ternartyfalseCnt++));
+    auto endBlock = new IRBlockNode("ternary.end" + std::to_string(ternartyendCnt++));
+    setCondition(astValueMap[node->cond], trueBlock, falseBlock);
+    
+    auto ret = new IRVarNode(&ptrType, std::to_string(count++));
+    
+    currentFunction->blocks.push_back(trueBlock);
+    currentFunction->blocks.push_back(falseBlock);
+    currentFunction->blocks.push_back(endBlock);
+
+    currentBlock = trueBlock;
+    node->True->accept(this);
+    auto True = setVariable(type, astValueMap[node->True]);
+    currentBlock->stmts.push_back(new IRStoreStmtNode(True, ret));
+    currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+    
+    currentBlock = falseBlock;
+    node->False->accept(this);
+    auto False = setVariable(type, astValueMap[node->False]);
+    currentBlock->stmts.push_back(new IRStoreStmtNode(False, ret));
+    currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+    currentBlock = endBlock;
+    astValueMap[node] = ret;    
 }
 
 void IRBuilder::visitClassNode(ASTClassNode *node) {}
@@ -322,8 +386,15 @@ void IRBuilder::visitMemberExprNode(ASTMemberExprNode *node) {}
 
 void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {}
 
-void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode *node) {}
-void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {}
+
+void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {
+    auto type = toIRType(&(node->type));
+    node->lhs->accept(this);
+    auto lhs = dynamic_cast<IRVarNode*>(astValueMap[node->lhs]);
+    node->rhs->accept(this);
+    auto rhs = setVariable(type, astValueMap[node->rhs]);
+    currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs));
+}
 
 void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
     if (node->type.is_int()) {

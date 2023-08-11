@@ -59,6 +59,7 @@ int main(int argc, char const *argv[]) {
 		}
 		
 		IRBuilder irbuilder;
+
 		std::cerr << "okkkkk1\n";
 		irbuilder.visit(ast.root);
 		std::cerr << "okkkkk2\n";

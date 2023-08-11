@@ -114,7 +114,7 @@ std::string IRStoreStmtNode::to_string() {
 std::string IRIcmpStmtNode::to_string() {
     std::string ret = "";
     ret += var->to_string() + " = ";
-    ret += "icmp " + op + " " + lhs->type->to_string() + " " + lhs->to_string() + ", " + rhs->to_string();
+    ret += op + " " + lhs->type->to_string() + " " + lhs->to_string() + ", " + rhs->to_string();
     return ret;
 }
 
@@ -122,5 +122,12 @@ std::string IRTruncStmtNode::to_string() {
     std::string ret = "";
     ret += var->to_string() + " = ";
     ret += "trunc " + value->type->to_string() + " " + value->to_string() + " to " + var->type->to_string();
+    return ret;
+}
+
+std::string IRZextStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = ";
+    ret += "zext " + value->type->to_string() + " " + value->to_string() + " to " + var->type->to_string();
     return ret;
 }

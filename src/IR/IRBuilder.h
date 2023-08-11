@@ -13,6 +13,7 @@ private:
     int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
     int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
     int whilecondCnt = 0, whilebodyCnt = 0, whileendCnt = 0;
+    int ternartytrueCnt = 0, ternartyfalseCnt = 0, ternartyendCnt = 0;
     int returnCnt = 0;
     IRProgramNode *program = nullptr;
     IRClassNode* currentClass = nullptr;
@@ -22,9 +23,13 @@ private:
     IRVarNode* currentReturnVar = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;
     std::map<std::string, IRVarNode*> varMap;
+    std::map<std::string, std::string> opcode;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
+    IRBuilder() {
+        init();
+    }
     void visitContinueStmtNode(ASTContinueStmtNode *node) override;
     void visitTernaryExprNode(ASTTernaryExprNode *node) override;
     void visitAssignExprNode(ASTAssignExprNode *node) override;
@@ -53,11 +58,13 @@ public:
     // void visitStmtNode(ASTStmtNode *node) override;
     // void visitExprNode(ASTExprNode *node) override;
     
+    void init();
     IRLiteralNode* defaultValue(IRType *type);
     IRType* toIRType(ASTTypeNode *node);
     IRType* toIRType(Type *type);
     void print() { program->print(); }
     void setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2);
+    IRValueNode* setVariable(IRType* type, IRValueNode* value);
 };
 
 #endif
