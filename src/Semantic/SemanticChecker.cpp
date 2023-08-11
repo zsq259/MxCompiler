@@ -248,8 +248,11 @@ void SemanticChecker::visitTernaryExprNode(ASTTernaryExprNode *node) {
     node->True->accept(this);
     node->False->accept(this);
     
-    if (node->True->type == node->False->type) {
+    if (node->True->type.convertible(node->False->type)) {
         node->type = node->True->type;
+    }
+    else if (node->False->type.convertible(node->True->type)) {
+        node->type = node->False->type;
     }
     else throw semantic_error("type mismatch in ternary expression");
     
