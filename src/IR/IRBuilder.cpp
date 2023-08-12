@@ -6,6 +6,7 @@
 static IRVoidType voidType;
 static IRIntType boolType(32);
 static IRIntType intType(32);
+static IRIntType i8Type(8);
 static IRIntType i1Type(1);
 static IRPtrType ptrType;
 static IRLiteralNode nullNode(&ptrType, 0);
@@ -76,7 +77,7 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
     auto type = toIRType(node->type);
     if (!currentFunction) /* global */ {
         for (auto v: node->uniqueNameVars) {
-            auto var = new IRVarNode(type, v.first);
+            auto var = new IRGlobalVarNode(type, v.first);
             auto globalstmt = new IRGlobalVarStmtNode(static_cast<IRValueNode*>(defaultValue(type)), var);
             if (v.second) {
                 if (auto liter = dynamic_cast<ASTLiterExprNode*>(v.second)) {
@@ -97,7 +98,8 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
             currentBlock->stmts.push_back(new IRAllocaStmtNode(var, type));
             if (v.second) {
                 v.second->accept(this);
-                currentBlock->stmts.push_back(new IRStoreStmtNode(astValueMap[v.second], var));   
+                auto rhs = (node->type->name == "string")? astValueMap[v.second]: setVariable(type, astValueMap[v.second]);
+                currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var));   
             }
             varMap[v.first] = var;
         }
@@ -432,7 +434,7 @@ void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {
     node->lhs->accept(this);
     auto lhs = dynamic_cast<IRVarNode*>(astValueMap[node->lhs]);
     node->rhs->accept(this);
-    auto rhs = setVariable(type, astValueMap[node->rhs]);
+    auto rhs = node->type.is_string()? astValueMap[node->rhs]: setVariable(type, astValueMap[node->rhs]);
     currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs));
 }
 
@@ -444,7 +446,12 @@ void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
         astValueMap[node] = new IRLiteralNode(&boolType, node->value == "true" ? 1 : 0);
     }
     else if (node->type.is_string()) {
-        
+        auto value = node->value.substr(1, node->value.size() - 2);
+        auto type = new IRArrayType(value.size() + 1, &i8Type);
+        auto var = new IRGlobalVarNode(&ptrType, "_string" + std::to_string(counter["string"]++));
+        auto str = new IRStringNode(type, "c\"" + value + "\\00\"");
+        program->global_vars.push_back(new IRGlobalVarStmtNode(str, var));
+        astValueMap[node] = var;
     }
     else if (node->type.is_null()) {
         

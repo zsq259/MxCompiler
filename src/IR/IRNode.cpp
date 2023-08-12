@@ -5,6 +5,7 @@ std::string IRProgramNode::to_string() {
     for (auto g:global_vars) {
         ret += g->to_string() + "\n";
     }
+    ret += '\n';
     for (auto c:classes) {
         ret += c->to_string() + "\n";
     }
@@ -34,7 +35,7 @@ std::string IRVarNode::to_string() {
 
 std::string IRGlobalVarStmtNode::to_string() {
     std::string ret = "";
-    ret += "@" + var->name + " = global " + value->type->to_string() + " " + value->to_string() + "\n";
+    ret += var->to_string() + " = global " + value->type->to_string() + " " + value->to_string();
     return ret;
 }
 

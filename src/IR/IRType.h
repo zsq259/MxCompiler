@@ -33,6 +33,8 @@ class IRArrayType: public IRType {
 public:
     int length;
     IRType *type;
+
+    IRArrayType(int length_, IRType *type_): length(length_), type(type_) {}
     std::string to_string() override {
         return "[" + std::to_string(length) + " x " + type->to_string() + "]";
     }

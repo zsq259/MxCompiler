@@ -23,20 +23,19 @@ public:
     // std::string to_string() override;
 };
 
-class IRGlobalVarNode: public IRValueNode {
-public:
-    std::string name;
-
-    explicit IRGlobalVarNode(IRType* type_, std::string name_): IRValueNode(type_), name(name_) {}
-    void print() { std::cout << to_string(); };
-    std::string to_string() override;
-};
-
 class IRVarNode: public IRValueNode {
 public:
     std::string name;
 
     explicit IRVarNode(IRType* type_, std::string name_): IRValueNode(type_), name(name_) {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRGlobalVarNode: public IRVarNode {
+public:
+
+    explicit IRGlobalVarNode(IRType* type_, std::string name_): IRVarNode(type_, name_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -216,9 +215,8 @@ class IRStringNode: public IRLiteralNode {
 public:
     std::string str;
 
-    ~IRStringNode() { 
-        
-    }
+    explicit IRStringNode(IRType* type_, std::string str_): IRLiteralNode(type_, 0), str(str_) {}
+    ~IRStringNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -226,12 +224,12 @@ public:
 class IRGlobalVarStmtNode: public IRStmtNode {
 public:
     IRValueNode* value = nullptr;
-    IRVarNode* var = nullptr;
+    IRGlobalVarNode* var = nullptr;
 
     ~IRGlobalVarStmtNode() { 
         
     }
-    explicit IRGlobalVarStmtNode(IRValueNode* value_, IRVarNode* var_): value(value_), var(var_) {}
+    explicit IRGlobalVarStmtNode(IRValueNode* value_, IRGlobalVarNode* var_): value(value_), var(var_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
