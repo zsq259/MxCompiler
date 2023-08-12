@@ -26,8 +26,8 @@ public:
 class IRVarNode: public IRValueNode {
 public:
     std::string name;
-
-    explicit IRVarNode(IRType* type_, std::string name_): IRValueNode(type_), name(name_) {}
+    bool isConst = false;
+    explicit IRVarNode(IRType* type_, std::string name_, bool const_): IRValueNode(type_), name(name_), isConst(const_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -35,7 +35,7 @@ public:
 class IRGlobalVarNode: public IRVarNode {
 public:
 
-    explicit IRGlobalVarNode(IRType* type_, std::string name_): IRVarNode(type_, name_) {}
+    explicit IRGlobalVarNode(IRType* type_, std::string name_, bool const_): IRVarNode(type_, name_, const_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
