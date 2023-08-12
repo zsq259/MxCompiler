@@ -9,13 +9,6 @@
 
 class IRBuilder : public ASTBaseVisitor {
 private:
-    int count = 0;
-    int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
-    int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
-    int whilecondCnt = 0, whilebodyCnt = 0, whileendCnt = 0;
-    int logicCnt = 0, logicendCnt = 0;
-    int ternartytrueCnt = 0, ternartyfalseCnt = 0, ternartyendCnt = 0;
-    int returnCnt = 0;
     IRProgramNode *program = nullptr;
     IRClassNode* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
@@ -25,6 +18,7 @@ private:
     std::map<ASTNode*, IRValueNode*> astValueMap;
     std::map<std::string, IRVarNode*> varMap;
     std::map<std::string, std::string> opcode;
+    std::map<std::string, int> counter;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
