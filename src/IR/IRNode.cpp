@@ -131,3 +131,25 @@ std::string IRZextStmtNode::to_string() {
     ret += "zext " + value->type->to_string() + " " + value->to_string() + " to " + var->type->to_string();
     return ret;
 }
+
+std::string IRCallStmtNode::to_string() {
+    std::string ret = "";
+    if (var) ret += var->to_string() + " = ";
+    ret += "call " + (var? var->type->to_string(): "void") + " @" + funcName + "(";
+    for (int i = 0, k = args.size(); i < k; ++i) {
+        if (i < k - 1) ret += args[i]->type->to_string() + " " + args[i]->to_string() + ", ";
+        else ret += args[i]->type->to_string() + " " + args[i]->to_string();
+    }
+    ret += ")";
+    return ret;
+}
+
+std::string IRPhiStmtNode::to_string() {
+    std::string ret = "";
+    ret += var->to_string() + " = phi " + var->type->to_string() + " ";
+    for (int i = 0, k = values.size(); i < k; ++i) {
+        if (i < k - 1) ret += "[ " + values[i].first->to_string() + ", %" + values[i].second + " ], ";
+        else ret += "[ " + values[i].first->to_string() + ", %" + values[i].second + " ]";
+    }
+    return ret;
+}

@@ -13,6 +13,7 @@ private:
     int ifthenCnt = 0, ifelseCnt = 0, ifendCnt = 0;
     int forcondCnt = 0, forbodyCnt = 0, forstepCnt = 0, forendCnt = 0;
     int whilecondCnt = 0, whilebodyCnt = 0, whileendCnt = 0;
+    int logicCnt = 0, logicendCnt = 0;
     int ternartytrueCnt = 0, ternartyfalseCnt = 0, ternartyendCnt = 0;
     int returnCnt = 0;
     IRProgramNode *program = nullptr;
@@ -54,7 +55,7 @@ public:
     void visitIfStmtNode(ASTIfStmtNode *node) override;
     void visitClassNode(ASTClassNode *node) override;
     void visitBlockNode(ASTBlockNode *node) override;
-    void visitTypeNode(ASTTypeNode *node) override;
+    // void visitTypeNode(ASTTypeNode *node) override;
     // void visitStmtNode(ASTStmtNode *node) override;
     // void visitExprNode(ASTExprNode *node) override;
     

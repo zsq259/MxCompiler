@@ -176,6 +176,30 @@ public:
     std::string to_string() override;
 };
 
+class IRCallStmtNode: public IRStmtNode {
+public:
+    IRVarNode* var = nullptr;
+    std::string funcName;
+    std::vector<IRValueNode*> args;
+
+    explicit IRCallStmtNode(IRVarNode* var_, std::string funcName_): 
+        var(var_), funcName(funcName_) {}
+    ~IRCallStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRPhiStmtNode: public IRStmtNode {
+public:
+    IRVarNode* var = nullptr;
+    std::vector<std::pair<IRValueNode*, std::string>> values;
+
+    explicit IRPhiStmtNode(IRVarNode* var_): var(var_) {}
+    ~IRPhiStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLiteralNode: public IRValueNode {
 public:
     int value;
