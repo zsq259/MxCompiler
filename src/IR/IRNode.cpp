@@ -167,7 +167,7 @@ std::string IRPhiStmtNode::to_string() {
 
 std::string IRGetElementPtrStmtNode::to_string() {
     std::string ret = "";
-    ret += var->to_string() + " = getelementptr " + var->type->to_string();
+    ret += var->to_string() + " = getelementptr " + type->to_string();
     ret += ", ptr " + ptr->to_string() + ", i32 " + index->to_string();
     return ret;
 }

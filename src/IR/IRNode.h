@@ -203,9 +203,10 @@ class IRGetElementPtrStmtNode: public IRStmtNode {
 public:
     IRVarNode *var = nullptr, *ptr = nullptr;
     IRValueNode* index = nullptr;
+    IRType* type;
 
-    explicit IRGetElementPtrStmtNode(IRVarNode* var_, IRVarNode* ptr_, IRValueNode* index_): 
-        var(var_), ptr(ptr_), index(index_) {}
+    explicit IRGetElementPtrStmtNode(IRVarNode* var_, IRVarNode* ptr_, IRValueNode* index_, IRType* type_): 
+        var(var_), ptr(ptr_), index(index_), type(type_) {}
     ~IRGetElementPtrStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
