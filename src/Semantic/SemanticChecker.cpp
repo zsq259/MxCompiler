@@ -259,6 +259,9 @@ void SemanticChecker::visitTernaryExprNode(ASTTernaryExprNode *node) {
 }
 
 void SemanticChecker::visitAssignExprNode(ASTAssignExprNode *node) {
+    if (auto l = dynamic_cast<ASTAtomExprNode*>(node->lhs)) {
+        if (l->name == "this") throw semantic_error("cannot assign to this");
+    }
     node->lhs->accept(this);
     node->rhs->accept(this);
     if (!node->lhs->type.assignable(node->rhs->type)) {

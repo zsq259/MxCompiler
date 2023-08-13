@@ -72,10 +72,12 @@ IRValueNode* IRBuilder::defaultValue(IRType *type) {
 
 void IRBuilder::registerClass(ASTClassNode *node) {
     auto clstype = new IRStructType;
+    int cnt = 0;
     for (auto vars: node->variables) {
         auto type = toIRType(vars->type);
-        for (auto v: vars->vars) {
+        for (auto v: vars->uniqueNameVars) {
             clstype->elements.push_back(type);
+            memberIndex[node->name + "." + v.first] = cnt++;
         }
     }
     auto cls = new IRClassType(node->name, clstype);
@@ -242,7 +244,7 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
     func->blocks.push_back(new IRBlockNode("entry"));
     currentFunction = func;
     currentBlock = func->blocks.front();
-    if (node->name == "main") {
+    if (node->name == "main" && !varInitList.empty()) {
         auto call = new IRCallStmtNode(nullptr, "__.init");
         currentBlock->stmts.push_back(call);
     }
@@ -560,8 +562,10 @@ void IRBuilder::visitFuncExprNode(ASTFuncExprNode *node) {
     IRCallStmtNode* call = nullptr;
     if (auto func = dynamic_cast<ASTAtomExprNode*>(node->func)) call = new IRCallStmtNode(var, func->name);
     else {
+        auto func1 = dynamic_cast<ASTMemberExprNode*>(node->func);
         node->func->accept(this);
-        call = new IRCallStmtNode(var, "");
+        call = new IRCallStmtNode(var, memberFuncMap[func1]);
+        call->args.push_back(setVariable(&ptrType, astValueMap[func1]));
     }
     for (auto arg: node->args) {
         arg->accept(this);
@@ -571,10 +575,37 @@ void IRBuilder::visitFuncExprNode(ASTFuncExprNode *node) {
     astValueMap[node] = var;
 }
 
-void IRBuilder::visitArrayExprNode(ASTArrayExprNode *node) {}
-void IRBuilder::visitMemberExprNode(ASTMemberExprNode *node) {}
+void IRBuilder::visitArrayExprNode(ASTArrayExprNode *node) {
+    auto type = toIRType(&(node->type));
 
-void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {}
+    node->array->accept(this);
+    auto array = setVariable(&ptrType, astValueMap[node->array]);
+    
+    node->index->accept(this);
+    auto index = setVariable(&intType, astValueMap[node->index]);
+    
+    auto ret = new IRVarNode(type, "_array.tmp" + std::to_string(counter["array.tmp"]++), true);
+    currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ret, dynamic_cast<IRVarNode*>(array), index));
+    astValueMap[node] = ret;
+
+}
+
+void IRBuilder::visitMemberExprNode(ASTMemberExprNode *node) {
+    auto type = toIRType(&(node->type));
+    if (memberIndex.count(node->object->type.name + "." + node->member)) {
+        node->object->accept(this);
+        auto object = setVariable(&ptrType, astValueMap[node->object]);
+        auto index = new IRLiteralNode(&intType, memberIndex[node->object->type.name + "." + node->member]);
+        auto ret = new IRVarNode(type, "_member.tmp" + std::to_string(counter["member.tmp"]++), false);
+        currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ret, dynamic_cast<IRVarNode*>(object), index));
+        astValueMap[node] = ret;
+    }
+    else {
+        node->object->accept(this);
+        astValueMap[node] = setVariable(&ptrType, astValueMap[node->object]);
+        memberFuncMap[node] = node->object->type.name + "." + node->member;
+    }
+}
 
 void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {
     auto type = toIRType(&(node->type));
@@ -606,21 +637,21 @@ void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
         astValueMap[node] = var;
     }
     else if (node->type.is_null()) {
-        
+        astValueMap[node] = &nullNode;
     }
 }
 
 void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {
-    if (node->name == "this") {
-    
-    }
+    if (!currentClass || !memberIndex.count(currentClass->name + "." + node->uniqueName)) astValueMap[node] = varMap[node->uniqueName];
     else {
-        astValueMap[node] = varMap[node->uniqueName];
+        auto thisClass = new IRVarNode(&ptrType, "this", true);
+        auto index = new IRLiteralNode(&intType, memberIndex[currentClass->name + "." + node->uniqueName]);
+        auto ret = new IRVarNode(toIRType(&(node->type)), "_member.tmp" + std::to_string(counter["member.tmp"]++), false);
+        currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ret, thisClass, index));
+        astValueMap[node] = ret;
     }
 }
 
-
-
-
+void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {}
 
 void IRBuilder::visitNewTypeNode(ASTNewTypeNode *node) {}

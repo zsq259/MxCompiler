@@ -19,8 +19,10 @@ private:
     std::map<std::string, IRVarNode*> varMap;
     std::map<std::string, std::string> opcode, stropcode;
     std::map<std::string, int> counter;
+    std::map<std::string, int> memberIndex;
     std::map<std::string, IRGlobalVarNode*> stringMap;
     std::map<std::string, IRClassType*> classMap;
+    std::map<ASTMemberExprNode*, std::string> memberFuncMap;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:

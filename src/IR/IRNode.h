@@ -199,6 +199,18 @@ public:
     std::string to_string() override;
 };
 
+class IRGetElementPtrStmtNode: public IRStmtNode {
+public:
+    IRVarNode *var = nullptr, *ptr = nullptr;
+    IRValueNode* index = nullptr;
+
+    explicit IRGetElementPtrStmtNode(IRVarNode* var_, IRVarNode* ptr_, IRValueNode* index_): 
+        var(var_), ptr(ptr_), index(index_) {}
+    ~IRGetElementPtrStmtNode() {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRLiteralNode: public IRValueNode {
 public:
     int value;
