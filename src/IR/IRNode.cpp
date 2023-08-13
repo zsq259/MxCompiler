@@ -92,7 +92,7 @@ std::string IRBrStmtNode::to_string() {
 
 std::string IRRetStmtNode::to_string() {
     std::string ret = "";
-    ret += "ret" + (var ? " " + var->type->to_string() + " " + var->to_string() : "void");
+    ret += "ret " + (var ? var->type->to_string() + " " + var->to_string() : "void");
     return ret;
 }
 
@@ -164,3 +164,4 @@ std::string IRPhiStmtNode::to_string() {
     }
     return ret;
 }
+

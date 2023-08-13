@@ -29,6 +29,8 @@ public:
     int size() override { return 4; }
 };
 
+class IRStringType: public IRPtrType {};
+
 class IRArrayType: public IRType {
 public:
     int length;

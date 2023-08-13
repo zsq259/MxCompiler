@@ -56,7 +56,7 @@ public:
     // void visitExprNode(ASTExprNode *node) override;
     
     void init();
-    IRLiteralNode* defaultValue(IRType *type);
+    IRValueNode* defaultValue(IRType *type);
     IRType* toIRType(ASTTypeNode *node);
     IRType* toIRType(Type *type);
     void print() { program->print(); }
@@ -64,6 +64,8 @@ public:
     IRValueNode* setVariable(IRType* type, IRValueNode* value);
     void registerClass(ASTClassNode *node);
     void initBuiltin();
+    void initEmptyString();
+    void initGlobalVar();
 };
 
 #endif
