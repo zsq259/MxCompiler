@@ -45,7 +45,7 @@ class IRStructType: public IRType {
 public:
     std::vector<IRType *> elements;
     std::string to_string() override {
-        std::string ret = "{ ";
+        std::string ret = "type { ";
         for (int i = 0, n = elements.size(); i < n; ++i) {
             if (i < n - 1) ret += elements[i]->to_string() + ", ";
             else ret += elements[i]->to_string();
@@ -59,6 +59,16 @@ public:
         for (auto element : elements) ret += element->size();
         return ret;
     }
+};
+
+class IRClassType: public IRType {
+public:
+    std::string name;
+    IRStructType* type;
+
+    explicit IRClassType(std::string name_, IRStructType* type_): name(name_), type(type_) {}
+    std::string to_string() override { return "%class." + name; }
+    int size() override { return type->size(); }
 };
 
 #endif

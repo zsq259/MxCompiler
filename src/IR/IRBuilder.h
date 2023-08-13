@@ -10,16 +10,17 @@
 class IRBuilder : public ASTBaseVisitor {
 private:
     IRProgramNode *program = nullptr;
-    IRClassNode* currentClass = nullptr;
+    IRClassType* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
     IRBlockNode *currentBlock = nullptr, *currentCondBlock = nullptr, *currentEndBlock = nullptr;
     IRBlockNode* currentReturnBlock = nullptr;
     IRVarNode* currentReturnVar = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;
     std::map<std::string, IRVarNode*> varMap;
-    std::map<std::string, std::string> opcode;
+    std::map<std::string, std::string> opcode, stropcode;
     std::map<std::string, int> counter;
     std::map<std::string, IRGlobalVarNode*> stringMap;
+    std::map<std::string, IRClassType*> classMap;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
@@ -61,6 +62,8 @@ public:
     void print() { program->print(); }
     void setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2);
     IRValueNode* setVariable(IRType* type, IRValueNode* value);
+    void registerClass(ASTClassNode *node);
+    void initBuiltin();
 };
 
 #endif

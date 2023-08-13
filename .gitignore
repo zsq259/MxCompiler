@@ -1,9 +1,12 @@
 testcases/
 build/
 bin/
+test/
 .vscode/
 bugs.md
 test.txt
+*.in
 *.out
 *.ll
+*.bash
 run

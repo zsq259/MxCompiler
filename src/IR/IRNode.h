@@ -234,6 +234,15 @@ public:
     std::string to_string() override;
 };
 
+class IRClassStmtNode: public IRStmtNode {
+public:
+    IRClassType *type = nullptr;
+
+    explicit IRClassStmtNode(IRClassType* type_): type(type_) {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
 class IRFunctionNode: public IRNode {
 public:
     IRType* retType = nullptr;
@@ -265,7 +274,7 @@ public:
 
 class IRProgramNode: public IRNode {
 public:
-    std::vector<IRClassNode *> classes;
+    std::vector<IRClassStmtNode *> classes;
     std::vector<IRFunctionNode *> functions;
     std::vector<IRGlobalVarStmtNode *> global_vars;
 
