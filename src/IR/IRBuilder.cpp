@@ -690,9 +690,10 @@ void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {
 }
 
 IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
+    node->size[index]->accept(this);
+    auto size = setVariable(&intType, astValueMap[node->size[index]]);
     if (index == node->size.size() - 1) {
-        node->size[index]->accept(this);
-        auto size = setVariable(&intType, astValueMap[node->size[index]]);
+        
         auto ptr = new IRVarNode(&ptrType, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
         IRCallStmtNode* call = nullptr;
         if (node->dim > node->size.size()) call = new IRCallStmtNode(ptr, "__newPtrArray");
@@ -706,7 +707,34 @@ IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
         return ptr;
     }
     else {
+        auto ptr = new IRVarNode(&ptrType, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
+        auto call = new IRCallStmtNode(ptr, "__newPtrArray");
+        call->args.push_back(size);
+        currentBlock->stmts.push_back(call);
 
+        auto block = new IRBlockNode("_new.array" + std::to_string(counter["new.array"]++));
+        auto endBlock = new IRBlockNode("_new.array.end" + std::to_string(counter["new.array.end"]++));
+        currentFunction->blocks.push_back(block);
+        currentBlock->stmts.push_back(new IRBrStmtNode(block->label));
+        std::string fromBlock = currentBlock->label;
+        currentBlock = block;
+        auto i = new IRVarNode(&intType, "_new.i" + std::to_string(counter["new.i"]++), true);
+        auto phi = new IRPhiStmtNode(i);
+        phi->values.emplace_back(&intZeroNode, fromBlock);
+        currentBlock->stmts.push_back(phi);
+        auto next = new IRVarNode(&intType, "_new.next" + std::to_string(counter["new.next"]++), true);
+        currentBlock->stmts.push_back(new IRBinaryStmtNode("add", next, i, &intOneNode));
+        auto retPtr = mallocNewArray(node, index + 1);
+        auto ind = new IRVarNode(&ptrType, "_new.ind" + std::to_string(counter["new.ind"]++), true);
+        currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ind, ptr, i, &ptrType));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(retPtr, ind));
+        phi->values.emplace_back(next, currentBlock->label);
+        auto tmp = new IRVarNode(&i1Type, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
+        currentBlock->stmts.push_back(new IRIcmpStmtNode("icmp slt", tmp, next, size));
+        currentBlock->stmts.push_back(new IRBrCondStmtNode(tmp, block->label, endBlock->label));
+        currentBlock = endBlock;
+        currentFunction->blocks.push_back(endBlock);
+        return ptr;
     }
 }
 
