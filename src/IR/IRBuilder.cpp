@@ -695,9 +695,12 @@ IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
         auto size = setVariable(&intType, astValueMap[node->size[index]]);
         auto ptr = new IRVarNode(&ptrType, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
         IRCallStmtNode* call = nullptr;
-        if (node->name == "int") call = new IRCallStmtNode(ptr, "__newIntArray");
-        else if (node->name == "bool") call = new IRCallStmtNode(ptr, "__newBoolArray");
-        else call = new IRCallStmtNode(ptr, "__newPtrArray");
+        if (node->dim > node->size.size()) call = new IRCallStmtNode(ptr, "__newPtrArray");
+        else {
+            if (node->name == "int") call = new IRCallStmtNode(ptr, "__newIntArray");
+            else if (node->name == "bool") call = new IRCallStmtNode(ptr, "__newBoolArray");
+            else call = new IRCallStmtNode(ptr, "__newPtrArray");
+        }
         call->args.push_back(size);
         currentBlock->stmts.push_back(call);
         return ptr;
