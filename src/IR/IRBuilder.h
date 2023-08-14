@@ -69,7 +69,7 @@ public:
     void initBuiltin();
     void initEmptyString();
     void initGlobalVar();
-    IRVarNode* mallocNewArray(ASTNewTypeNode* node);
+    IRVarNode* mallocNewArray(ASTNewTypeNode* node, int index);
 };
 
 #endif

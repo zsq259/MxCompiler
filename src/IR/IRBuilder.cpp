@@ -440,6 +440,9 @@ void IRBuilder::visitContinueStmtNode(ASTContinueStmtNode *node) {
 
 void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {
     currentBlock->stmts.push_back(new IRBrStmtNode(currentEndBlock->label));
+    auto block = new IRBlockNode("_break" + std::to_string(counter["break"]++));
+    currentFunction->blocks.push_back(block);
+    currentBlock = block;
 }
 
 void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
@@ -454,20 +457,20 @@ void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
 
 void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {
     auto type = toIRType(&(node->type));
-    auto tmp = new IRVarNode(type, "_single.tmp" + std::to_string(counter["single.tmp"]++), true);
     node->expr->accept(this);
-    auto expr = dynamic_cast<IRVarNode*>(astValueMap[node->expr]);
-    if (!expr) throw std::runtime_error("not a lvalue");
-
-    currentBlock->stmts.push_back(new IRLoadStmtNode(tmp, expr));
+    auto tmp = setVariable(toIRType(&(node->expr->type)), astValueMap[node->expr]);
     
     auto ret = new IRVarNode(type, "_single.return.tmp" + std::to_string(counter["single.return.tmp"]++), true);
     if (node->op == "++") {
         currentBlock->stmts.push_back(new IRBinaryStmtNode("add", ret, tmp, &intOneNode));
+        auto expr = dynamic_cast<IRVarNode*>(astValueMap[node->expr]);
+        if (!expr) throw std::runtime_error("++ not a value");
         currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr));
     }
     else if (node->op == "--") {
         currentBlock->stmts.push_back(new IRBinaryStmtNode("sub", ret, tmp, &intOneNode));
+        auto expr = dynamic_cast<IRVarNode*>(astValueMap[node->expr]);
+        if (!expr) throw std::runtime_error("-- not a value");
         currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr));
     }
     else if (node->op == "-") {
@@ -686,10 +689,10 @@ void IRBuilder::visitAtomExprNode(ASTAtomExprNode *node) {
     }
 }
 
-IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node) {
-    if (node->size.size() == 1) {
-        node->size[0]->accept(this);
-        auto size = setVariable(&intType, astValueMap[node->size[0]]);
+IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
+    if (index == node->size.size() - 1) {
+        node->size[index]->accept(this);
+        auto size = setVariable(&intType, astValueMap[node->size[index]]);
         auto ptr = new IRVarNode(&ptrType, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
         IRCallStmtNode* call = nullptr;
         if (node->name == "int") call = new IRCallStmtNode(ptr, "__newIntArray");
@@ -715,6 +718,6 @@ void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {
         astValueMap[node] = ret;
     }
     else {
-        astValueMap[node] = mallocNewArray(node->newType);
+        astValueMap[node] = mallocNewArray(node->newType, 0);
     }
 }
