@@ -106,3 +106,28 @@ char *string_concat(char *this_, char *other) {
 	return buffer;
 }
 
+void *__newPtrArray(int size) {
+#ifdef HOST
+	int *array = malloc((size << 3) + 4);
+#else
+	int *array = malloc((size << 2) + 4);
+#endif
+	array[0] = size;
+	return array + 1;
+}
+
+void *__newIntArray(int size) {
+	int *array = malloc((size << 2) + 4);
+	array[0] = size;
+	return array + 1;
+}
+
+void *__newBoolArray(int size) {
+	#ifdef __bool_32
+	int *array = malloc((size << 2)+ 4);
+	#else
+	int *array = malloc(size + 4);
+	#endif
+	array[0] = size;
+	return array + 1;
+}

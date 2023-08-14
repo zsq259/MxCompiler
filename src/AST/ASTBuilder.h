@@ -4,6 +4,7 @@
 
 class ASTBuilder: public MxParserBaseVisitor {
 private:
+    bool returnFlag = false;
     virtual std::any visitProgram(MxParser::ProgramContext *ctx) override;
     virtual std::any visitClassDef(MxParser::ClassDefContext *ctx) override;
     // virtual std::any visitClassSuite(MxParser::ClassSuiteContext *ctx) override;

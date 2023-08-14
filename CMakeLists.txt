@@ -18,6 +18,7 @@ include_directories(src/IR)
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
+add_definitions(-D__bool_32)
 add_executable(mxc ${sources})
 
 target_link_libraries(mxc MxAntlr)

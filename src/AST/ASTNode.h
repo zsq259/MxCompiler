@@ -191,6 +191,8 @@ class ASTLiterExprNode: public ASTExprNode {
 public:
     string value;
 
+    ASTLiterExprNode() = default;
+    ASTLiterExprNode(string value_): value(value_) {}
     ~ASTLiterExprNode() override = default;
     std::string NodeType() override { return "ASTLiterExprNode"; }
     void accept(ASTBaseVisitor *visitor) override { return visitor->visitLiterExprNode(this); }

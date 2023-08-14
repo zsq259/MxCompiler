@@ -9,6 +9,7 @@ private:
     Scope *scope = nullptr;
     ASTFunctionNode *currentFunction = nullptr;
     int loopDepth = 0;
+    bool returnFlag = false;
 public:
     explicit SemanticChecker(GlobalScope *globalScope_): globalScope(globalScope_), scope(globalScope_) {}
     void visitProgramNode(ASTProgramNode *node)           override;

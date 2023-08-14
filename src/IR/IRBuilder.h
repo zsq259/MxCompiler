@@ -46,7 +46,7 @@ public:
     void visitExprStmtNode(ASTExprStmtNode *node) override;
     void visitFuncExprNode(ASTFuncExprNode *node) override;
     void visitVarStmtNode(ASTVarStmtNode *node) override;
-    void visitNewTypeNode(ASTNewTypeNode *node) override;
+    // void visitNewTypeNode(ASTNewTypeNode *node) override;
     void visitNewExprNode(ASTNewExprNode *node) override;
     void visitForStmtNode(ASTForStmtNode *node) override;
     void visitProgramNode(ASTProgramNode *node) override;
@@ -61,6 +61,7 @@ public:
     IRValueNode* defaultValue(IRType *type);
     IRType* toIRType(ASTTypeNode *node);
     IRType* toIRType(Type *type);
+    IRType* toIRType(std::string str);
     void print() { program->print(); }
     void setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2);
     IRValueNode* setVariable(IRType* type, IRValueNode* value);
@@ -68,6 +69,7 @@ public:
     void initBuiltin();
     void initEmptyString();
     void initGlobalVar();
+    IRVarNode* mallocNewArray(ASTNewTypeNode* node);
 };
 
 #endif

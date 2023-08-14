@@ -2,6 +2,7 @@ testcases/
 build/
 bin/
 test/
+Testing/
 .vscode/
 bugs.md
 test.txt

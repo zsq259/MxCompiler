@@ -49,6 +49,12 @@ std::any ASTBuilder::visitFunctionDef(MxParser::FunctionDefContext *ctx) {
         node->paras = *any_cast<vector<pair<ASTTypeNode*, string>>>(&res);
     }
     node->block = dynamic_cast<ASTBlockNode*>(any_cast<ASTStmtNode*>(visit(ctx->block())));
+    if (node->name == "main" && !returnFlag) {
+        auto ret = new ASTReturnStmtNode;
+        ret->expr = new ASTLiterExprNode("0");
+        node->block->stmts.push_back(ret);
+    }
+    returnFlag = false;
     return node;
 }
 
@@ -174,6 +180,7 @@ std::any ASTBuilder::visitFlowStmt(MxParser::FlowStmtContext *ctx) {
         if (ctx->expression()) node_->expr = any_cast<ASTExprNode*>(visit(ctx->expression()));
         else node_->expr = nullptr;
         node = node_;
+        returnFlag = true;
     }
     return node;
 }

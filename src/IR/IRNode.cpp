@@ -18,6 +18,7 @@ std::string IRProgramNode::to_string() {
 std::string IRLiteralNode::to_string() {
     if (type->to_string() == "i32") return std::to_string(value);
     if (type->to_string() == "i1") return value ? "true" : "false";
+    if (type->to_string() == "ptr") return "null";
     return "";
 }
 

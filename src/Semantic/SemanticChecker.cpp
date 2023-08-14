@@ -39,6 +39,9 @@ void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
             scope->addVariable(p.second, Type(p.first->name, p.first->dim));
         }
         visitBlockWithScope(node->block, this);
+        if (!returnFlag && node->type.name != "void") {
+            throw semantic_error("function must return");
+        }
     } 
     catch (semantic_error &e) {
         delete scope;
@@ -53,6 +56,7 @@ void SemanticChecker::visitFunctionNode(ASTFunctionNode *node) {
     delete scope;
     scope = currentScope;
     currentFunction = nullptr;
+    returnFlag = false;
 }
 
 void SemanticChecker::visitTypeNode(ASTTypeNode *node) {
@@ -76,8 +80,6 @@ void SemanticChecker::visitBlockNode(ASTBlockNode *node) {
     delete scope;
     scope = currentScope;
 }
-
-// void SemanticChecker::visitStmtNode(ASTStmtNode *node) {}
 
 void SemanticChecker::visitExprStmtNode(ASTExprStmtNode *node) {
     for (auto e: node->exprs) e->accept(this);
@@ -341,7 +343,6 @@ void SemanticChecker::visitForStmtNode(ASTForStmtNode *node) {
     scope = currentScope;
 }
 
-// void SemanticChecker::visitFlowStmtNode(ASTFlowStmtNode *node)         {}
 void SemanticChecker::visitContinueStmtNode(ASTContinueStmtNode *node) {
     if (!loopDepth) throw semantic_error("continue must be in loop");
     
@@ -364,6 +365,7 @@ void SemanticChecker::visitReturnStmtNode(ASTReturnStmtNode *node) {
     else {
         if (node->expr) throw semantic_error("return type not match");
     }
+    returnFlag = true;
 }
 
 void SemanticChecker::visitVarStmtNode(ASTVarStmtNode *node) {
