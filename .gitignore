@@ -9,5 +9,4 @@ test.txt
 *.in
 *.out
 *.ll
-*.bash
 run
