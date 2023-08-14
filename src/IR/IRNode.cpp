@@ -23,7 +23,15 @@ std::string IRLiteralNode::to_string() {
 }
 
 std::string IRStringNode::to_string() {
-    return str;
+    std::string ret = "c\"";
+    for (auto c: str) {
+        if (c == '\n') ret += "\\0A";
+        else if (c == '\\') ret += "\\\\";
+        else if (c == '\"') ret += "\\22";
+        else ret += c;
+    }
+    ret += "\\00\"";
+    return ret;
 }
 
 std::string IRGlobalVarNode::to_string() {

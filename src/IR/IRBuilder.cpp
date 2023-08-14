@@ -182,7 +182,7 @@ void IRBuilder::initBuiltin() {
 void IRBuilder::initEmptyString() {
     auto type = new IRArrayType(1, &i8Type);
     auto var = new IRGlobalVarNode(&ptrType, "_string" + std::to_string(counter["string"]++), true);
-    auto str = new IRStringNode(type, "c\"\\00\"");
+    auto str = new IRStringNode(type, "");
     program->global_vars.push_back(new IRGlobalVarStmtNode(str, var));
     stringMap[""] = var;
 }
@@ -670,9 +670,20 @@ void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
             astValueMap[node] = stringMap[value];
             return;
         }
-        auto type = new IRArrayType(value.size() + 1, &i8Type);
+        std::string ret = "";
+        for (int i = 0, k = value.size(); i < k; ++i) {
+            if (value[i] != '\\') ret += value[i];
+            else {
+                ++i;
+                if (value[i] == 'n') ret += "\n";
+                else if (value[i] == '\\') ret += "\\";
+                else if (value[i] == '"') ret += "\"";
+                else throw std::runtime_error("invalid string");
+            }
+        }
+        auto type = new IRArrayType(ret.size() + 1, &i8Type);
         auto var = new IRGlobalVarNode(&ptrType, "_string" + std::to_string(counter["string"]++), true);
-        auto str = new IRStringNode(type, "c\"" + value + "\\00\"");
+        auto str = new IRStringNode(type, ret);
         program->global_vars.push_back(new IRGlobalVarStmtNode(str, var));
         stringMap[value] = var;
         astValueMap[node] = var;
