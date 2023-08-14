@@ -174,6 +174,9 @@ void IRBuilder::initBuiltin() {
     f = new IRFunctionNode(&ptrType, "__newBoolArray");
     f->args.emplace_back(&intType, "size");
     program->functions.push_back(f);
+    f = new IRFunctionNode(&ptrType, "array.size");
+    f->args.emplace_back(&ptrType, "array");
+    program->functions.push_back(f);
 }
 
 void IRBuilder::initEmptyString() {
@@ -640,7 +643,8 @@ void IRBuilder::visitMemberExprNode(ASTMemberExprNode *node) {
     else {
         node->object->accept(this);
         astValueMap[node] = setVariable(&ptrType, astValueMap[node->object]);
-        memberFuncMap[node] = node->object->type.name + "." + node->member;
+        if (node->object->type.dim) memberFuncMap[node] = "array.size";
+        else  memberFuncMap[node] = node->object->type.name + "." + node->member;
     }
 }
 

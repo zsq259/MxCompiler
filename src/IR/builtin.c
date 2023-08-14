@@ -131,3 +131,7 @@ void *__newBoolArray(int size) {
 	array[0] = size;
 	return array + 1;
 }
+
+int array_size(void *this_) {
+	return ((int*)this_)[-1];
+}
