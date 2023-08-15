@@ -64,7 +64,7 @@ std::string IRFunctionNode::to_string() {
         else ret += args[i].first->to_string() + " %" + args[i].second;
     }
     ret += ")";
-    if (blocks.empty()) return ret; 
+    if (blocks.empty()) return ret;
     ret += "{\n";
     for (auto b:blocks) {
         ret += b->to_string() + "\n";
@@ -77,6 +77,8 @@ std::string IRBlockNode::to_string() {
     std::string ret = "";
     ret += label + ":\n";
     for (auto s:stmts) {
+        if (label == "_ternary.true1") {
+        }
         ret += "  " + s->to_string() + "\n";
     }
     return ret;

@@ -122,6 +122,7 @@ void *__newIntArray(int size) {
 	return array + 1;
 }
 
+#define __bool_32
 void *__newBoolArray(int size) {
 	#ifdef __bool_32
 	int *array = malloc((size << 2)+ 4);

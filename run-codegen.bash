@@ -9,7 +9,7 @@ exitCode=$(grep 'ExitCode:' "$2" | sed 's/ExitCode: //g')
 echo 'compile to llvm IR'
 $1 -emit-llvm $2 >test.ll
 echo 'compile to binary'
-clang-15 test.ll builtin.ll -o binary
+clang-15 test.ll builtin.ll -o binary -m32
 echo 'run binary'
 
 set +e

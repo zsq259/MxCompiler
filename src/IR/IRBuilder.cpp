@@ -407,17 +407,18 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
+    auto formerNextBlock = currentNextBlock;
+    auto formerEndBlock = currentEndBlock;
     currentNextBlock = step;
     currentEndBlock = endBlock;
     node->block->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(step->label));
-    currentNextBlock = nullptr;
-    currentEndBlock = nullptr;
+    currentNextBlock = formerNextBlock;
+    currentEndBlock = formerEndBlock;
 
     currentBlock = step;
     if (node->step) node->step->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(cond->label));
-
     currentBlock = endBlock;
 }
 
@@ -442,13 +443,14 @@ void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
+    auto formerNextBlock = currentNextBlock;
+    auto formerEndBlock = currentEndBlock;
     currentNextBlock = cond;
     currentEndBlock = endBlock;
     node->block->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(cond->label));
-    currentNextBlock = nullptr;
-    currentEndBlock = nullptr;
-
+    currentNextBlock = formerNextBlock;
+    currentEndBlock = formerEndBlock;
     currentBlock = endBlock;
 }
 
@@ -461,6 +463,7 @@ void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {
     auto block = new IRBlockNode("_break" + std::to_string(counter["break"]++));
     currentFunction->blocks.push_back(block);
     currentBlock = block;
+    
 }
 
 void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
@@ -550,10 +553,11 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
 
         currentBlock = block;
         node->rhs->accept(this);
-        currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
-
         auto rhs = astValueMap[node->rhs];
-        tmp->values.emplace_back(setVariable(toIRType(&(node->rhs->type)), rhs), currentBlock->label);
+        auto tmp2 = setVariable(toIRType(&(node->rhs->type)), rhs);
+
+        currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+        tmp->values.emplace_back(tmp2, currentBlock->label);
 
         currentBlock = endBlock;
         endBlock->stmts.push_back(tmp);
@@ -586,21 +590,30 @@ void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode* node) {
     currentFunction->blocks.push_back(falseBlock);
     currentFunction->blocks.push_back(endBlock);
 
-    auto ret = new IRVarNode(&ptrType, "_ternary.return" + std::to_string(counter["ternary.return"]++), false);
-    currentBlock->stmts.push_back(new IRAllocaStmtNode(ret, type));
+    bool notVoid = type->to_string() != "void";
+    IRVarNode* ret = nullptr;
+    if (notVoid) {
+        ret = new IRVarNode(&ptrType, "_ternary.return" + std::to_string(counter["ternary.return"]++), false);
+        currentBlock->stmts.push_back(new IRAllocaStmtNode(ret, type));
+    }
+
     node->cond->accept(this);
     setCondition(astValueMap[node->cond], trueBlock, falseBlock);
 
     currentBlock = trueBlock;
     node->True->accept(this);
-    auto True = setVariable(type, astValueMap[node->True]);
-    currentBlock->stmts.push_back(new IRStoreStmtNode(True, ret));
+    if (notVoid) {
+        auto True = setVariable(type, astValueMap[node->True]);
+        currentBlock->stmts.push_back(new IRStoreStmtNode(True, ret));
+    }
     currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
     
     currentBlock = falseBlock;
     node->False->accept(this);
-    auto False = setVariable(type, astValueMap[node->False]);
-    currentBlock->stmts.push_back(new IRStoreStmtNode(False, ret));
+    if (notVoid) {
+        auto False = setVariable(type, astValueMap[node->False]);
+        currentBlock->stmts.push_back(new IRStoreStmtNode(False, ret));
+    }
     currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
     currentBlock = endBlock;
     astValueMap[node] = ret;    
@@ -616,6 +629,7 @@ void IRBuilder::visitFuncExprNode(ASTFuncExprNode *node) {
     if (type->to_string() != "void") var = new IRVarNode(type, "_call.tmp" + std::to_string(counter["call.tmp"]++), true);
     IRCallStmtNode* call = nullptr;
     if (auto func = dynamic_cast<ASTAtomExprNode*>(node->func)) {
+        
         if (currentClass && memberFuncSet.contains(currentClass->name + "." + func->name)) {
             call = new IRCallStmtNode(var, currentClass->name + "." + func->name);
             call->args.push_back(new IRVarNode(&ptrType, "this", true));
