@@ -13,7 +13,7 @@ private:
     IRProgramNode *program = nullptr;
     IRClassType* currentClass = nullptr;
     IRFunctionNode* currentFunction = nullptr;
-    IRBlockNode *currentBlock = nullptr, *currentCondBlock = nullptr, *currentEndBlock = nullptr;
+    IRBlockNode *currentBlock = nullptr, *currentNextBlock = nullptr, *currentEndBlock = nullptr;
     IRBlockNode* currentReturnBlock = nullptr;
     IRVarNode* currentReturnVar = nullptr;
     std::map<ASTNode*, IRValueNode*> astValueMap;

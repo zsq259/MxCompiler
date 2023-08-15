@@ -407,11 +407,11 @@ void IRBuilder::visitForStmtNode(ASTForStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
-    currentCondBlock = cond;
+    currentNextBlock = step;
     currentEndBlock = endBlock;
     node->block->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(step->label));
-    currentCondBlock = nullptr;
+    currentNextBlock = nullptr;
     currentEndBlock = nullptr;
 
     currentBlock = step;
@@ -442,18 +442,18 @@ void IRBuilder::visitWhileStmtNode(ASTWhileStmtNode *node) {
     else cond->stmts.push_back(new IRBrStmtNode(body->label));
 
     currentBlock = body;
-    currentCondBlock = cond;
+    currentNextBlock = cond;
     currentEndBlock = endBlock;
     node->block->accept(this);
     currentBlock->stmts.push_back(new IRBrStmtNode(cond->label));
-    currentCondBlock = nullptr;
+    currentNextBlock = nullptr;
     currentEndBlock = nullptr;
 
     currentBlock = endBlock;
 }
 
 void IRBuilder::visitContinueStmtNode(ASTContinueStmtNode *node) {
-    currentBlock->stmts.push_back(new IRBrStmtNode(currentCondBlock->label));
+    currentBlock->stmts.push_back(new IRBrStmtNode(currentNextBlock->label));
 }
 
 void IRBuilder::visitBreakStmtNode(ASTBreakStmtNode *node) {
