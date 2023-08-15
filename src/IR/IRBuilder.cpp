@@ -97,6 +97,10 @@ void IRBuilder::registerClass(ASTClassNode *node) {
     auto classstmt = new IRClassStmtNode(cls);
     program->classes.push_back(classstmt);
     classMap[node->name] = cls;
+    currentClass = cls;
+    for (auto cons: node->constructors) registerFunction(cons);
+    for (auto func: node->functions) registerFunction(func);
+    currentClass = nullptr;
 }
 
 void IRBuilder::initBuiltin() {
@@ -211,6 +215,9 @@ void IRBuilder::visitProgramNode(ASTProgramNode *node) {
         if (auto cls = dynamic_cast<ASTClassNode*>(c)) { registerClass(cls); }
     }
     for (auto c: node->children) {
+        if (auto func = dynamic_cast<ASTFunctionNode*>(c)) { registerFunction(func); }
+    }
+    for (auto c: node->children) {
         if (auto var = dynamic_cast<ASTVarStmtNode*>(c)) { var->accept(this); }
     }
     initGlobalVar();
@@ -252,15 +259,19 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
                 auto rhs = setVariable(type, astValueMap[v.second]);
                 currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var));   
             }
+            else if (type->to_string() == "ptr") {
+                currentBlock->stmts.push_back(new IRStoreStmtNode(&nullNode, var));
+            }
             varMap[v.first] = var;
         }
     }
 }
 
-void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
+void IRBuilder::registerFunction(ASTFunctionNode* node) {
     auto func = new IRFunctionNode(toIRType(&(node->type)), "");
     if (currentClass) {
         func->name = currentClass->name + "." + node->name;
+        memberFuncSet.insert(func->name);
         func->args.emplace_back(&ptrType, "this");
     }
     else func->name = node->name;
@@ -269,7 +280,11 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
         func->args.emplace_back(varType, arg.second);
     }
     program->functions.push_back(func);
+    functionMap[node] = func;
+}
 
+void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
+    auto func = functionMap[node];
     func->blocks.push_back(new IRBlockNode("entry"));
     currentFunction = func;
     currentBlock = func->blocks.front();
@@ -291,7 +306,7 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
     }
     auto retBlock = new IRBlockNode("_return_block" + std::to_string(counter["return_block"]++));
     currentReturnVar = ret;
-    currentReturnBlock = retBlock;
+    currentReturnBlock = retBlock;    
     node->block->accept(this);
 
     
@@ -509,8 +524,8 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
     if (node->type.is_string()) {
         node->lhs->accept(this);
         node->rhs->accept(this);
-        auto lhs = setVariable(type, astValueMap[node->lhs]);
-        auto rhs = setVariable(type, astValueMap[node->rhs]);
+        auto lhs = setVariable(toIRType(&(node->lhs->type)), astValueMap[node->lhs]);
+        auto rhs = setVariable(toIRType(&(node->rhs->type)), astValueMap[node->rhs]);
         auto call = new IRCallStmtNode(ret, stropcode[node->op]);
         call->args.push_back(lhs);
         call->args.push_back(rhs);
@@ -531,14 +546,14 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
         currentFunction->blocks.push_back(endBlock);
 
         auto tmp = new IRPhiStmtNode(ret);
-        tmp->values.emplace_back(setVariable(type, lhs), currentBlock->label);
+        tmp->values.emplace_back(setVariable(toIRType(&(node->lhs->type)), lhs), currentBlock->label);
 
         currentBlock = block;
         node->rhs->accept(this);
         currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
 
         auto rhs = astValueMap[node->rhs];
-        tmp->values.emplace_back(setVariable(type, rhs), currentBlock->label);
+        tmp->values.emplace_back(setVariable(toIRType(&(node->rhs->type)), rhs), currentBlock->label);
 
         currentBlock = endBlock;
         endBlock->stmts.push_back(tmp);
@@ -547,8 +562,8 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
     else {
         node->lhs->accept(this);
         node->rhs->accept(this);
-        auto lhs = setVariable(type, astValueMap[node->lhs]);
-        auto rhs = setVariable(type, astValueMap[node->rhs]);
+        auto lhs = setVariable(toIRType(&(node->lhs->type)), astValueMap[node->lhs]);
+        auto rhs = setVariable(toIRType(&(node->rhs->type)), astValueMap[node->rhs]);
         auto op = opcode[node->op];
         if (op.find("icmp") != std::string::npos) {
             auto tmp = new IRVarNode(&i1Type, "_binary.tmp" + std::to_string(counter["binary.tmp"]++), true);
@@ -600,7 +615,13 @@ void IRBuilder::visitFuncExprNode(ASTFuncExprNode *node) {
     IRVarNode* var = nullptr;
     if (type->to_string() != "void") var = new IRVarNode(type, "_call.tmp" + std::to_string(counter["call.tmp"]++), true);
     IRCallStmtNode* call = nullptr;
-    if (auto func = dynamic_cast<ASTAtomExprNode*>(node->func)) call = new IRCallStmtNode(var, func->name);
+    if (auto func = dynamic_cast<ASTAtomExprNode*>(node->func)) {
+        if (currentClass && memberFuncSet.contains(currentClass->name + "." + func->name)) {
+            call = new IRCallStmtNode(var, currentClass->name + "." + func->name);
+            call->args.push_back(new IRVarNode(&ptrType, "this", true));
+        }
+        else call = new IRCallStmtNode(var, func->name);
+    }
     else {
         auto func1 = dynamic_cast<ASTMemberExprNode*>(node->func);
         node->func->accept(this);

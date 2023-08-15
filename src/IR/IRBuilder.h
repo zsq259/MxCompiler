@@ -1,6 +1,7 @@
 #ifndef IRBUILDER_H
 #define IRBUILDER_H
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 #include "ASTBaseVisitor.h"
@@ -22,7 +23,9 @@ private:
     std::map<std::string, int> memberIndex;
     std::map<std::string, IRGlobalVarNode*> stringMap;
     std::map<std::string, IRClassType*> classMap;
+    std::map<ASTFunctionNode*, IRFunctionNode*> functionMap;
     std::map<ASTMemberExprNode*, std::string> memberFuncMap;
+    std::set<std::string> memberFuncSet;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
@@ -66,6 +69,7 @@ public:
     void setCondition(IRValueNode* cond, IRBlockNode* block1, IRBlockNode* block2);
     IRValueNode* setVariable(IRType* type, IRValueNode* value);
     void registerClass(ASTClassNode *node);
+    void registerFunction(ASTFunctionNode* node);
     void initBuiltin();
     void initEmptyString();
     void initGlobalVar();
