@@ -9,7 +9,7 @@
 class IRNode {
 public:
     IRNode() = default;
-    ~IRNode() = default;
+    virtual ~IRNode() = default;
     virtual void print() = 0;
     virtual std::string to_string() = 0;
 };
@@ -19,6 +19,7 @@ public:
     IRType* type = nullptr;
 
     explicit IRValueNode(IRType* type_): type(type_) {}
+    virtual ~IRValueNode() {}
     // void print() { std::cout << to_string(); };
     // std::string to_string() override;
 };
@@ -28,6 +29,7 @@ public:
     std::string name;
     bool isConst = false;
     explicit IRVarNode(IRType* type_, std::string name_, bool const_): IRValueNode(type_), name(name_), isConst(const_) {}
+    ~IRVarNode() override {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -36,14 +38,12 @@ class IRGlobalVarNode: public IRVarNode {
 public:
 
     explicit IRGlobalVarNode(IRType* type_, std::string name_, bool const_): IRVarNode(type_, name_, const_) {}
+    ~IRGlobalVarNode() override {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
 
-class IRStmtNode: public IRNode {
-public:
-    
-};
+class IRStmtNode: public IRNode {};
 
 class IRBlockNode: public IRNode {
 public:
@@ -52,8 +52,28 @@ public:
 
     explicit IRBlockNode(std::string label_): label(label_) {}
     ~IRBlockNode() { 
-        
+        for (auto &s: stmts) delete s;
     }
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRLiteralNode: public IRValueNode {
+public:
+    int value;
+
+    explicit IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
+    ~IRLiteralNode() override {}
+    void print() { std::cout << to_string(); };
+    std::string to_string() override;
+};
+
+class IRStringNode: public IRLiteralNode {
+public:
+    std::string str;
+
+    explicit IRStringNode(IRType* type_, std::string str_): IRLiteralNode(type_, 0), str(str_) {}
+    ~IRStringNode() override { delete type; }
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -212,36 +232,12 @@ public:
     std::string to_string() override;
 };
 
-class IRLiteralNode: public IRValueNode {
-public:
-    int value;
-
-    explicit IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
-    ~IRLiteralNode() { 
-        
-    }
-    void print() { std::cout << to_string(); };
-    std::string to_string() override;
-};
-
-class IRStringNode: public IRLiteralNode {
-public:
-    std::string str;
-
-    explicit IRStringNode(IRType* type_, std::string str_): IRLiteralNode(type_, 0), str(str_) {}
-    ~IRStringNode() {}
-    void print() { std::cout << to_string(); };
-    std::string to_string() override;
-};
-
 class IRGlobalVarStmtNode: public IRStmtNode {
 public:
     IRValueNode* value = nullptr;
     IRGlobalVarNode* var = nullptr;
 
-    ~IRGlobalVarStmtNode() { 
-        
-    }
+    ~IRGlobalVarStmtNode() {}
     explicit IRGlobalVarStmtNode(IRValueNode* value_, IRGlobalVarNode* var_): value(value_), var(var_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
@@ -252,6 +248,7 @@ public:
     IRClassType *type = nullptr;
 
     explicit IRClassStmtNode(IRClassType* type_): type(type_) {}
+    ~IRClassStmtNode() { delete type; }
     void print() { std::cout << to_string(); };
     std::string to_string() override;
 };
@@ -265,7 +262,7 @@ public:
 
     explicit IRFunctionNode(IRType* retType_, std::string name_): retType(retType_), name(name_) {}
     ~IRFunctionNode() { 
-        
+        for (auto &b: blocks) delete b;
     }
     void print() { std::cout << to_string(); };
     std::string to_string() override;
@@ -279,7 +276,7 @@ public:
 
     explicit IRClassNode(std::string name_): name(name_) {}
     ~IRClassNode() { 
-        
+        for (auto &f: functions) delete f;
     }
     void print() { std::cout << to_string(); };
     std::string to_string() override;
@@ -292,7 +289,9 @@ public:
     std::vector<IRGlobalVarStmtNode *> global_vars;
 
     ~IRProgramNode() { 
-        
+        for (auto &c: classes) delete c;
+        for (auto &f: functions) delete f;
+        for (auto &g: global_vars) delete g;
     }
     void print() { std::cout << to_string(); };
     std::string to_string() override;

@@ -7,6 +7,7 @@ class IRType {
 public:
     virtual std::string to_string() = 0;
     virtual int size() = 0;
+    virtual ~IRType() {}
 };
 
 class IRVoidType: public IRType {
@@ -37,6 +38,7 @@ public:
     IRType *type;
 
     explicit IRArrayType(int length_, IRType *type_): length(length_), type(type_) {}
+    ~IRArrayType() override {}
     std::string to_string() override {
         return "[" + std::to_string(length) + " x " + type->to_string() + "]";
     }
@@ -69,6 +71,7 @@ public:
     IRStructType* type;
 
     explicit IRClassType(std::string name_, IRStructType* type_): name(name_), type(type_) {}
+    ~IRClassType() override { delete type; }
     std::string to_string() override { return "%class." + name; }
     int size() override { return type->size(); }
 };

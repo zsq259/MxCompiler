@@ -26,11 +26,16 @@ private:
     std::map<ASTFunctionNode*, IRFunctionNode*> functionMap;
     std::map<ASTMemberExprNode*, std::string> memberFuncMap;
     std::set<std::string> memberFuncSet;
+    std::set<IRValueNode*> valueSet;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
     IRBuilder() {
         init();
+    }
+    ~IRBuilder() { 
+        delete program; 
+        for (auto v: valueSet) delete v;
     }
     void visitContinueStmtNode(ASTContinueStmtNode *node) override;
     void visitTernaryExprNode(ASTTernaryExprNode *node) override;
