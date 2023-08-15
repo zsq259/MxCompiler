@@ -796,6 +796,12 @@ void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {
         auto size = new IRLiteralNode(&intType, type->size());
         call->args.push_back(size);
         currentBlock->stmts.push_back(call);
+        auto consName = node->newType->name + "." + node->newType->name;
+        if (memberFuncSet.contains(consName)) {
+            auto cons = new IRCallStmtNode(nullptr, consName);
+            cons->args.push_back(ret);
+            currentBlock->stmts.push_back(cons);
+        }
         astValueMap[node] = ret;
     }
     else {
