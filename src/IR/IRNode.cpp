@@ -2,9 +2,9 @@
 
 std::string IRProgramNode::to_string() {
     std::string ret = "";
-    for (auto c:classes) {
-        ret += c->to_string() + "\n";
-    }
+    // for (auto c:classes) {
+    //     ret += c->to_string() + "\n";
+    // }
     for (auto g:global_vars) {
         ret += g->to_string() + "\n";
     }
@@ -48,12 +48,6 @@ std::string IRGlobalVarStmtNode::to_string() {
     return ret;
 }
 
-std::string IRClassStmtNode::to_string() {
-    std::string ret = "";
-    ret += type->to_string() + " = " + type->type->to_string();
-    return ret;
-}
-
 std::string IRFunctionNode::to_string() {
     std::string ret = "";
     if (blocks.empty()) ret += "declare ";
@@ -81,11 +75,6 @@ std::string IRBlockNode::to_string() {
         }
         ret += "  " + s->to_string() + "\n";
     }
-    return ret;
-}
-
-std::string IRClassNode::to_string() {
-    std::string ret = "";
     return ret;
 }
 

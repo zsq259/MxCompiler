@@ -94,8 +94,6 @@ void IRBuilder::registerClass(ASTClassNode *node) {
         }
     }
     auto cls = new IRClassType(node->name, clstype);
-    auto classstmt = new IRClassStmtNode(cls);
-    program->classes.push_back(classstmt);
     classMap[node->name] = cls;
     currentClass = cls;
     for (auto cons: node->constructors) registerFunction(cons);
