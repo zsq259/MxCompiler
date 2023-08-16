@@ -30,6 +30,7 @@ std::string IRStringNode::to_string() {
         else if (c == '\"') ret += "\\22";
         else ret += c;
     }
+    std::cerr << "ret: " << str <<  " size: " << str.size() << '\n';
     ret += "\\00\"";
     return ret;
 }

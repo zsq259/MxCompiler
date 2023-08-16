@@ -41,7 +41,6 @@ public:
     virtual void visitValue(IRValueNode* node) {}
     virtual void visitVar(IRVarNode* node) {}
     virtual void visitGlobalVar(IRGlobalVarNode* node) {}
-    virtual void visitStmt(IRStmtNode* node) {}
     virtual void visitBlock(IRBlockNode* node) {}
     virtual void visitLiteral(IRLiteralNode* node) {}
     virtual void visitString(IRStringNode* node) {}

@@ -12,7 +12,6 @@ public:
     IRType* type = nullptr;
 
     explicit IRValueNode(IRType* type_): type(type_) {}
-    virtual ~IRValueNode() {}
     void accept(IRBaseVisitor* visitor) { visitor->visitValue(this); }
 };
 
@@ -21,7 +20,6 @@ public:
     std::string name;
     bool isConst = false;
     explicit IRVarNode(IRType* type_, std::string name_, bool const_): IRValueNode(type_), name(name_), isConst(const_) {}
-    ~IRVarNode() override {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitVar(this); }
@@ -31,7 +29,6 @@ class IRGlobalVarNode: public IRVarNode {
 public:
 
     explicit IRGlobalVarNode(IRType* type_, std::string name_, bool const_): IRVarNode(type_, name_, const_) {}
-    ~IRGlobalVarNode() override {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitGlobalVar(this); }
@@ -58,7 +55,6 @@ public:
     int value;
 
     explicit IRLiteralNode(IRType* t_,  int value_): IRValueNode(t_), value(value_) {}
-    ~IRLiteralNode() override {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitLiteral(this); }
@@ -82,7 +78,6 @@ public:
 
     explicit IRBrCondStmtNode(IRValueNode* cond_, std::string trueLabel_, std::string falseLabel_): 
         cond(cond_), trueLabel(trueLabel_), falseLabel(falseLabel_) {}
-    ~IRBrCondStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitBrCondStmt(this); }
@@ -93,7 +88,6 @@ public:
     std::string label;
 
     explicit IRBrStmtNode(std::string label_): label(label_) {}
-    ~IRBrStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitBrStmt(this); }
@@ -104,7 +98,6 @@ public:
     IRVarNode* var = nullptr;
 
     explicit IRRetStmtNode(IRVarNode* var_): var(var_) {}
-    ~IRRetStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitRetStmt(this); }
@@ -119,7 +112,6 @@ public:
 
     explicit IRBinaryStmtNode(std::string op_, IRVarNode* var_, IRValueNode* lhs_, IRValueNode* rhs_): 
         op(op_), var(var_), lhs(lhs_), rhs(rhs_) {}
-    ~IRBinaryStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitBinaryStmt(this); }
@@ -130,7 +122,6 @@ public:
     IRVarNode* var = nullptr;
     IRType* type = nullptr;
     explicit IRAllocaStmtNode(IRVarNode* var_, IRType* type_): var(var_), type(type_) {}
-    ~IRAllocaStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitAllocaStmt(this); }
@@ -141,7 +132,6 @@ public:
     IRVarNode *var = nullptr, *ptr = nullptr;
 
     explicit IRLoadStmtNode(IRVarNode* var_, IRVarNode* ptr_): var(var_), ptr(ptr_) {}
-    ~IRLoadStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitLoadStmt(this); }
@@ -153,7 +143,6 @@ public:
     IRVarNode* ptr = nullptr;
 
     explicit IRStoreStmtNode(IRValueNode* value_, IRVarNode* ptr_): value(value_), ptr(ptr_) {}
-    ~IRStoreStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitStoreStmt(this); }
@@ -170,7 +159,6 @@ public:
         op(op_), var(var_), lhs(lhs_), rhs(rhs_) {
             if (op.find("icmp") == std::string::npos) op = "icmp " + op;
         }
-    ~IRIcmpStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitIcmpStmt(this); }
@@ -182,7 +170,6 @@ public:
     IRValueNode *value = nullptr;
 
     explicit IRTruncStmtNode(IRVarNode* var_, IRValueNode* value_): var(var_), value(value_) {}
-    ~IRTruncStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitTruncStmt(this); }
@@ -194,7 +181,6 @@ public:
     IRValueNode *value = nullptr;
 
     explicit IRZextStmtNode(IRVarNode* var_, IRValueNode* value_): var(var_), value(value_) {}
-    ~IRZextStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitZextStmt(this); }
@@ -208,7 +194,6 @@ public:
 
     explicit IRCallStmtNode(IRVarNode* var_, std::string funcName_): 
         var(var_), funcName(funcName_) {}
-    ~IRCallStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitCallStmt(this); }
@@ -220,7 +205,6 @@ public:
     std::vector<std::pair<IRValueNode*, std::string>> values;
 
     explicit IRPhiStmtNode(IRVarNode* var_): var(var_) {}
-    ~IRPhiStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) {  visitor->visitPhiStmt(this); }
@@ -234,7 +218,6 @@ public:
 
     explicit IRGetElementPtrStmtNode(IRVarNode* var_, IRVarNode* ptr_, IRValueNode* index_, IRType* type_): 
         var(var_), ptr(ptr_), index(index_), type(type_) {}
-    ~IRGetElementPtrStmtNode() {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor){ visitor->visitGetElementPtrStmt(this); }
@@ -245,7 +228,6 @@ public:
     IRValueNode* value = nullptr;
     IRGlobalVarNode* var = nullptr;
 
-    ~IRGlobalVarStmtNode() {}
     explicit IRGlobalVarStmtNode(IRValueNode* value_, IRGlobalVarNode* var_): value(value_), var(var_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;

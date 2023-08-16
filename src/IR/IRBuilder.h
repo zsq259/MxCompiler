@@ -30,9 +30,7 @@ private:
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
 
 public:
-    IRBuilder() {
-        init();
-    }
+    IRBuilder() { init(); }
     ~IRBuilder() { 
         delete program; 
         for (auto v: valueSet) delete v;
@@ -49,21 +47,16 @@ public:
     void visitBreakStmtNode(ASTBreakStmtNode *node) override;
     void visitArrayExprNode(ASTArrayExprNode *node) override;
     void visitAtomExprNode(ASTAtomExprNode *node) override;
-    // void visitFlowStmtNode(ASTFlowStmtNode *node) override;
     void visitFunctionNode(ASTFunctionNode *node) override;
     void visitExprStmtNode(ASTExprStmtNode *node) override;
     void visitFuncExprNode(ASTFuncExprNode *node) override;
     void visitVarStmtNode(ASTVarStmtNode *node) override;
-    // void visitNewTypeNode(ASTNewTypeNode *node) override;
     void visitNewExprNode(ASTNewExprNode *node) override;
     void visitForStmtNode(ASTForStmtNode *node) override;
     void visitProgramNode(ASTProgramNode *node) override;
     void visitIfStmtNode(ASTIfStmtNode *node) override;
     void visitClassNode(ASTClassNode *node) override;
     void visitBlockNode(ASTBlockNode *node) override;
-    // void visitTypeNode(ASTTypeNode *node) override;
-    // void visitStmtNode(ASTStmtNode *node) override;
-    // void visitExprNode(ASTExprNode *node) override;
     
     void init();
     IRValueNode* defaultValue(IRType *type);

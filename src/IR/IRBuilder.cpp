@@ -605,10 +605,11 @@ void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode* node) {
 
     bool notVoid = type->to_string() != "void";
     IRVarNode* ret = nullptr;
+    IRValueNode *True = nullptr, *False = nullptr;
+    std::string trueLabel = "", falseLabel = "";
     if (notVoid) {
-        ret = new IRVarNode(&ptrType, "_ternary.return" + std::to_string(counter["ternary.return"]++), false);
+        ret = new IRVarNode(type, "_ternary.return" + std::to_string(counter["ternary.return"]++), true);
         valueSet.insert(ret);
-        currentBlock->stmts.push_back(new IRAllocaStmtNode(ret, type));
     }
 
     node->cond->accept(this);
@@ -617,19 +618,26 @@ void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode* node) {
     currentBlock = trueBlock;
     node->True->accept(this);
     if (notVoid) {
-        auto True = setVariable(type, astValueMap[node->True]);
-        currentBlock->stmts.push_back(new IRStoreStmtNode(True, ret));
+        True = setVariable(type, astValueMap[node->True]);
     }
     currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+    trueLabel = currentBlock->label;
     
     currentBlock = falseBlock;
     node->False->accept(this);
     if (notVoid) {
-        auto False = setVariable(type, astValueMap[node->False]);
-        currentBlock->stmts.push_back(new IRStoreStmtNode(False, ret));
+        False = setVariable(type, astValueMap[node->False]);
+        // currentBlock->stmts.push_back(new IRStoreStmtNode(False, ret));
     }
     currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
+    falseLabel = currentBlock->label;
     currentBlock = endBlock;
+    if (notVoid) {
+        auto phi = new IRPhiStmtNode(ret);
+        phi->values.emplace_back(True, trueLabel);
+        phi->values.emplace_back(False, falseLabel);
+        currentBlock->stmts.push_back(phi);
+    }
     astValueMap[node] = ret;    
 }
 
