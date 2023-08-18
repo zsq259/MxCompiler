@@ -253,11 +253,11 @@ public:
 class IRProgramNode: public IRNode {
 public:
     std::vector<IRFunctionNode *> functions;
-    std::vector<IRGlobalVarStmtNode *> global_vars;
+    std::vector<IRGlobalVarStmtNode *> globalVars;
 
     ~IRProgramNode() { 
         for (auto &f: functions) delete f;
-        for (auto &g: global_vars) delete g;
+        for (auto &g: globalVars) delete g;
     }
     void print() { std::cout << to_string(); };
     std::string to_string() override;

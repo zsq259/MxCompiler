@@ -2,16 +2,13 @@
 
 std::string IRProgramNode::to_string() {
     std::string ret = "";
-    // for (auto c:classes) {
-    //     ret += c->to_string() + "\n";
-    // }
-    for (auto g:global_vars) {
+    for (auto g:globalVars) {
         ret += g->to_string() + "\n";
     }
-    ret += '\n';
     for (auto f:functions) {
         ret += f->to_string() + "\n";
     }
+    ret += '\n';
     return ret;
 }
 
@@ -30,7 +27,6 @@ std::string IRStringNode::to_string() {
         else if (c == '\"') ret += "\\22";
         else ret += c;
     }
-    std::cerr << "ret: " << str <<  " size: " << str.size() << '\n';
     ret += "\\00\"";
     return ret;
 }

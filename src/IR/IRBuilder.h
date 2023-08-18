@@ -28,7 +28,6 @@ private:
     std::set<std::string> memberFuncSet;
     std::set<IRValueNode*> valueSet;
     std::vector<std::pair<IRVarNode*, ASTExprNode*>> varInitList;
-
 public:
     IRBuilder() { init(); }
     ~IRBuilder() { 
@@ -72,6 +71,7 @@ public:
     void initEmptyString();
     void initGlobalVar();
     IRVarNode* mallocNewArray(ASTNewTypeNode* node, int index);
+    IRProgramNode* root() { return program; }
 };
 
 #endif

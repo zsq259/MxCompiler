@@ -37,6 +37,8 @@ class IRProgramNode;
 
 class IRBaseVisitor {
 public:
+    IRBaseVisitor() = default;
+    virtual ~IRBaseVisitor() = default;
     virtual void visit(IRNode* node) { node->accept(this); }
     virtual void visitValue(IRValueNode* node) {}
     virtual void visitVar(IRVarNode* node) {}

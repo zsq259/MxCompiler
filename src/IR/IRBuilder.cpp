@@ -187,7 +187,7 @@ void IRBuilder::initEmptyString() {
     valueSet.insert(var);
     auto str = new IRStringNode(type, "");
     valueSet.insert(str);
-    program->global_vars.push_back(new IRGlobalVarStmtNode(str, var));
+    program->globalVars.push_back(new IRGlobalVarStmtNode(str, var));
     stringMap[""] = var;
 }
 
@@ -247,7 +247,7 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
                     varInitList.emplace_back(var, v.second);
                 }
             }
-            program->global_vars.push_back(globalstmt);
+            program->globalVars.push_back(globalstmt);
             varMap[v.first] = var;
         }
     }
@@ -750,7 +750,7 @@ void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
         valueSet.insert(var);
         auto str = new IRStringNode(type, ret);
         valueSet.insert(str);
-        program->global_vars.push_back(new IRGlobalVarStmtNode(str, var));
+        program->globalVars.push_back(new IRGlobalVarStmtNode(str, var));
         stringMap[value] = var;
         astValueMap[node] = var;
     }
