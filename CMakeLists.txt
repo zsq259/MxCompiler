@@ -46,12 +46,17 @@ set(CodegenPath "${TestdataPath}/codegen")
 file(GLOB_RECURSE test_files RELATIVE ${CodegenPath} ${CodegenPath}/**.mx)
 foreach (test_file ${test_files})
     string(REGEX REPLACE ".*/" "" filename "${test_file}")
-    set(testname "codegen|${filename}")
-    message(STATUS "dir: ${PROJECT_SOURCE_DIR}")
+    set(testname "ir|${filename}")
     add_test(NAME ${testname}
-            COMMAND "${PROJECT_SOURCE_DIR}/run-codegen.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
+            COMMAND "${PROJECT_SOURCE_DIR}/run-llvm.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
-    set_tests_properties(${testname} PROPERTIES LABELS "codegen")
+    set_tests_properties(${testname} PROPERTIES LABELS "ir" TIMEOUT 3)
+
+    set(testname "asm|${filename}")
+    add_test(NAME ${testname}
+            COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
+    set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 5)
 endforeach ()
 
 enable_testing()

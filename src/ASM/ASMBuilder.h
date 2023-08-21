@@ -17,7 +17,7 @@ private:
     ASMProgramNode* program;
     IRFunctionNode* currentFunction;
     ASMBlockNode* currentBlock;
-    ASMImmInsNode* spAddIns;
+    ASMImmInsNode *spAddIns, *spRetIns;
     std::map<std::string, ASMVarNode*> varMap;
     std::map<std::string, int> counter;
 
@@ -49,8 +49,10 @@ public:
 
     void print() { std::cout << program->to_string(); }
     void setVar(ASMVarNode* var, Register* reg);
+    void loadVarValue(ASMVarNode* var, Register* reg);
     void setValue(IRValueNode* value, Register* reg);
     void storeVar(ASMVarNode* var, Register* reg);
+    void storeValue(ASMVarNode* var, Register* reg);
 };
 
 #endif

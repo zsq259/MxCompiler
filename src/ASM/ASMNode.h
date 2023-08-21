@@ -14,12 +14,13 @@ public:
 class ASMVarNode: public ASMNode {
 public:
     std::string name;
-    explicit ASMVarNode(std::string name_): name(name_) {}
+    bool is_ptr = false;
+    explicit ASMVarNode(std::string name_, bool p_): name(name_), is_ptr(p_) {}
 };
 
 class ASMGlobalVarNode: public ASMVarNode {
 public:
-    explicit ASMGlobalVarNode(std::string name_): ASMVarNode(name_) {}
+    explicit ASMGlobalVarNode(std::string name_, bool p_): ASMVarNode(name_, p_) {}
     std::string to_string() override;
 };
 
@@ -27,8 +28,8 @@ class ASMLocalVarNode: public ASMVarNode {
 public:
     Register* reg = nullptr;
     int offset;
-    explicit ASMLocalVarNode(std::string name_, int offset_): 
-        ASMVarNode(name_), offset(offset_) {}
+    explicit ASMLocalVarNode(std::string name_, int offset_, bool p_): 
+        ASMVarNode(name_, p_), offset(offset_) {}
     std::string to_string() override;
 };
 

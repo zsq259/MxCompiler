@@ -50,9 +50,9 @@ std::string ASMBlockNode::to_string() {
     ret += name;
     ret += ":\n";
     for (auto ins: insts) {
-        ret += ins->to_string();
-        ret += '\n';
+        ret += '\t' + ins->to_string() + '\n';
     }
+    ret += '\n';
     return ret;
 }
 
@@ -68,7 +68,7 @@ std::string ASMGlobalVarStmtNode::to_string() {
 
     if (is_string) {
         if (value.size()) {
-            ret += ": .asciiz ";
+            ret += ": .asciz ";
             ret += "\"";
             for (auto c:value) {
                 if (c == '\n') ret += "\\n";
