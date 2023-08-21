@@ -48,11 +48,11 @@ public:
     void visitProgram(IRProgramNode* node) override;
 
     void print() { std::cout << program->to_string(); }
-    void setVar(ASMVarNode* var, Register* reg);
-    void loadVarValue(ASMVarNode* var, Register* reg);
-    void setValue(IRValueNode* value, Register* reg);
+    void getPtr(ASMVarNode* var, Register* reg);
+    void getVar(ASMVarNode* var, Register* reg);
+    void getValue(IRValueNode* value, Register* reg);
     void storeVar(ASMVarNode* var, Register* reg);
-    void storeValue(ASMVarNode* var, Register* reg);
+    void storePtr(ASMVarNode* var, Register* reg);
 };
 
 #endif
