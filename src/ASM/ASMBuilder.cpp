@@ -41,13 +41,26 @@ void ASMBuilder::getValue(IRValueNode* value, Register* reg) {
     if (dynamic_cast<IRVarNode*>(value)) {
         auto tmp = dynamic_cast<IRVarNode*>(value);
         auto ptr = varMap[tmp->name];
-        if (ptr->is_ptr) getPtr(ptr, reg);
-        else getVar(ptr, reg);
+        getVar(ptr, reg);
     }
     else if (dynamic_cast<IRLiteralNode*>(value)) {
         auto tmp = dynamic_cast<IRLiteralNode*>(value);
         auto load = new ASMImmInsNode("addi", reg, regAllocator.getReg("zero"), tmp->value);
         currentBlock->insts.push_back(load);
+    }
+}
+
+void ASMBuilder::getAddr(IRVarNode* var, Register* reg) {
+    auto ptr = varMap[var->name];
+    if (dynamic_cast<ASMGlobalVarNode*>(ptr)) {
+        auto la = new ASMLaInsNode(reg, dynamic_cast<ASMGlobalVarNode*>(ptr)->name);
+        currentBlock->insts.push_back(la);
+    }
+    else {
+        auto tmp = dynamic_cast<ASMLocalVarNode*>(ptr);
+        if (!tmp->is_ptr) throw std::runtime_error("not a pointer when get address");
+        auto load = new ASMLoadInsNode("lw", reg, regAllocator.getReg("sp"), tmp->offset);
+        currentBlock->insts.push_back(load);        
     }
 }
 
@@ -95,16 +108,22 @@ void ASMBuilder::visitString(IRStringNode* node) {}
 void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
     ASMLocalVarNode* var = nullptr;
     if(node->var) {
-        var = new ASMLocalVarNode(node->var->name, spSize, false);
+        var = new ASMLocalVarNode(node->var->name, spSize, node->var->type->to_string() == "ptr");
         spSize += node->var->type->size();
         varMap[node->var->name] = var;
     }
     int cnt = 0;
     for (int i = 0, k = node->args.size(); i < k; ++i) {
         auto arg = node->args[i];
-        if (i < 8) getValue(arg, regAllocator.getReg("a" + std::to_string(i)));
+        if (i < 8) {
+            if (arg->type->to_string() != "ptr")
+                getValue(arg, regAllocator.getReg("a" + std::to_string(i)));
+            else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("a" + std::to_string(i)));
+        }
         else {
-            getValue(arg, regAllocator.getReg("s0"));
+            if (arg->type->to_string() != "ptr")
+                getValue(arg, regAllocator.getReg("s0"));
+            else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("s0"));
             cnt += arg->type->size();
             auto store = new ASMStoreInsNode("sw", regAllocator.getReg("sp"), regAllocator.getReg("s0"), -cnt);
             currentBlock->insts.push_back(store);
