@@ -58,7 +58,7 @@ void ASMBuilder::getAddr(IRVarNode* var, Register* reg) {
     }
     else {
         auto tmp = dynamic_cast<ASMLocalVarNode*>(ptr);
-        if (!tmp->is_ptr) throw std::runtime_error("not a pointer when get address");
+        if (!tmp->is_ptr) throw std::runtime_error("not a pointer when get address: " + tmp->name);
         auto load = new ASMLoadInsNode("lw", reg, regAllocator.getReg("sp"), tmp->offset);
         currentBlock->insts.push_back(load);        
     }
@@ -282,12 +282,13 @@ void ASMBuilder::visitZextStmt(IRZextStmtNode* node) {
 }
 
 void ASMBuilder::visitLoadStmt(IRLoadStmtNode* node) {
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
+    auto var = new ASMLocalVarNode(node->var->name, spSize, node->var->type->to_string() == "ptr");
     varMap[node->var->name] = var;
     spSize += node->var->type->size();
     auto ptr = varMap[node->ptr->name];
-    if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
-    else getVar(ptr, regAllocator.getReg("s0"));
+    // if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
+    // else 
+    getVar(ptr, regAllocator.getReg("s0"));
     // auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("s0"), 0);
     // currentBlock->insts.push_back(load);
     storeVar(var, regAllocator.getReg("s0"));
@@ -297,8 +298,9 @@ void ASMBuilder::visitStoreStmt(IRStoreStmtNode* node) {
     getValue(node->value, regAllocator.getReg("s0"));
     auto ptr = varMap[node->ptr->name];
 
-    if (ptr->is_ptr) storePtr(ptr, regAllocator.getReg("s0"));
-    else storeVar(ptr, regAllocator.getReg("s0"));
+    // if (ptr->is_ptr) storePtr(ptr, regAllocator.getReg("s0"));
+    // else 
+    storeVar(ptr, regAllocator.getReg("s0"));
 
     if (node->value->type->to_string() == "ptr") ptr->is_ptr = true;
 }
