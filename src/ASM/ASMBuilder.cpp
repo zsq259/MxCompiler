@@ -2,6 +2,14 @@
 #include "ASMNode.h"
 #include "IRNode.h"
 
+ASMLocalVarNode* ASMBuilder::registerLocalVar(IRVarNode* var, bool p_ = false) {
+    if (varMap.count(var->name)) return dynamic_cast<ASMLocalVarNode*>(varMap[var->name]);
+    auto ret = new ASMLocalVarNode(var->name, spSize, p_);
+    spSize += var->type->size();
+    varMap[var->name] = ret;
+    return ret;
+}
+
 void ASMBuilder::getPtr(ASMVarNode* var, Register* reg) {
     if (!var->is_ptr) throw std::runtime_error("not a pointer");
     if (dynamic_cast<ASMGlobalVarNode*>(var)) {
@@ -108,9 +116,7 @@ void ASMBuilder::visitString(IRStringNode* node) {}
 void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
     ASMLocalVarNode* var = nullptr;
     if(node->var) {
-        var = new ASMLocalVarNode(node->var->name, spSize, node->var->type->to_string() == "ptr");
-        spSize += node->var->type->size();
-        varMap[node->var->name] = var;
+        var = registerLocalVar(node->var, node->var->type->to_string() == "ptr");
     }
     int cnt = 0;
     for (int i = 0, k = node->args.size(); i < k; ++i) {
@@ -135,9 +141,7 @@ void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
 }
 
 void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    spSize += node->var->type->size();
-    varMap[node->var->name] = var;
+    auto var = registerLocalVar(node->var, false);
     auto endBlock = new ASMBlockNode("endPhi" + std::to_string(counter["endPhi"]++));
     for (auto p: node->values) {
         auto value = p.first;
@@ -163,10 +167,9 @@ void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
 }
 
 void ASMBuilder::visitGetElementPtrStmt(IRGetElementPtrStmtNode* node) {
-    auto var = new ASMLocalVarNode(node->var->name, spSize, true);
-    spSize += node->var->type->size();
-    varMap[node->var->name] = var;
-    getVar(varMap[node->ptr->name], regAllocator.getReg("s0"));
+    auto var = registerLocalVar(node->var, true);
+    auto ptr= varMap[node->ptr->name];
+    getVar(ptr, regAllocator.getReg("s0"));
     getValue(node->index, regAllocator.getReg("s1"));
     auto tmp = new ASMImmInsNode("addi", regAllocator.getReg("t1"), regAllocator.getReg("zero"), node->var->type->size());
     currentBlock->insts.push_back(tmp);
@@ -180,9 +183,7 @@ void ASMBuilder::visitGetElementPtrStmt(IRGetElementPtrStmtNode* node) {
 void ASMBuilder::visitBinaryStmt(IRBinaryStmtNode* node) {
     getValue(node->lhs, regAllocator.getReg("s0"));
     getValue(node->rhs, regAllocator.getReg("s1"));
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    spSize += node->lhs->type->size();
-    varMap[node->var->name] = var;
+    auto var = registerLocalVar(node->var, false);
     std::string op = node->op;
     if (node->op == "sdiv") op = "div";
     else if (node->op == "srem") op = "rem";
@@ -196,9 +197,7 @@ void ASMBuilder::visitBinaryStmt(IRBinaryStmtNode* node) {
 void ASMBuilder::visitIcmpStmt(IRIcmpStmtNode* node) {
     getValue(node->lhs, regAllocator.getReg("s0"));
     getValue(node->rhs, regAllocator.getReg("s1"));
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    spSize += node->lhs->type->size();
-    varMap[node->var->name] = var;
+    auto var = registerLocalVar(node->var, false);
     if (node->op == "icmp eq") {
         auto tmp = new ASMBinaryInsNode("xor", regAllocator.getReg("s0"), regAllocator.getReg("s0"), regAllocator.getReg("s1"));
         currentBlock->insts.push_back(tmp);
@@ -267,24 +266,18 @@ void ASMBuilder::visitBrStmt(IRBrStmtNode* node) {
 
 void ASMBuilder::visitTruncStmt(IRTruncStmtNode* node) {
     getValue(node->value, regAllocator.getReg("s0"));
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    spSize += node->value->type->size();
-    varMap[node->var->name] = var;
+    auto var = registerLocalVar(node->var, false);
     storeVar(var, regAllocator.getReg("s0"));
 }
 
 void ASMBuilder::visitZextStmt(IRZextStmtNode* node) {
     getValue(node->value, regAllocator.getReg("s0"));
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    spSize += node->var->type->size();
-    varMap[node->var->name] = var;
+    auto var = registerLocalVar(node->var, false);
     storeVar(var, regAllocator.getReg("s0"));
 }
 
 void ASMBuilder::visitLoadStmt(IRLoadStmtNode* node) {
-    auto var = new ASMLocalVarNode(node->var->name, spSize, node->var->type->to_string() == "ptr");
-    varMap[node->var->name] = var;
-    spSize += node->var->type->size();
+    auto var = registerLocalVar(node->var, node->var->type->to_string() == "ptr");
     auto ptr = varMap[node->ptr->name];
     if (node->var->type->to_string() != "ptr") {
         if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
@@ -310,9 +303,7 @@ void ASMBuilder::visitStoreStmt(IRStoreStmtNode* node) {
 }
 
 void ASMBuilder::visitAllocaStmt(IRAllocaStmtNode* node) {
-    auto var = new ASMLocalVarNode(node->var->name, spSize, false);
-    varMap[node->var->name] = var;
-    spSize += node->type->size();
+    registerLocalVar(node->var, false);
 }
 
 void ASMBuilder::visitBlock(IRBlockNode* node) {

@@ -54,6 +54,7 @@ public:
     void getValue(IRValueNode* value, Register* reg);
     void storeVar(ASMVarNode* var, Register* reg);
     void storePtr(ASMVarNode* var, Register* reg);
+    ASMLocalVarNode* registerLocalVar(IRVarNode* var, bool p_);
 };
 
 #endif
