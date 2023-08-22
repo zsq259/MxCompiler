@@ -259,10 +259,10 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
             if (v.second) {
                 v.second->accept(this);
                 auto rhs = setVariable(type, astValueMap[v.second]);
-                currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var, type->to_string() == "ptr" && !(node->type->name == "string")));   
+                currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var, false));   
             }
             else if (type->to_string() == "ptr") {
-                currentBlock->stmts.push_back(new IRStoreStmtNode(&nullNode, var, !(node->type->name == "string")));
+                currentBlock->stmts.push_back(new IRStoreStmtNode(&nullNode, var, false));
             }
             varMap[v.first] = var;
         }
@@ -716,7 +716,7 @@ void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {
     auto lhs = dynamic_cast<IRVarNode*>(astValueMap[node->lhs]);
     node->rhs->accept(this);
     auto rhs = setVariable(type, astValueMap[node->rhs]);
-    currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs, rhs->type->to_string() == "ptr" && !node->type.is_string()));
+    currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs, false));
 }
 
 void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {

@@ -300,11 +300,11 @@ void ASMBuilder::visitZextStmt(IRZextStmtNode* node) {
 void ASMBuilder::visitLoadStmt(IRLoadStmtNode* node) {
     auto var = registerLocalVar(node->var, node->var->type->to_string() == "ptr");
     auto ptr = varMap[node->ptr->name];
-    if (node->var->type->to_string() != "ptr") {
+    // if (node->var->type->to_string() != "ptr") {
         if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
         else getVar(ptr, regAllocator.getReg("s0"));
-    }
-    else getVar(ptr, regAllocator.getReg("s0"));
+    // }
+    // else getVar(ptr, regAllocator.getReg("s0"));
     // auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("s0"), 0);
     // currentBlock->insts.push_back(load);
     storeVar(var, regAllocator.getReg("s0"));
@@ -314,11 +314,11 @@ void ASMBuilder::visitStoreStmt(IRStoreStmtNode* node) {
     getValue(node->value, regAllocator.getReg("s0"));
     auto ptr = varMap[node->ptr->name];
 
-    if (node->value->type->to_string() != "ptr") {
+    // if (node->value->type->to_string() != "ptr") {
         if (ptr->is_ptr) storePtr(ptr, regAllocator.getReg("s0"));
         else storeVar(ptr, regAllocator.getReg("s0"));
-    }
-    else storeVar(ptr, regAllocator.getReg("s0"));
+    // }
+    // else storeVar(ptr, regAllocator.getReg("s0"));
 
     if (node->is_ptr) ptr->is_ptr = true;
 }
