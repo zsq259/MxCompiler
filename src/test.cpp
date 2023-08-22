@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
 			in.close();
 		}
 		GlobalScope globalscope(nullptr);
-		
+		globalscope.scopeName = ".0";
 		ClassColletor classcollector(&globalscope);
 		classcollector.init();
 		classcollector.visit(ast.root);

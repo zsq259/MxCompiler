@@ -147,7 +147,7 @@ void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
         auto block = new ASMBlockNode(".LloadPhiValue" + std::to_string(counter["loadPhiValue"]++));
         auto la = new ASMLaInsNode(regAllocator.getReg("t5"), label);
         currentBlock->insts.push_back(la);
-        auto neq = new ASMBranchInsNode("bne", regAllocator.getReg("t5"), regAllocator.getReg("t6"), block->name);
+        auto neq = new ASMBranchInsNode("beq", regAllocator.getReg("t5"), regAllocator.getReg("t6"), block->name);
         currentBlock->insts.push_back(neq);
         auto formerBlock = currentBlock;
         currentBlock = block;
@@ -286,9 +286,11 @@ void ASMBuilder::visitLoadStmt(IRLoadStmtNode* node) {
     varMap[node->var->name] = var;
     spSize += node->var->type->size();
     auto ptr = varMap[node->ptr->name];
-    // if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
-    // else 
-    getVar(ptr, regAllocator.getReg("s0"));
+    if (node->var->type->to_string() != "ptr") {
+        if (ptr->is_ptr) getPtr(ptr, regAllocator.getReg("s0"));
+        else getVar(ptr, regAllocator.getReg("s0"));
+    }
+    else getVar(ptr, regAllocator.getReg("s0"));
     // auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("s0"), 0);
     // currentBlock->insts.push_back(load);
     storeVar(var, regAllocator.getReg("s0"));
@@ -298,9 +300,11 @@ void ASMBuilder::visitStoreStmt(IRStoreStmtNode* node) {
     getValue(node->value, regAllocator.getReg("s0"));
     auto ptr = varMap[node->ptr->name];
 
-    // if (ptr->is_ptr) storePtr(ptr, regAllocator.getReg("s0"));
-    // else 
-    storeVar(ptr, regAllocator.getReg("s0"));
+    if (node->value->type->to_string() != "ptr") {
+        if (ptr->is_ptr) storePtr(ptr, regAllocator.getReg("s0"));
+        else storeVar(ptr, regAllocator.getReg("s0"));
+    }
+    else storeVar(ptr, regAllocator.getReg("s0"));
 
     if (node->value->type->to_string() == "ptr") ptr->is_ptr = true;
 }
