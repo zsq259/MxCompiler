@@ -133,14 +133,14 @@ void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
     for (int i = 0, k = node->args.size(); i < k; ++i) {
         auto arg = node->args[i];
         if (i < 8) {
-            if (arg->type->to_string() != "ptr")
+            // if (arg->type->to_string() != "ptr")
                 getValue(arg, regAllocator.getReg("a" + std::to_string(i)));
-            else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("a" + std::to_string(i)));
+            // else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("a" + std::to_string(i)));
         }
         else {
-            if (arg->type->to_string() != "ptr")
+            // if (arg->type->to_string() != "ptr")
                 getValue(arg, regAllocator.getReg("s0"));
-            else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("s0"));
+            // else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("s0"));
             cnt += arg->type->size();
             auto store = new ASMStoreInsNode("sw", regAllocator.getReg("sp"), regAllocator.getReg("s0"), -cnt);
             currentBlock->insts.push_back(store);
