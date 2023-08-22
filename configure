@@ -12,6 +12,8 @@ cmake --build build
 mkdir -p bin
 cp build/mxc bin/mxc
 cd bin
-clang-15 -emit-llvm --target=riscv32-unknown-elf -O2 -fno-builtin-printf -fno-builtin-memcpy -c ../IR/builtin.c -o builtin_intermediate.ll
+clang-15 -emit-llvm --target=riscv32-unknown-elf -O2 -fno-builtin-printf -fno-builtin-memcpy -c ../src/IR/builtin.c -o builtin_intermediate.ll
 sed 's/string_/string./g;s/array_/array./g' builtin_intermediate.ll > builtin.ll
+rm builtin_intermediate.ll
 clang-15 -S builtin.ll --target=riscv32-unknown-elf -o builtin.s
+rm builtin.ll
