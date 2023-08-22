@@ -290,7 +290,7 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
     func->blocks.push_back(new IRBlockNode("entry"));
     currentFunction = func;
     currentBlock = func->blocks.front();
-    if (node->name == "main" && !varInitList.empty()) {
+    if (!currentClass &&  node->name == "main" && !varInitList.empty()) {
         auto call = new IRCallStmtNode(nullptr, "__.init");
         currentBlock->stmts.push_back(call);
     }
@@ -301,7 +301,7 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
         auto arg = new IRVarNode(varType, node->paras[i].second, true);
         valueSet.insert(arg);
         currentBlock->stmts.push_back(new IRAllocaStmtNode(var, varType));
-        currentBlock->stmts.push_back(new IRStoreStmtNode(arg, var, arg->type->to_string() == "ptr"));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(arg, var, false));
         varMap[node->uniqueNameParas[i].second] = var;
     }
     IRVarNode* ret = nullptr;
@@ -480,7 +480,7 @@ void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
         currentBlock->stmts.push_back(new IRStoreStmtNode(ret, currentReturnVar, (ret->type->to_string() == "ptr" && node->expr->type.name != "string")));
         currentBlock->stmts.push_back(new IRBrStmtNode(currentReturnBlock->label));
     }
-    else currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
+    else currentBlock->stmts.push_back(new IRBrStmtNode(currentReturnBlock->label));
 }
 
 void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {

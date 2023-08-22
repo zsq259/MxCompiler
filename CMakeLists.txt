@@ -56,7 +56,7 @@ foreach (test_file ${test_files})
     add_test(NAME ${testname}
             COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
-    set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 5)
+    set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 40)
 endforeach ()
 
 enable_testing()

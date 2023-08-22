@@ -44,8 +44,10 @@ void ASMBuilder::getVar(ASMVarNode* var, Register* reg) {
         auto tmp = dynamic_cast<ASMGlobalVarNode*>(var);
         auto la = new ASMLaInsNode(reg, tmp->name);
         currentBlock->insts.push_back(la);
-        auto load = new ASMLoadInsNode("lw", reg, reg, 0);
-        currentBlock->insts.push_back(load);
+        if (!var->is_ptr) {
+            auto load = new ASMLoadInsNode("lw", reg, reg, 0);
+            currentBlock->insts.push_back(load);
+        }
     }
     else {
         auto tmp = dynamic_cast<ASMLocalVarNode*>(var);
@@ -397,7 +399,7 @@ void ASMBuilder::visitGlobalVarStmt(IRGlobalVarStmtNode* node) {
     }
     auto globalVar = new ASMGlobalVarStmtNode(node->var->name, str, is_string);
     program->data->globalVarStmts.push_back(globalVar);
-    varMap[node->var->name] = new ASMGlobalVarNode(node->var->name, false);
+    varMap[node->var->name] = new ASMGlobalVarNode(node->var->name, is_string);
 }
 
 void ASMBuilder::visitProgram(IRProgramNode* node) {
