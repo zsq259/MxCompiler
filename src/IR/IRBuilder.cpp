@@ -477,7 +477,7 @@ void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
     if (node->expr) {
         node->expr->accept(this);
         auto ret = setVariable(toIRType(&(node->expr->type)), astValueMap[node->expr]);
-        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, currentReturnVar, (ret->type->to_string() == "ptr" && node->expr->type.name != "string")));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, currentReturnVar, false));
         currentBlock->stmts.push_back(new IRBrStmtNode(currentReturnBlock->label));
     }
     else currentBlock->stmts.push_back(new IRBrStmtNode(currentReturnBlock->label));
