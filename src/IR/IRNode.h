@@ -141,8 +141,9 @@ class IRStoreStmtNode: public IRStmtNode {
 public:
     IRValueNode* value = nullptr;
     IRVarNode* ptr = nullptr;
+    bool is_ptr = false;
 
-    explicit IRStoreStmtNode(IRValueNode* value_, IRVarNode* ptr_): value(value_), ptr(ptr_) {}
+    explicit IRStoreStmtNode(IRValueNode* value_, IRVarNode* ptr_, bool p_): value(value_), ptr(ptr_), is_ptr(p_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitStoreStmt(this); }

@@ -3,11 +3,20 @@
 #include "IRNode.h"
 
 ASMLocalVarNode* ASMBuilder::registerLocalVar(IRVarNode* var, bool p_ = false) {
-    if (varMap.count(var->name)) return dynamic_cast<ASMLocalVarNode*>(varMap[var->name]);
+    if (varMap.count(var->name)) {
+        auto ret = dynamic_cast<ASMLocalVarNode*>(varMap[var->name]);
+        ret->is_ptr = p_;
+        return ret;
+    }
     auto ret = new ASMLocalVarNode(var->name, spSize, p_);
     spSize += var->type->size();
     varMap[var->name] = ret;
     return ret;
+}
+
+ASMVarNode* ASMBuilder::getVarNode(IRVarNode* var) {
+    if (varMap.count(var->name)) return varMap[var->name];
+    else return registerLocalVar(var, false);
 }
 
 void ASMBuilder::getPtr(ASMVarNode* var, Register* reg) {
@@ -48,7 +57,7 @@ void ASMBuilder::getVar(ASMVarNode* var, Register* reg) {
 void ASMBuilder::getValue(IRValueNode* value, Register* reg) {
     if (dynamic_cast<IRVarNode*>(value)) {
         auto tmp = dynamic_cast<IRVarNode*>(value);
-        auto ptr = varMap[tmp->name];
+        auto ptr = getVarNode(tmp);
         getVar(ptr, reg);
     }
     else if (dynamic_cast<IRLiteralNode*>(value)) {
@@ -142,7 +151,7 @@ void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
 
 void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
     auto var = registerLocalVar(node->var, false);
-    auto endBlock = new ASMBlockNode("endPhi" + std::to_string(counter["endPhi"]++));
+    auto endBlock = new ASMBlockNode(".LendPhi" + std::to_string(counter["endPhi"]++));
     for (auto p: node->values) {
         auto value = p.first;
         auto label = p.second;
@@ -151,6 +160,9 @@ void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
         auto block = new ASMBlockNode(".LloadPhiValue" + std::to_string(counter["loadPhiValue"]++));
         auto la = new ASMLaInsNode(regAllocator.getReg("t5"), label);
         currentBlock->insts.push_back(la);
+
+        phiLaMap[label].push_back(la);
+
         auto neq = new ASMBranchInsNode("beq", regAllocator.getReg("t5"), regAllocator.getReg("t6"), block->name);
         currentBlock->insts.push_back(neq);
         auto formerBlock = currentBlock;
@@ -161,9 +173,18 @@ void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
         program->text->functions.back()->blocks.push_back(block);
         currentBlock = formerBlock;
     }
+
+    for (auto la: phiLaMap[currentBlock->name]) {
+        la->name = endBlock->name;
+        phiLaMap[endBlock->name].push_back(la);
+    }
+    phiLaMap[currentBlock->name].clear();
+
     program->text->functions.back()->blocks.push_back(endBlock);
     currentBlock = endBlock;
     storeVar(var, regAllocator.getReg("s0"));
+
+    
 }
 
 void ASMBuilder::visitGetElementPtrStmt(IRGetElementPtrStmtNode* node) {
@@ -299,7 +320,7 @@ void ASMBuilder::visitStoreStmt(IRStoreStmtNode* node) {
     }
     else storeVar(ptr, regAllocator.getReg("s0"));
 
-    if (node->value->type->to_string() == "ptr") ptr->is_ptr = true;
+    if (node->is_ptr) ptr->is_ptr = true;
 }
 
 void ASMBuilder::visitAllocaStmt(IRAllocaStmtNode* node) {

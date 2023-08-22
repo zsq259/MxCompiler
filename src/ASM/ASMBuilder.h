@@ -20,6 +20,7 @@ private:
     ASMImmInsNode *spAddIns, *spRetIns;
     std::map<std::string, ASMVarNode*> varMap;
     std::map<std::string, int> counter;
+    std::map<std::string, std::vector<ASMLaInsNode*>> phiLaMap;
 
 public:
     ASMBuilder() {}
@@ -55,6 +56,7 @@ public:
     void storeVar(ASMVarNode* var, Register* reg);
     void storePtr(ASMVarNode* var, Register* reg);
     ASMLocalVarNode* registerLocalVar(IRVarNode* var, bool p_);
+    ASMVarNode* getVarNode(IRVarNode* var);
 };
 
 #endif

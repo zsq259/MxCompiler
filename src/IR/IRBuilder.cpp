@@ -201,7 +201,7 @@ void IRBuilder::initGlobalVar() {
     for (auto v: varInitList) {
         v.second->accept(this);
         auto rhs = setVariable(toIRType(&(v.second->type)), astValueMap[v.second]);
-        currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, v.first));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, v.first, false));
     }
     currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
     currentFunction = nullptr;
@@ -259,10 +259,10 @@ void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
             if (v.second) {
                 v.second->accept(this);
                 auto rhs = setVariable(type, astValueMap[v.second]);
-                currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var));   
+                currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, var, type->to_string() == "ptr" && !(node->type->name == "string")));   
             }
             else if (type->to_string() == "ptr") {
-                currentBlock->stmts.push_back(new IRStoreStmtNode(&nullNode, var));
+                currentBlock->stmts.push_back(new IRStoreStmtNode(&nullNode, var, !(node->type->name == "string")));
             }
             varMap[v.first] = var;
         }
@@ -301,7 +301,7 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
         auto arg = new IRVarNode(varType, node->paras[i].second, true);
         valueSet.insert(arg);
         currentBlock->stmts.push_back(new IRAllocaStmtNode(var, varType));
-        currentBlock->stmts.push_back(new IRStoreStmtNode(arg, var));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(arg, var, arg->type->to_string() == "ptr"));
         varMap[node->uniqueNameParas[i].second] = var;
     }
     IRVarNode* ret = nullptr;
@@ -477,7 +477,7 @@ void IRBuilder::visitReturnStmtNode(ASTReturnStmtNode *node) {
     if (node->expr) {
         node->expr->accept(this);
         auto ret = setVariable(toIRType(&(node->expr->type)), astValueMap[node->expr]);
-        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, currentReturnVar));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, currentReturnVar, (ret->type->to_string() == "ptr" && node->expr->type.name != "string")));
         currentBlock->stmts.push_back(new IRBrStmtNode(currentReturnBlock->label));
     }
     else currentBlock->stmts.push_back(new IRRetStmtNode(nullptr));
@@ -494,13 +494,13 @@ void IRBuilder::visitSingleExprNode(ASTSingleExprNode *node) {
         currentBlock->stmts.push_back(new IRBinaryStmtNode("add", ret, tmp, &intOneNode));
         auto expr = dynamic_cast<IRVarNode*>(astValueMap[node->expr]);
         if (!expr) throw std::runtime_error("++ not a value");
-        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr, false));
     }
     else if (node->op == "--") {
         currentBlock->stmts.push_back(new IRBinaryStmtNode("sub", ret, tmp, &intOneNode));
         auto expr = dynamic_cast<IRVarNode*>(astValueMap[node->expr]);
         if (!expr) throw std::runtime_error("-- not a value");
-        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(ret, expr, false));
     }
     else if (node->op == "-") {
         currentBlock->stmts.push_back(new IRBinaryStmtNode("sub", ret, &intZeroNode, tmp));
@@ -716,7 +716,7 @@ void IRBuilder::visitAssignExprNode(ASTAssignExprNode *node) {
     auto lhs = dynamic_cast<IRVarNode*>(astValueMap[node->lhs]);
     node->rhs->accept(this);
     auto rhs = setVariable(type, astValueMap[node->rhs]);
-    currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs));
+    currentBlock->stmts.push_back(new IRStoreStmtNode(rhs, lhs, rhs->type->to_string() == "ptr" && !node->type.is_string()));
 }
 
 void IRBuilder::visitLiterExprNode(ASTLiterExprNode *node) {
@@ -815,7 +815,7 @@ IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
         auto ind = new IRVarNode(&ptrType, "_new.ind" + std::to_string(counter["new.ind"]++), true);
         valueSet.insert(ind);
         currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ind, ptr, i, &ptrType));
-        currentBlock->stmts.push_back(new IRStoreStmtNode(retPtr, ind));
+        currentBlock->stmts.push_back(new IRStoreStmtNode(retPtr, ind, true));
         phi->values.emplace_back(next, currentBlock->label);
         auto tmp = new IRVarNode(&i1Type, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
         valueSet.insert(tmp);
