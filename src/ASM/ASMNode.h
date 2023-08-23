@@ -1,7 +1,8 @@
 #ifndef ASM_NODE_H
 #define ASM_NODE_H
 #include <string>
-#include <list>
+#include <vector>
+#include <iostream>
 #include "Register.h"
 
 class ASMNode {
@@ -113,14 +114,21 @@ public:
 class ASMBlockNode: public ASMNode {
 public:
     std::string name;
-    std::list<ASMInsNode*> insts;
+    std::vector<ASMInsNode*> insts;
     explicit ASMBlockNode(std::string name_): name(name_) {}
+    ~ASMBlockNode() override {
+        for (auto ins: insts) delete ins;
+    }
     std::string to_string() override;
 };
 
 class ASMFunctionNode: public ASMNode {
 public:
-    std::list<ASMBlockNode*> blocks;
+    std::vector<ASMBlockNode*> blocks;
+
+    ~ASMFunctionNode() override {
+        for (auto b: blocks) delete b;
+    }
     std::string to_string() override;
 };
 
@@ -135,14 +143,19 @@ public:
 
 class ASMDataSectionNode: public ASMNode {
 public:
-    std::list<ASMGlobalVarStmtNode*> globalVarStmts;
-
+    std::vector<ASMGlobalVarStmtNode*> globalVarStmts;
+    ~ASMDataSectionNode() override {
+        for (auto g: globalVarStmts) delete g;
+    }
     std::string to_string() override;
 };
 
 class ASMTextSectionNode: public ASMNode {
 public:
-    std::list<ASMFunctionNode*> functions;
+    std::vector<ASMFunctionNode*> functions;
+    ~ASMTextSectionNode() override {
+        for (auto f: functions) delete f;
+    }
     std::string to_string() override;
 };
 
@@ -152,6 +165,10 @@ public:
     ASMTextSectionNode* text = nullptr;
     
     ASMProgramNode() = default;
+    ~ASMProgramNode() override {
+        delete data;
+        delete text;
+    }
     std::string to_string() override;
 };
 

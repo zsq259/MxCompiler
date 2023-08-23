@@ -9,6 +9,7 @@ ASMLocalVarNode* ASMBuilder::registerLocalVar(IRVarNode* var, bool p_ = false) {
         return ret;
     }
     auto ret = new ASMLocalVarNode(var->name, spSize, p_);
+    varSet.insert(ret);
     spSize += var->type->size();
     varMap[var->name] = ret;
     return ret;
@@ -133,14 +134,10 @@ void ASMBuilder::visitCallStmt(IRCallStmtNode* node) {
     for (int i = 0, k = node->args.size(); i < k; ++i) {
         auto arg = node->args[i];
         if (i < 8) {
-            // if (arg->type->to_string() != "ptr")
-                getValue(arg, regAllocator.getReg("a" + std::to_string(i)));
-            // else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("a" + std::to_string(i)));
+            getValue(arg, regAllocator.getReg("a" + std::to_string(i)));    
         }
         else {
-            // if (arg->type->to_string() != "ptr")
-                getValue(arg, regAllocator.getReg("s0"));
-            // else getAddr(dynamic_cast<IRVarNode*>(arg), regAllocator.getReg("s0"));
+            getValue(arg, regAllocator.getReg("s0"));
             cnt += arg->type->size();
             auto store = new ASMStoreInsNode("sw", regAllocator.getReg("sp"), regAllocator.getReg("s0"), -cnt);
             currentBlock->insts.push_back(store);
@@ -337,11 +334,11 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         auto spAdd = new ASMImmInsNode("addi", regAllocator.getReg("sp"), regAllocator.getReg("sp"), -spSize);
         block->insts.push_back(spAdd);
         spAddIns = spAdd;
-        
         int cnt = 0;
         for (int i = 8, k = currentFunction->args.size(); i < k; ++i) {
             auto arg = currentFunction->args[i];
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
+            varSet.insert(var);
             spSize += arg.first->size();
             varMap[arg.second] = var;
             cnt += arg.first->size();
@@ -352,12 +349,13 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         for (int i = 0, k = currentFunction->args.size(); i < std::min(8, k); ++i) {
             auto arg = currentFunction->args[i];
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
+            varSet.insert(var);
             varMap[arg.second] = var;
             spSize += arg.first->size();
             storeVar(var, regAllocator.getReg("a" + std::to_string(i)));
         }
-
         auto raVar = new ASMLocalVarNode("..ra" + currentFunction->name, spSize, false);
+        varSet.insert(raVar);
         spSize += 4;
         varMap["..ra" + currentFunction->name] = raVar;
         auto raStore = new ASMStoreInsNode("sw", regAllocator.getReg("sp"), regAllocator.getReg("ra"), raVar->offset);
@@ -399,7 +397,9 @@ void ASMBuilder::visitGlobalVarStmt(IRGlobalVarStmtNode* node) {
     }
     auto globalVar = new ASMGlobalVarStmtNode(node->var->name, str, is_string);
     program->data->globalVarStmts.push_back(globalVar);
-    varMap[node->var->name] = new ASMGlobalVarNode(node->var->name, is_string);
+    auto var = new ASMGlobalVarNode(node->var->name, is_string);
+    varSet.insert(var);
+    varMap[node->var->name] = var;
 }
 
 void ASMBuilder::visitProgram(IRProgramNode* node) {

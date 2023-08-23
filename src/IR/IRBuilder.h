@@ -33,6 +33,7 @@ public:
     ~IRBuilder() { 
         delete program; 
         for (auto v: valueSet) delete v;
+        for (auto c: classMap) delete c.second;
     }
     void visitContinueStmtNode(ASTContinueStmtNode *node) override;
     void visitTernaryExprNode(ASTTernaryExprNode *node) override;

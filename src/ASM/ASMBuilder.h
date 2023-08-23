@@ -14,17 +14,21 @@ class ASMBuilder : public IRBaseVisitor {
 private:
     int spSize = 0;
     RegisterAllocator regAllocator;
-    ASMProgramNode* program;
-    IRFunctionNode* currentFunction;
+    ASMProgramNode* program = nullptr;
+    IRFunctionNode* currentFunction = nullptr;
     ASMBlockNode* currentBlock;
-    ASMImmInsNode *spAddIns, *spRetIns;
+    ASMImmInsNode *spAddIns = nullptr, *spRetIns = nullptr;
     std::map<std::string, ASMVarNode*> varMap;
+    std::set<ASMVarNode*> varSet;
     std::map<std::string, int> counter;
     std::map<std::string, std::vector<ASMLaInsNode*>> phiLaMap;
 
 public:
     ASMBuilder() {}
-    ~ASMBuilder() {}
+    ~ASMBuilder() { 
+        delete program; 
+        for (auto v: varSet) delete v;
+    }
     void visitValue(IRValueNode* node) override;
     void visitVar(IRVarNode* node) override;
     void visitGlobalVar(IRGlobalVarNode* node) override;
