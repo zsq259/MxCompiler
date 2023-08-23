@@ -6,6 +6,7 @@
 #include "../Semantic/SemanticChecker.h"
 #include "../IR/IRBuilder.h"
 #include "../ASM/ASMBuilder.h"
+#include "../Optimize/Mem2Reg/DomTreeBuilder.h"
 #include "MxLexer.h"
 using std::cerr;
 
@@ -64,6 +65,8 @@ int main(int argc, char const *argv[]) {
 		std::cerr << "okkkkk1\n";
 		irbuilder.visit(ast.root);
 		std::cerr << "okkkkk2\n";
+
+		
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }
 		}

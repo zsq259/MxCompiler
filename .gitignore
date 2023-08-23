@@ -12,6 +12,7 @@ test.txt
 *.out
 *.ll
 *.s
+*.bash
 run
 generate-ll
 generate-s

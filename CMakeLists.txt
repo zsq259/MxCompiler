@@ -16,6 +16,7 @@ include_directories(src/AST)
 include_directories(src/Util)
 include_directories(src/IR)
 include_directories(src/ASM)
+include_directories(src/Optimize/Mem2Reg)
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
