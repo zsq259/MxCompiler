@@ -6,7 +6,7 @@
 #include "../Semantic/SemanticChecker.h"
 #include "../IR/IRBuilder.h"
 #include "../ASM/ASMBuilder.h"
-#include "../Optimize/Mem2Reg/DomTreeBuilder.h"
+#include "../Optimize/Mem2Reg/Mem2RegBuilder.h"
 #include "MxLexer.h"
 using std::cerr;
 
@@ -61,22 +61,23 @@ int main(int argc, char const *argv[]) {
 		}
 		
 		IRBuilder irbuilder;
-
 		std::cerr << "okkkkk1\n";
 		irbuilder.visit(ast.root);
 		std::cerr << "okkkkk2\n";
-
+		
+		Mem2RegBuilder mem2regbuilder;
+		mem2regbuilder.visit(irbuilder.root());
 		
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }
 		}
 
-		ASMBuilder asmbuilder;
-		asmbuilder.visit(irbuilder.root());
-		std::cerr << "okkkkk3\n";
-		for (int i = 1; i < argc; ++i) {
-			if (std::string(argv[i]) == "-S") asmbuilder.print();
-		}
+		// ASMBuilder asmbuilder;
+		// asmbuilder.visit(irbuilder.root());
+		// std::cerr << "okkkkk3\n";
+		// for (int i = 1; i < argc; ++i) {
+		// 	if (std::string(argv[i]) == "-S") asmbuilder.print();
+		// }
 	}
 	catch (std::exception &e) {
 		cerr << e.what() << '\n';

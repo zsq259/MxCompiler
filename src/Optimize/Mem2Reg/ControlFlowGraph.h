@@ -28,7 +28,15 @@ public:
         name2node[from]->next.push_back(name2node[to]);
         name2node[to]->pred.push_back(name2node[from]);
     }
-
+    void print() {
+        for (auto it = name2node.begin(); it != name2node.end(); it++) {
+            std::cerr << it->first << ": ";
+            for (auto child : it->second->next) {
+                std::cerr << child->name << ", ";
+            }
+            std::cerr << std::endl;
+        }
+    }
 };
 
 #endif

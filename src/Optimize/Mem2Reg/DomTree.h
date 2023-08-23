@@ -2,13 +2,15 @@
 #define DOM_TREE_H
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 
 struct DomTreeNode {
     int id;
     std::string name;
+    DomTreeNode* parent = nullptr;
     std::vector<DomTreeNode*> children;
-    std::vector<int> frontier, dom;
+    std::set<int> frontier, dom;
     explicit DomTreeNode(std::string name_, int id_) : name(name_), id(id_) {}
 };
 
@@ -28,7 +30,7 @@ public:
     }
     void init() {
         for (auto it: name2node) {
-            for (int i = 0; i < cnt; ++i) it.second->frontier.push_back(i);
+            for (int i = 0; i < cnt; ++i) it.second->dom.insert(i);
         }
     }
     void addNode(std::string name) {
@@ -38,16 +40,32 @@ public:
         name2id[name] = cnt++;
     }
     void addEdge(std::string from, std::string to) {
+        name2node[to]->parent = name2node[from];
         name2node[from]->children.push_back(name2node[to]);
     }
-    void print() {
-        for (auto it = name2node.begin(); it != name2node.end(); it++) {
-            std::cout << it->first << ": ";
-            for (auto child : it->second->children) {
-                std::cout << child << ", ";
+    void addEdge(DomTreeNode* from, DomTreeNode* to) {
+        to->parent = from;
+        from->children.push_back(to);
+    }
+    void printDom() {
+        for (auto it: name2node) {
+            std::cerr << it.first << ": ";
+            for (auto id: it.second->dom) {
+                std::cerr << id2node[id]->name << ", ";
             }
-            std::cout << std::endl;
+            std::cerr << '\n';
         }
+        std::cerr << std::endl;
+    }
+    void print() {
+        for (auto it: name2node) {
+            std::cerr << it.first << ": ";
+            for (auto child : it.second->children) {
+                std::cerr << child->name << ", ";
+            }
+            std::cerr << "\n";
+        }
+        std::cerr << std::endl;
     }
     
 };
