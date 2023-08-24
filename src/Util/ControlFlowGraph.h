@@ -17,6 +17,7 @@ struct CFGNode {
 class DomTreeBuilder;
 class Mem2RegBuilder;
 class CFGBuilder;
+class ASMBuilder;
 
 class ControlFlowGraph {
 private:
@@ -26,6 +27,7 @@ private:
     friend class DomTreeBuilder;
     friend class Mem2RegBuilder;
     friend class CFGBuilder;
+    friend class ASMBuilder;
 public:
     void addNode(IRBlockNode* block) {
         name2node[block->label] = new CFGNode(block->label, cnt++, block);

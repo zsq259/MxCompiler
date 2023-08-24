@@ -106,7 +106,6 @@ public:
                 while (true) {
                     if (now->dom.count(tmp->id)) break;
                     tmp->frontier.insert(now->id);
-                    domTree->frontierLabelMap[std::make_pair(tmp, now)] = tmp2->name;
                     tmp = tmp->parent;
                 }
             }

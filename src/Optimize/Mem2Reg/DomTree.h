@@ -25,7 +25,6 @@ private:
     std::map<std::string, DomTreeNode*> name2node;
     std::map<std::string, int> name2id;
     std::map<int, DomTreeNode*> id2node;
-    std::map<std::pair<DomTreeNode*, DomTreeNode*>, std::string> frontierLabelMap;
     DomTreeNode* root;
     friend class DomTreeBuilder;
     friend class Mem2RegBuilder;

@@ -127,7 +127,7 @@ public:
         }
         auto nowBlock = node->block;
         for (auto next: node->next) {
-            if (node->pred.size() <= 1) continue;
+            if (next->pred.size() <= 1) continue;
             auto nextBlock = next->block;
 
             auto block = new IRBlockNode("._eliminateCriticalEdge." + std::to_string(counter["eliminateCriticalEdge"]++));
@@ -167,9 +167,10 @@ public:
                 while (pr < len && phis[pl]->var->name == phis[pr]->var->name) ++pr;
                 auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name, phis[pl]->var->isConst);
                 auto phi = new IRPhiStmtNode(var);
+
                 block->stmts.push_front(phi);
                 phiRenameSet.insert(phi);
-                pl = pr;            
+                pl = pr;
             }
         }
         visitCFG(domTreeBuilder->cfg->entry, nullptr);
