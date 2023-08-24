@@ -110,7 +110,10 @@ public:
                 else if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
                     for (auto arg: s->values) useMap[arg.second].push_back(s);
                 }
-                else if (auto s = dynamic_cast<IRGetElementPtrStmtNode*>(stmt)) useMap[s->index].push_back(s);
+                else if (auto s = dynamic_cast<IRGetElementPtrStmtNode*>(stmt)) {
+                    useMap[s->ptr].push_back(s);
+                    useMap[s->index].push_back(s);
+                }
             }
         }
     }
@@ -145,6 +148,11 @@ public:
         visitCFG(domTreeBuilder->cfg->entry, nullptr);
         for (auto phi: phiRenameSet) {
             phi->var->name += ".rename" + std::to_string(counter[phi->var->name + ".rename"]++);
+        }
+        for (auto it = node->blocks.begin(); it != node->blocks.end();) {
+            auto block = *it;
+            if (!visited.count(domTreeBuilder->cfg->name2node[block->label])) it = node->blocks.erase(it);
+            else ++it;
         }
     }
     void visitProgram(IRProgramNode* node) override {

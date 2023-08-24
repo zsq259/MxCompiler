@@ -73,6 +73,7 @@ public:
     void initGlobalVar();
     IRVarNode* mallocNewArray(ASTNewTypeNode* node, int index);
     IRProgramNode* root() { return program; }
+    void elinimate();
 };
 
 #endif

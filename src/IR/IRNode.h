@@ -255,6 +255,7 @@ public:
     void accept(IRBaseVisitor* visitor){ visitor->visitGetElementPtrStmt(this); }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (index == from) index = to;
+        if (ptr == dynamic_cast<IRVarNode*>(from)) ptr = dynamic_cast<IRVarNode*>(to);
     }
 };
 
@@ -274,7 +275,7 @@ public:
     IRType* retType = nullptr;
     std::string name;
     std::vector<std::pair<IRType*, std::string>> args;
-    std::vector<IRBlockNode*> blocks;
+    std::list<IRBlockNode*> blocks;
 
     explicit IRFunctionNode(IRType* retType_, std::string name_): retType(retType_), name(name_) {}
     ~IRFunctionNode() { 

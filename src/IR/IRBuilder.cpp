@@ -229,6 +229,7 @@ void IRBuilder::visitProgramNode(ASTProgramNode *node) {
             cls->accept(this);
         }
     }
+    elinimate();
 }
 
 void IRBuilder::visitVarStmtNode(ASTVarStmtNode *node) {
@@ -847,5 +848,20 @@ void IRBuilder::visitNewExprNode(ASTNewExprNode *node) {
     }
     else {
         astValueMap[node] = mallocNewArray(node->newType, 0);
+    }
+}
+
+void IRBuilder::elinimate() {
+    for (auto func: program->functions) {
+        for (auto block: func->blocks) {
+            for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
+                auto stmt = *it;
+                if (dynamic_cast<IRBrStmtNode*>(stmt) || dynamic_cast<IRBrCondStmtNode*>(stmt) || dynamic_cast<IRRetStmtNode*>(stmt)) {
+                    ++it;
+                    while (it != block->stmts.end()) it = block->stmts.erase(it);
+                    break;
+                }
+            }
+        }
     }
 }
