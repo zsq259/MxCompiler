@@ -23,7 +23,7 @@ private:
     std::map<std::string, int> counter;
     std::set<IRPhiStmtNode*> phiRenameSet;
     std::set<CFGNode*> visited;
-    std::set<IRVarNode*> allocaSet;
+    std::set<std::string> allocaSet;
 public:
     Mem2RegBuilder() { domTreeBuilder = new DomTreeBuilder; }
 
@@ -36,29 +36,25 @@ public:
         visited.clear();
     }
     void setPhiStmt(DomTreeNode* node, IRValueNode* value, IRVarNode* var) {
-        // std::cerr << "oooooooooooooooooooooo\n";
-        // std::cerr << node->name << ": ";
         for (auto fid: node->frontier) {
             auto fnode = domTreeBuilder->domTree->id2node[fid];
-            // std::cerr <<domTreeBuilder->domTree->frontierLabelMap[std::make_pair(node, fnode)] << ", ";
-            // std::cerr << fnode->name << "; ";
             auto phi = new IRPhiStmtNode(var);
             phiMap[fnode->name].push_back(phi);
             useMap[var].push_back(phi);
             setPhiStmt(fnode, value, var);
         }
-        // std::cerr << "\nooooooooooooooooooooooooooooooooooooooooooooo\n";
     }
     void setPtrDef(DomTreeNode* node) {
         for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
+                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
                 if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 auto var = new IRVarNode(s->value->type, s->ptr->name, s->ptr->isConst);
                 setPhiStmt(node, s->value, var);
                 ++it;
             }
-            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var), it = node->block->stmts.erase(it);
+            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), it = node->block->stmts.erase(it);
             else ++it;
         }
         for (auto child: node->children) setPtrDef(child);        
@@ -68,7 +64,7 @@ public:
         for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end(); ++it) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
-                if (!allocaSet.count(s->var)) continue;
+                if (!allocaSet.count(s->var->name)) break;
                 if (!renameMap[s->var->name].size()) {
                     s->values[fa->name] = (s->var->type->to_string() == "ptr"? &nullNode: &intZeroNode);
                 }
@@ -82,16 +78,15 @@ public:
         for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
-                if (!allocaSet.count(s->ptr)) { ++it; continue; }
+                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
                 if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 renameMap[s->ptr->name].push_back(s->value);
                 it = node->block->stmts.erase(it);
             }
             else if (auto s = dynamic_cast<IRLoadStmtNode*>(stmt)) {
-                if (!allocaSet.count(s->ptr)) { ++it; continue; }
+                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
                 if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 if (!renameMap[s->ptr->name].size()) { ++it; continue; }
-                // for (auto t: useMap[s->var]) std::cerr << s->ptr->name << ' ' << renameMap[s->ptr->name].size() << '\n', t->replaceValue(s->var, renameMap[s->ptr->name].back());
                 for (auto t: useMap[s->var]) t->replaceValue(s->var, renameMap[s->ptr->name].back());
                 it = node->block->stmts.erase(it);                
             }
@@ -141,7 +136,6 @@ public:
             while (pl < len) {
                 while (pr < len && phis[pl]->var->name == phis[pr]->var->name) ++pr;
                 auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name, phis[pl]->var->isConst);
-                // auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name + ".rename" + std::to_string(counter[phis[pl]->var->name + ".rename"]++), phis[pl]->var->isConst);
                 auto phi = new IRPhiStmtNode(var);
                 block->stmts.push_front(phi);
                 phiRenameSet.insert(phi);
