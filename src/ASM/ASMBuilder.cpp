@@ -152,8 +152,8 @@ void ASMBuilder::visitPhiStmt(IRPhiStmtNode* node) {
     auto var = registerLocalVar(node->var, false);
     auto endBlock = new ASMBlockNode(".LendPhi" + std::to_string(counter["endPhi"]++));
     for (auto p: node->values) {
-        auto value = p.first;
-        auto label = p.second;
+        auto value = p.second;
+        auto label = p.first;
         if (label == "entry") label = currentFunction->name;
         else label = ".L" + label;
         auto block = new ASMBlockNode(".LloadPhiValue" + std::to_string(counter["loadPhiValue"]++));
@@ -265,8 +265,8 @@ void ASMBuilder::visitBrCondStmt(IRBrCondStmtNode* node) {
 }
 
 void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
-    if(node->var) {
-        getVar(varMap[node->var->name], regAllocator.getReg("a0"));
+    if(node->value) {
+        getValue(node->value, regAllocator.getReg("a0"));
     }
     auto raVar = dynamic_cast<ASMLocalVarNode*>(varMap["..ra" + currentFunction->name]);
     auto raLoad = new ASMLoadInsNode("lw", regAllocator.getReg("ra"), regAllocator.getReg("sp"), raVar->offset);

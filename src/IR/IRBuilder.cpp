@@ -561,7 +561,7 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
         currentFunction->blocks.push_back(endBlock);
 
         auto tmp = new IRPhiStmtNode(ret);
-        tmp->values.emplace_back(setVariable(toIRType(&(node->lhs->type)), lhs), currentBlock->label);
+        tmp->values.emplace(currentBlock->label, setVariable(toIRType(&(node->lhs->type)), lhs));
 
         currentBlock = block;
         node->rhs->accept(this);
@@ -569,7 +569,7 @@ void IRBuilder::visitBinaryExprNode(ASTBinaryExprNode *node) {
         auto tmp2 = setVariable(toIRType(&(node->rhs->type)), rhs);
 
         currentBlock->stmts.push_back(new IRBrStmtNode(endBlock->label));
-        tmp->values.emplace_back(tmp2, currentBlock->label);
+        tmp->values.emplace(currentBlock->label, tmp2);
 
         currentBlock = endBlock;
         endBlock->stmts.push_back(tmp);
@@ -634,8 +634,8 @@ void IRBuilder::visitTernaryExprNode(ASTTernaryExprNode* node) {
     currentBlock = endBlock;
     if (notVoid) {
         auto phi = new IRPhiStmtNode(ret);
-        phi->values.emplace_back(True, trueLabel);
-        phi->values.emplace_back(False, falseLabel);
+        phi->values.emplace(trueLabel, True);
+        phi->values.emplace(falseLabel, False);
         currentBlock->stmts.push_back(phi);
     }
     astValueMap[node] = ret;    
@@ -806,7 +806,7 @@ IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
         auto i = new IRVarNode(&intType, "_new.i" + std::to_string(counter["new.i"]++), true);
         valueSet.insert(i);
         auto phi = new IRPhiStmtNode(i);
-        phi->values.emplace_back(&intZeroNode, fromBlock);
+        phi->values.emplace(fromBlock, &intZeroNode);
         currentBlock->stmts.push_back(phi);
         auto next = new IRVarNode(&intType, "_new.next" + std::to_string(counter["new.next"]++), true);
         valueSet.insert(next);
@@ -816,7 +816,7 @@ IRVarNode* IRBuilder::mallocNewArray(ASTNewTypeNode* node, int index) {
         valueSet.insert(ind);
         currentBlock->stmts.push_back(new IRGetElementPtrStmtNode(ind, ptr, i, &ptrType));
         currentBlock->stmts.push_back(new IRStoreStmtNode(retPtr, ind, true));
-        phi->values.emplace_back(next, currentBlock->label);
+        phi->values.emplace(currentBlock->label, next);
         auto tmp = new IRVarNode(&i1Type, "_new.tmp" + std::to_string(counter["new.tmp"]++), true);
         valueSet.insert(tmp);
         currentBlock->stmts.push_back(new IRIcmpStmtNode("icmp slt", tmp, next, size));

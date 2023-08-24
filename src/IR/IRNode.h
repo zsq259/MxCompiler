@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <map>
+#include <list>
 #include "IRType.h"
 #include "IRBaseVisitor.h"
 
@@ -34,12 +36,15 @@ public:
     void accept(IRBaseVisitor* visitor) { visitor->visitGlobalVar(this); }
 };
 
-class IRStmtNode: public IRNode {};
+class IRStmtNode: public IRNode {
+public:
+    virtual void replaceValue(IRValueNode* from, IRValueNode* to) {}
+};
 
 class IRBlockNode: public IRNode {
 public:
     std::string label;
-    std::vector<IRStmtNode*> stmts;
+    std::list<IRStmtNode*> stmts;
 
     explicit IRBlockNode(std::string label_): label(label_) {}
     ~IRBlockNode() { 
@@ -95,12 +100,15 @@ public:
 
 class IRRetStmtNode: public IRStmtNode {
 public:
-    IRVarNode* var = nullptr;
+    IRValueNode* value = nullptr;
 
-    explicit IRRetStmtNode(IRVarNode* var_): var(var_) {}
+    explicit IRRetStmtNode(IRValueNode* value_): value(value_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitRetStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (value == from) value = to;
+    }
 };
 
 class IRBinaryStmtNode: public IRStmtNode {
@@ -115,6 +123,10 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitBinaryStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (lhs == from) lhs = to;
+        if (rhs == from) rhs = to;
+    }
 };
 
 class IRAllocaStmtNode: public IRStmtNode {
@@ -147,6 +159,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitStoreStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (value == from) value = to;
+    }
 };
 
 class IRIcmpStmtNode: public IRStmtNode {
@@ -163,6 +178,10 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitIcmpStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (lhs == from) lhs = to;
+        if (rhs == from) rhs = to;
+    }
 };
 
 class IRTruncStmtNode: public IRStmtNode {
@@ -174,6 +193,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitTruncStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (value == from) value = to;
+    }
 };
 
 class IRZextStmtNode: public IRStmtNode {
@@ -185,6 +207,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitZextStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (value == from) value = to;
+    }
 };
 
 class IRCallStmtNode: public IRStmtNode {
@@ -198,17 +223,23 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitCallStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        for (auto &arg: args) if (arg == from) arg = to;
+    }
 };
 
 class IRPhiStmtNode: public IRStmtNode {
 public:
     IRVarNode* var = nullptr;
-    std::vector<std::pair<IRValueNode*, std::string>> values;
+    std::map<std::string, IRValueNode*> values;
 
     explicit IRPhiStmtNode(IRVarNode* var_): var(var_) {}
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) {  visitor->visitPhiStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        for (auto &arg: values) if (arg.second == from) arg.second = to;
+    }
 };
 
 class IRGetElementPtrStmtNode: public IRStmtNode {
@@ -222,6 +253,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor){ visitor->visitGetElementPtrStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (index == from) index = to;
+    }
 };
 
 class IRGlobalVarStmtNode: public IRStmtNode {

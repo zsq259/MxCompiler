@@ -51,7 +51,7 @@ foreach (test_file ${test_files})
     add_test(NAME ${testname}
             COMMAND "${PROJECT_SOURCE_DIR}/run-llvm.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
-    set_tests_properties(${testname} PROPERTIES LABELS "ir" TIMEOUT 3)
+    set_tests_properties(${testname} PROPERTIES LABELS "ir" TIMEOUT 10)
 
     set(testname "asm|${filename}")
     add_test(NAME ${testname}

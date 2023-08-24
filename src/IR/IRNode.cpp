@@ -89,7 +89,7 @@ std::string IRBrStmtNode::to_string() {
 
 std::string IRRetStmtNode::to_string() {
     std::string ret = "";
-    ret += "ret " + (var ? var->type->to_string() + " " + var->to_string() : "void");
+    ret += "ret " + (value ? value->type->to_string() + " " + value->to_string() : "void");
     return ret;
 }
 
@@ -155,9 +155,11 @@ std::string IRCallStmtNode::to_string() {
 std::string IRPhiStmtNode::to_string() {
     std::string ret = "";
     ret += var->to_string() + " = phi " + var->type->to_string() + " ";
-    for (int i = 0, k = values.size(); i < k; ++i) {
-        if (i < k - 1) ret += "[ " + values[i].first->to_string() + ", %" + values[i].second + " ], ";
-        else ret += "[ " + values[i].first->to_string() + ", %" + values[i].second + " ]";
+    auto it = values.end(); --it;
+    auto finalName = it->first;
+    for (auto v: values) {
+        ret += "[" + v.second->to_string() + ", %" + v.first + "]";
+        if (v.first != finalName) ret += ", ";
     }
     return ret;
 }

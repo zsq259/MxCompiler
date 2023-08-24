@@ -4,15 +4,18 @@
 #include <vector>
 #include <map>
 #include <string>
+#include "IRNode.h"
 
 struct CFGNode {
     int id;
+    IRBlockNode* block = nullptr;
     std::string name;
     std::vector<CFGNode*> pred, next;
-    explicit CFGNode(std::string name_, int id_) : name(name_), id(id_) {}
+    explicit CFGNode(std::string name_, int id_, IRBlockNode* block_) : name(name_), id(id_), block(block_) {}
 };
 
 class DomTreeBuilder;
+class Mem2RegBuilder;
 
 class ControlFlowGraph {
 private:
@@ -20,9 +23,10 @@ private:
     CFGNode* entry;
     std::map<std::string, CFGNode*> name2node;
     friend class DomTreeBuilder;
+    friend class Mem2RegBuilder;
 public:
-    void addNode(std::string name) {
-        name2node[name] = new CFGNode(name, cnt++);
+    void addNode(IRBlockNode* block) {
+        name2node[block->label] = new CFGNode(block->label, cnt++, block);
     }
     void addEdge(std::string from, std::string to) {
         name2node[from]->next.push_back(name2node[to]);

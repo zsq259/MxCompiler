@@ -4,17 +4,20 @@
 #include <map>
 #include <set>
 #include <string>
+#include "IRNode.h"
 
 struct DomTreeNode {
     int id;
     std::string name;
     DomTreeNode* parent = nullptr;
+    IRBlockNode* block = nullptr;
     std::vector<DomTreeNode*> children;
     std::set<int> frontier, dom;
-    explicit DomTreeNode(std::string name_, int id_) : name(name_), id(id_) {}
+    explicit DomTreeNode(std::string name_, int id_, IRBlockNode* block_) : name(name_), id(id_), block(block_) {}
 };
 
 class DomTreeBuilder;
+class Mem2RegBuilder;
 
 class DomTree {
 private:
@@ -22,8 +25,10 @@ private:
     std::map<std::string, DomTreeNode*> name2node;
     std::map<std::string, int> name2id;
     std::map<int, DomTreeNode*> id2node;
+    std::map<std::pair<DomTreeNode*, DomTreeNode*>, std::string> frontierLabelMap;
     DomTreeNode* root;
     friend class DomTreeBuilder;
+    friend class Mem2RegBuilder;
 public:
     ~DomTree() {
         for (auto it: name2node) delete it.second;
@@ -33,11 +38,11 @@ public:
             for (int i = 0; i < cnt; ++i) it.second->dom.insert(i);
         }
     }
-    void addNode(std::string name) {
-        auto node = new DomTreeNode(name, cnt);
-        name2node[name] = node;
+    void addNode(IRBlockNode* block) {
+        auto node = new DomTreeNode(block->label, cnt, block);
+        name2node[block->label] = node;
         id2node[cnt] = node;
-        name2id[name] = cnt++;
+        name2id[block->label] = cnt++;
     }
     void addEdge(std::string from, std::string to) {
         name2node[to]->parent = name2node[from];

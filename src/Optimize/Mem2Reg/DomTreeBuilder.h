@@ -10,11 +10,14 @@
 #include "DomTree.h"
 #include "ControlFlowGraph.h"
 
+class Mem2RegBuilder;
+
 class DomTreeBuilder {
 private:
     DomTree* domTree = nullptr;
     ControlFlowGraph* cfg = nullptr;
     bool changeFlag = true;
+    friend class Mem2RegBuilder;
 public:
     void visit(IRFunctionNode* node) {
         clear();
@@ -63,7 +66,7 @@ public:
     void buildDomTree(IRFunctionNode* node) {
         domTree = new DomTree;
         for (auto block: node->blocks) {
-            domTree->addNode(block->label);
+            domTree->addNode(block);
         }
         domTree->root = domTree->name2node["entry"];
         changeFlag = true;
@@ -96,9 +99,11 @@ public:
             auto now = domTree->name2node[node->name];
             for (auto p: node->pred) {
                 auto tmp = domTree->name2node[p->name];
+                auto tmp2 = tmp;
                 while (true) {
                     if (now->dom.count(tmp->id)) break;
                     tmp->frontier.insert(now->id);
+                    domTree->frontierLabelMap[std::make_pair(tmp, now)] = tmp2->name;
                     tmp = tmp->parent;
                 }
             }
@@ -107,7 +112,7 @@ public:
     void buildCFG(IRFunctionNode* node) {
         cfg = new ControlFlowGraph;
         for (auto block: node->blocks) {
-            cfg->addNode(block->label);
+            cfg->addNode(block);
         }
         cfg->entry = cfg->name2node["entry"];
         for (auto block: node->blocks) {
