@@ -65,8 +65,8 @@ int main(int argc, char const *argv[]) {
 		irbuilder.visit(ast.root);
 		std::cerr << "okkkkk2\n";
 		
-		Mem2RegBuilder mem2regbuilder;
-		mem2regbuilder.visit(irbuilder.root());
+		// Mem2RegBuilder mem2regbuilder;
+		// mem2regbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk3\n";
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }
