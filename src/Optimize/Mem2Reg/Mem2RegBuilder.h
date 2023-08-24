@@ -155,9 +155,7 @@ public:
         if (!node->blocks.size()) return;
         currentFunction = node;
         clear();
-        domTreeBuilder->buildCFG(node);
-        domTreeBuilder->buildDomTree(node);
-        domTreeBuilder->getFrontier();
+        domTreeBuilder->visit(node);
         collectVarUse(node);
         setPtrDef(domTreeBuilder->domTree->root);
         

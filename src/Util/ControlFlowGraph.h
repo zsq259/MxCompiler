@@ -16,6 +16,7 @@ struct CFGNode {
 
 class DomTreeBuilder;
 class Mem2RegBuilder;
+class CFGBuilder;
 
 class ControlFlowGraph {
 private:
@@ -24,6 +25,7 @@ private:
     std::map<std::string, CFGNode*> name2node;
     friend class DomTreeBuilder;
     friend class Mem2RegBuilder;
+    friend class CFGBuilder;
 public:
     void addNode(IRBlockNode* block) {
         name2node[block->label] = new CFGNode(block->label, cnt++, block);

@@ -9,6 +9,7 @@
 #include "IRNode.h"
 #include "DomTree.h"
 #include "ControlFlowGraph.h"
+#include "CFGBuilder.h"
 
 class Mem2RegBuilder;
 
@@ -16,14 +17,16 @@ class DomTreeBuilder {
 private:
     DomTree* domTree = nullptr;
     ControlFlowGraph* cfg = nullptr;
+    CFGBuilder* cfgBuilder = nullptr;
     bool changeFlag = true;
     friend class Mem2RegBuilder;
 public:
+    DomTreeBuilder() { cfgBuilder = new CFGBuilder; }
     void visit(IRFunctionNode* node) {
         clear();
-        buildCFG(node);
+        cfg = cfgBuilder->buildCFG(node);
         buildDomTree(node);
-        
+        getFrontier();
     }
     void updateDom(CFGNode* node) {
         auto now = domTree->name2node[node->name];
@@ -106,27 +109,6 @@ public:
                     domTree->frontierLabelMap[std::make_pair(tmp, now)] = tmp2->name;
                     tmp = tmp->parent;
                 }
-            }
-        }
-    }
-    void buildCFG(IRFunctionNode* node) {
-        cfg = new ControlFlowGraph;
-        for (auto block: node->blocks) {
-            cfg->addNode(block);
-        }
-        cfg->entry = cfg->name2node["entry"];
-        for (auto block: node->blocks) {
-            for (auto stmt: block->stmts) {
-                if (auto br = dynamic_cast<IRBrStmtNode*>(stmt)) {
-                    cfg->addEdge(block->label, br->label);
-                    break;
-                }
-                if (auto br = dynamic_cast<IRBrCondStmtNode*>(stmt)) {
-                    cfg->addEdge(block->label, br->trueLabel);
-                    cfg->addEdge(block->label, br->falseLabel);
-                    break;
-                }
-                if (dynamic_cast<IRRetStmtNode*>(stmt)) break;
             }
         }
     }
