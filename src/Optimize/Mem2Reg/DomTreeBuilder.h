@@ -26,7 +26,8 @@ public:
         clear();
         cfg = cfgBuilder->buildCFG(node);
         buildDomTree(node);
-        getFrontier();
+        getFrontier(node);
+        printFrontier();
     }
     void updateDom(CFGNode* node) {
         auto now = domTree->name2node[node->name];
@@ -77,37 +78,19 @@ public:
         while (changeFlag) {
             changeFlag = false;
             getDom();
-            
         }
-        for (auto block: node->blocks) {
-            if (block->label == "entry") continue;
-            auto now = domTree->name2node[block->label];
-            DomTreeNode* father = nullptr;
-            int sum = 0;
-            for (auto p: now->dom) {
-                if (p == now->id) continue;
-                auto tmp = domTree->id2node[p];
-                if (tmp->dom.size() > sum) {
-                    sum = tmp->dom.size();
-                    father = domTree->id2node[p];
-                }
-            }
-            domTree->addEdge(father, now);
-        }
+        printDom();
     }
-    void getFrontier() {
-        for (auto it: cfg->name2node) {
-            auto node = it.second;
-            if (node->pred.size() < 2) continue;
-            auto now = domTree->name2node[node->name];
-            for (auto p: node->pred) {
-                auto tmp = domTree->name2node[p->name];
-                auto tmp2 = tmp;
-                while (true) {
-                    if (now->dom.count(tmp->id)) break;
-                    tmp->frontier.insert(now->id);
-                    tmp = tmp->parent;
+    void getFrontier(IRFunctionNode* node) {
+        for (auto block: node->blocks) {
+            auto now = domTree->name2node[block->label];
+            auto b = cfg->name2node[block->label];
+            for (auto p: b->pred) {
+                auto pred = domTree->name2node[p->name];
+                for (auto dom: pred->dom) {
+                    if(!now->dom.count(dom) || dom == now->id) domTree->id2node[dom]->frontier.insert(now->id);
                 }
+                
             }
         }
     }

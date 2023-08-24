@@ -147,6 +147,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitLoadStmt(this); }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (ptr == dynamic_cast<IRVarNode*>(from)) ptr = dynamic_cast<IRVarNode*>(to);
+    }
 };
 
 class IRStoreStmtNode: public IRStmtNode {

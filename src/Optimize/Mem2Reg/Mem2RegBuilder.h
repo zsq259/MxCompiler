@@ -25,6 +25,7 @@ private:
     std::set<IRPhiStmtNode*> phiRenameSet;
     std::set<CFGNode*> visited;
     std::set<std::string> allocaSet;
+    std::map<DomTreeNode*, std::set<IRVarNode*>> phiVarMap;
 public:
     Mem2RegBuilder() { domTreeBuilder = new DomTreeBuilder; }
 
@@ -35,8 +36,11 @@ public:
         phiMap.clear();
         phiRenameSet.clear();
         visited.clear();
+        phiVarMap.clear();
     }
     void setPhiStmt(DomTreeNode* node, IRValueNode* value, IRVarNode* var) {
+        auto &setMap = phiVarMap[node];
+        if (!setMap.insert(var).second) return;
         for (auto fid: node->frontier) {
             auto fnode = domTreeBuilder->domTree->id2node[fid];
             auto phi = new IRPhiStmtNode(var);
@@ -46,9 +50,10 @@ public:
         }
     }
     void setPtrDef(DomTreeNode* node) {
-        for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
+        for (auto it = node->block->stmts.begin(); it != node->block->stmts.end();) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
+
                 if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
                 if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 auto var = new IRVarNode(s->value->type, s->ptr->name, s->ptr->isConst);
@@ -58,11 +63,11 @@ public:
             else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), it = node->block->stmts.erase(it);
             else ++it;
         }
-        for (auto child: node->children) setPtrDef(child);        
+        // for (auto child: node->children) setPtrDef(child);        
     }
     void visitCFG(CFGNode* node, CFGNode* fa) {
         auto copyMap = renameMap;
-        for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end(); ++it) {
+        for (auto it = node->block->stmts.begin(); it != node->block->stmts.end(); ++it) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->var->name)) break;
@@ -102,6 +107,7 @@ public:
                 if (auto s = dynamic_cast<IRRetStmtNode*>(stmt)) useMap[s->value].push_back(s);
                 else if (auto s = dynamic_cast<IRBinaryStmtNode*>(stmt)) useMap[s->lhs].push_back(s), useMap[s->rhs].push_back(s);
                 else if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) useMap[s->value].push_back(s);
+                else if (auto s = dynamic_cast<IRLoadStmtNode*>(stmt)) useMap[s->ptr].push_back(s);
                 else if (auto s = dynamic_cast<IRIcmpStmtNode*>(stmt)) useMap[s->lhs].push_back(s), useMap[s->rhs].push_back(s);
                 else if (auto s = dynamic_cast<IRTruncStmtNode*>(stmt)) useMap[s->value].push_back(s);
                 else if (auto s = dynamic_cast<IRZextStmtNode*>(stmt)) useMap[s->value].push_back(s);
@@ -155,10 +161,13 @@ public:
         if (!node->blocks.size()) return;
         currentFunction = node;
         clear();
-        domTreeBuilder->visit(node);
+        domTreeBuilder->visit(node);std::cerr << "adoajd4\n";
         collectVarUse(node);
-        setPtrDef(domTreeBuilder->domTree->root);
-        
+        // setPtrDef(domTreeBuilder->domTree->root);
+        for (auto block: node->blocks) {
+            auto now = domTreeBuilder->domTree->name2node[block->label];
+            setPtrDef(now);
+        }
         for (auto block: node->blocks) {
             std::vector<IRPhiStmtNode*> &phis = phiMap[block->label];
             sort(phis.begin(), phis.end(), [](IRPhiStmtNode* a, IRPhiStmtNode* b) { return a->var->name < b->var->name; });
@@ -183,7 +192,7 @@ public:
             else ++it;
         }
         visited.clear();
-        eliminateCriticalEdge(domTreeBuilder->cfg->entry);
+        // eliminateCriticalEdge(domTreeBuilder->cfg->entry);
         currentFunction = nullptr;
     }
     void visitProgram(IRProgramNode* node) override {
