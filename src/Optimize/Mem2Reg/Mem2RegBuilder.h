@@ -16,6 +16,7 @@ static IRLiteralNode intZeroNode(&intType, 0);
 
 class Mem2RegBuilder : public IRBaseVisitor {
 private:
+    IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
     std::map<IRValueNode*, std::vector<IRStmtNode*>> useMap;
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
@@ -117,18 +118,46 @@ public:
             }
         }
     }
+    void eliminateCriticalEdge(CFGNode* node) {
+        if (visited.count(node)) return;
+        visited.insert(node);
+        if (node->next.size() <= 1) {
+            for (auto next: node->next) eliminateCriticalEdge(next);
+            return;
+        }
+        auto nowBlock = node->block;
+        for (auto next: node->next) {
+            if (node->pred.size() <= 1) continue;
+            auto nextBlock = next->block;
+
+            auto block = new IRBlockNode("._eliminateCriticalEdge." + std::to_string(counter["eliminateCriticalEdge"]++));
+            block->stmts.push_back(new IRBrStmtNode(nextBlock->label));
+            currentFunction->blocks.push_back(block);
+
+            auto stmt = dynamic_cast<IRBrCondStmtNode*>(nowBlock->stmts.back());
+            if (!stmt) throw std::runtime_error("eliminateCriticalEdge: not a cond br");
+            if (stmt->trueLabel == nextBlock->label) stmt->trueLabel = block->label;
+            else stmt->falseLabel = block->label;
+
+            for (auto st: nextBlock->stmts) {
+                if (auto s = dynamic_cast<IRPhiStmtNode*>(st)) {
+                    if (s->values.count(nowBlock->label)) {
+                        s->values.emplace(block->label, s->values[nowBlock->label]);
+                        s->values.erase(nowBlock->label);
+                    }
+                }
+                else break;
+            }
+        }
+        for (auto next: node->next) eliminateCriticalEdge(next);
+    }
     void visitFunction(IRFunctionNode* node) override {
         if (!node->blocks.size()) return;
+        currentFunction = node;
         clear();
         domTreeBuilder->buildCFG(node);
         domTreeBuilder->buildDomTree(node);
         domTreeBuilder->getFrontier();
-        // std::cerr << "--------------------------\n";
-        // domTreeBuilder->printCFG();
-        // domTreeBuilder->printDom();
-        
-        // domTreeBuilder->printFrontier();
-        // std::cerr << "+++++++++++++++++++++++++++\n";
         collectVarUse(node);
         setPtrDef(domTreeBuilder->domTree->root);
         
@@ -154,6 +183,9 @@ public:
             if (!visited.count(domTreeBuilder->cfg->name2node[block->label])) it = node->blocks.erase(it);
             else ++it;
         }
+        visited.clear();
+        eliminateCriticalEdge(domTreeBuilder->cfg->entry);
+        currentFunction = nullptr;
     }
     void visitProgram(IRProgramNode* node) override {
         for (auto func: node->functions) visitFunction(func);

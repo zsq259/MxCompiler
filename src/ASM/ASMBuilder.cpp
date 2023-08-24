@@ -10,7 +10,7 @@ ASMLocalVarNode* ASMBuilder::registerLocalVar(IRVarNode* var, bool p_ = false) {
     }
     auto ret = new ASMLocalVarNode(var->name, spSize, p_);
     varSet.insert(ret);
-    spSize += var->type->size();
+    spSize += 4;//var->type->size();
     varMap[var->name] = ret;
     return ret;
 }
@@ -329,7 +329,7 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
             auto arg = currentFunction->args[i];
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
             varSet.insert(var);
-            spSize += arg.first->size();
+            spSize += 4;//arg.first->size();
             varMap[arg.second] = var;
             cnt += arg.first->size();
             auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("sp"), -cnt);
@@ -341,7 +341,7 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
             varSet.insert(var);
             varMap[arg.second] = var;
-            spSize += arg.first->size();
+            spSize += 4;//arg.first->size();
             storeVar(var, regAllocator.getReg("a" + std::to_string(i)));
         }
         auto raVar = new ASMLocalVarNode("..ra" + currentFunction->name, spSize, false);
