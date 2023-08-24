@@ -68,6 +68,7 @@ public:
         for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end(); ++it) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
+                if (!allocaSet.count(s->var)) continue;
                 if (!renameMap[s->var->name].size()) {
                     s->values[fa->name] = (s->var->type->to_string() == "ptr"? &nullNode: &intZeroNode);
                 }
