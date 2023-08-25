@@ -79,7 +79,6 @@ public:
             changeFlag = false;
             getDom();
         }
-        printDom();
     }
     void getFrontier(IRFunctionNode* node) {
         for (auto block: node->blocks) {

@@ -192,7 +192,7 @@ public:
             else ++it;
         }
         visited.clear();
-        // eliminateCriticalEdge(domTreeBuilder->cfg->entry);
+        eliminateCriticalEdge(domTreeBuilder->cfg->entry);
         currentFunction = nullptr;
     }
     void visitProgram(IRProgramNode* node) override {
