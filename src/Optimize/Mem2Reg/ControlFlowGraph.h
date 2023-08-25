@@ -29,6 +29,9 @@ private:
     friend class CFGBuilder;
     friend class ASMBuilder;
 public:
+    ~ControlFlowGraph() { 
+        for (auto it: name2node) delete it.second;
+    }
     void addNode(IRBlockNode* block) {
         name2node[block->label] = new CFGNode(block->label, cnt++, block);
     }

@@ -22,12 +22,12 @@ private:
     friend class Mem2RegBuilder;
 public:
     DomTreeBuilder() { cfgBuilder = new CFGBuilder; }
+    ~DomTreeBuilder() { clear(); delete cfgBuilder; }
     void visit(IRFunctionNode* node) {
         clear();
         cfg = cfgBuilder->buildCFG(node);
         buildDomTree(node);
         getFrontier(node);
-        printFrontier();
     }
     void updateDom(CFGNode* node) {
         auto now = domTree->name2node[node->name];
@@ -40,7 +40,6 @@ public:
             dom.clear();
             for (auto d: newdom) dom.insert(d);
         }
-        if (!node->pred.size()) dom.clear();
         now->dom = dom;
         now->dom.insert(now);
         if (now->dom.size() != size) changeFlag = true;
@@ -67,6 +66,8 @@ public:
         domTree->root = domTree->name2node["entry"];
         changeFlag = true;
         domTree->init();
+        domTree->root->dom.clear();
+        domTree->root->dom.insert(domTree->root);
         while (changeFlag) {
             changeFlag = false;
             getDom();

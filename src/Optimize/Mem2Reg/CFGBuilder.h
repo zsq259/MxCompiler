@@ -3,11 +3,10 @@
 #include "ControlFlowGraph.h"
 
 class CFGBuilder {
-private:
-    ControlFlowGraph* cfg = nullptr;
 public:
+    ~CFGBuilder() {}
     ControlFlowGraph* buildCFG(IRFunctionNode* node) {
-        cfg = new ControlFlowGraph;
+        auto cfg = new ControlFlowGraph;
         for (auto block: node->blocks) {
             cfg->addNode(block);
         }

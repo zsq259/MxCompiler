@@ -26,9 +26,13 @@ private:
     std::set<CFGNode*> visited;
     std::set<std::string> allocaSet;
     std::map<DomTreeNode*, std::set<IRVarNode*>> phiVarMap;
+    std::set<IRNode*> irNodeSet;
 public:
     Mem2RegBuilder() { domTreeBuilder = new DomTreeBuilder; }
-
+    ~Mem2RegBuilder() { 
+        delete domTreeBuilder; 
+        for (auto v: irNodeSet) delete v;        
+    }
     void clear() {
         domTreeBuilder->clear();
         useMap.clear();
@@ -43,6 +47,7 @@ public:
         if (!setMap.insert(var).second) return;
         for (auto fnode: node->frontier) {
             auto phi = new IRPhiStmtNode(var);
+            irNodeSet.insert(phi);
             phiMap[fnode->name].push_back(phi);
             useMap[var].push_back(phi);
             setPhiStmt(fnode, value, var);
@@ -56,13 +61,13 @@ public:
                 if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
                 if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 auto var = new IRVarNode(s->value->type, s->ptr->name, s->ptr->isConst);
+                irNodeSet.insert(var);
                 setPhiStmt(node, s->value, var);
                 ++it;
             }
-            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), it = node->block->stmts.erase(it);
+            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), it = node->block->stmts.erase(it), delete s;
             else ++it;
         }
-        // for (auto child: node->children) setPtrDef(child);        
     }
     void visitCFG(CFGNode* node, CFGNode* fa) {
         auto copyMap = renameMap;
@@ -84,16 +89,16 @@ public:
             auto stmt = *it;
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
-                if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
                 renameMap[s->ptr->name].push_back(s->value);
                 it = node->block->stmts.erase(it);
+                delete s;
             }
             else if (auto s = dynamic_cast<IRLoadStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
-                if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
-                if (!renameMap[s->ptr->name].size()) { ++it; continue; }
+                // if (!renameMap[s->ptr->name].size()) { ++it; continue; }
                 for (auto t: useMap[s->var]) t->replaceValue(s->var, renameMap[s->ptr->name].back());
                 it = node->block->stmts.erase(it);                
+                delete s;
             }
             else ++it;
         }
@@ -160,9 +165,8 @@ public:
         if (!node->blocks.size()) return;
         currentFunction = node;
         clear();
-        domTreeBuilder->visit(node);std::cerr << "adoajd4\n";
+        domTreeBuilder->visit(node);
         collectVarUse(node);
-        // setPtrDef(domTreeBuilder->domTree->root);
         for (auto block: node->blocks) {
             auto now = domTreeBuilder->domTree->name2node[block->label];
             setPtrDef(now);
@@ -174,8 +178,8 @@ public:
             while (pl < len) {
                 while (pr < len && phis[pl]->var->name == phis[pr]->var->name) ++pr;
                 auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name, phis[pl]->var->isConst);
+                irNodeSet.insert(var);
                 auto phi = new IRPhiStmtNode(var);
-
                 block->stmts.push_front(phi);
                 phiRenameSet.insert(phi);
                 pl = pr;
@@ -187,7 +191,10 @@ public:
         }
         for (auto it = node->blocks.begin(); it != node->blocks.end();) {
             auto block = *it;
-            if (!visited.count(domTreeBuilder->cfg->name2node[block->label])) it = node->blocks.erase(it);
+            if (!visited.count(domTreeBuilder->cfg->name2node[block->label])) {
+                delete block;
+                it = node->blocks.erase(it);
+            }
             else ++it;
         }
         visited.clear();

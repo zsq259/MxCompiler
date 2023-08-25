@@ -282,6 +282,7 @@ void ASMBuilder::setPhiVar(IRBlockNode* node, IRBlockNode* nextBlock) {
             if (phi->values.count(node->label)) {
                 auto value = phi->values[node->label];
                 auto tmp = new IRVarNode(phi->var->type, phi->var->name + ".phi.tmp" + std::to_string(counter["phi.tmp"]++), phi->var->isConst);
+                irVarSet.insert(tmp);
                 auto tmpVar = registerLocalVar(tmp, false);
                 auto phiVar = registerLocalVar(phi->var, false);
                 phiVars.emplace_back(tmpVar, phiVar);

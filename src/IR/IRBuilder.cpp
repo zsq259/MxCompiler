@@ -858,7 +858,12 @@ void IRBuilder::elinimate() {
                 auto stmt = *it;
                 if (dynamic_cast<IRBrStmtNode*>(stmt) || dynamic_cast<IRBrCondStmtNode*>(stmt) || dynamic_cast<IRRetStmtNode*>(stmt)) {
                     ++it;
-                    while (it != block->stmts.end()) it = block->stmts.erase(it);
+                    while (it != block->stmts.end()) {
+                        stmt = *it;
+                        delete stmt;
+                        it = block->stmts.erase(it);
+                        
+                    }
                     break;
                 }
             }

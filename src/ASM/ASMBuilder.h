@@ -9,6 +9,7 @@
 #include "IRBaseVisitor.h"
 #include "ASMNode.h"
 #include "Register.h"
+#include "IRNode.h"
 
 class ASMBuilder : public IRBaseVisitor {
 private:
@@ -20,6 +21,7 @@ private:
     ASMImmInsNode *spAddIns = nullptr, *spRetIns = nullptr;
     std::map<std::string, ASMVarNode*> varMap;
     std::set<ASMVarNode*> varSet;
+    std::set<IRVarNode*> irVarSet;
     std::map<std::string, int> counter;
     std::map<std::string, std::vector<ASMLaInsNode*>> phiLaMap;
     std::map<std::string, IRBlockNode*> blockMap;
@@ -30,6 +32,7 @@ public:
     ~ASMBuilder() { 
         delete program; 
         for (auto v: varSet) delete v;
+        for (auto v: irVarSet) delete v;
     }
     void visitValue(IRValueNode* node) override;
     void visitVar(IRVarNode* node) override;
