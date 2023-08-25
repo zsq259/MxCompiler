@@ -10,7 +10,7 @@ ASMLocalVarNode* ASMBuilder::registerLocalVar(IRVarNode* var, bool p_ = false) {
     }
     auto ret = new ASMLocalVarNode(var->name, spSize, p_);
     varSet.insert(ret);
-    spSize += 4;//var->type->size();
+    spSize += var->type->size();
     varMap[var->name] = ret;
     return ret;
 }
@@ -219,8 +219,6 @@ void ASMBuilder::visitIcmpStmt(IRIcmpStmtNode* node) {
 }
 
 void ASMBuilder::visitBrCondStmt(IRBrCondStmtNode* node) {
-    auto la = new ASMLaInsNode(regAllocator.getReg("t6"), currentBlock->name);
-    currentBlock->insts.push_back(la);
     getValue(node->cond, regAllocator.getReg("s0"));
     auto bne = new ASMBranchInsNode("bne", regAllocator.getReg("s0"), regAllocator.getReg("zero"), ".L" + node->trueLabel);
     currentBlock->insts.push_back(bne);
@@ -242,8 +240,6 @@ void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
 }
 
 void ASMBuilder::visitBrStmt(IRBrStmtNode* node) {
-    auto la = new ASMLaInsNode(regAllocator.getReg("t6"), currentBlock->name);
-    currentBlock->insts.push_back(la);
     auto j = new ASMJumpInsNode(".L" + node->label);
     currentBlock->insts.push_back(j);
 }
@@ -280,6 +276,23 @@ void ASMBuilder::visitAllocaStmt(IRAllocaStmtNode* node) {
     registerLocalVar(node->var, false);
 }
 
+void ASMBuilder::setPhiVar(IRBlockNode* node, IRBlockNode* nextBlock) {
+    for (auto stmt: nextBlock->stmts) {
+        if (auto phi = dynamic_cast<IRPhiStmtNode*>(stmt)) {
+            if (phi->values.count(node->label)) {
+                auto value = phi->values[node->label];
+                auto tmp = new IRVarNode(phi->var->type, phi->var->name + ".phi.tmp" + std::to_string(counter["phi.tmp"]++), phi->var->isConst);
+                auto tmpVar = registerLocalVar(tmp, false);
+                auto phiVar = registerLocalVar(phi->var, false);
+                phiVars.emplace_back(tmpVar, phiVar);
+                getValue(value, regAllocator.getReg("s0"));
+                storeVar(tmpVar, regAllocator.getReg("s0"));
+            }
+        }
+        else break;
+    }
+}
+
 void ASMBuilder::visitBlock(IRBlockNode* node) {
     ASMBlockNode* block = nullptr;
     if (node->label == "entry") {
@@ -293,7 +306,7 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
             auto arg = currentFunction->args[i];
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
             varSet.insert(var);
-            spSize += 4;//arg.first->size();
+            spSize += arg.first->size();
             varMap[arg.second] = var;
             cnt += arg.first->size();
             auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("sp"), -cnt);
@@ -305,7 +318,7 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
             auto var = new ASMLocalVarNode(arg.second, spSize, false);
             varSet.insert(var);
             varMap[arg.second] = var;
-            spSize += 4;//arg.first->size();
+            spSize += arg.first->size();
             storeVar(var, regAllocator.getReg("a" + std::to_string(i)));
         }
         auto raVar = new ASMLocalVarNode("..ra" + currentFunction->name, spSize, false);
@@ -327,23 +340,13 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
     auto finalinst = currentBlock->insts.back();
     currentBlock->insts.pop_back();
     
-    std::vector<std::pair<ASMLocalVarNode*, ASMLocalVarNode*>> phiVars;
-    for (auto next: cfg->name2node[node->label]->next) {
-        auto nextBlock = next->block;
-        for (auto stmt: nextBlock->stmts) {
-            if (auto phi = dynamic_cast<IRPhiStmtNode*>(stmt)) {
-                if (phi->values.count(node->label)) {
-                    auto value = phi->values[node->label];
-                    auto tmp = new IRVarNode(phi->var->type, phi->var->name + ".phi.tmp" + std::to_string(counter["phi.tmp"]++), phi->var->isConst);
-                    auto tmpVar = registerLocalVar(tmp, false);
-                    auto phiVar = registerLocalVar(phi->var, false);
-                    phiVars.emplace_back(tmpVar, phiVar);
-                    getValue(value, regAllocator.getReg("s0"));
-                    storeVar(tmpVar, regAllocator.getReg("s0"));
-                }
-            }
-            else break;
-        }
+    phiVars.clear();
+    if (auto stmt = dynamic_cast<IRBrCondStmtNode*>(node->stmts.back())) {
+        setPhiVar(node, blockMap[stmt->trueLabel]);
+        setPhiVar(node, blockMap[stmt->falseLabel]);
+    }
+    else if (auto stmt = dynamic_cast<IRBrStmtNode*>(node->stmts.back())) {
+        setPhiVar(node, blockMap[stmt->label]);
     }
     for (auto p: phiVars) {
         auto load = new ASMLoadInsNode("lw", regAllocator.getReg("s0"), regAllocator.getReg("sp"), p.first->offset);
@@ -360,8 +363,11 @@ void ASMBuilder::visitFunction(IRFunctionNode* node) {
     program->text->functions.push_back(function);
     currentFunction = node;
     spSize = 0;
-    cfg = cfgBuilder->buildCFG(node);
-    for (auto& block : node->blocks) {
+    blockMap.clear();
+    for (auto block: node->blocks) {
+        blockMap[block->label] = block;
+    }
+    for (auto block: node->blocks) {
         block->accept(this);
     }
     spSize = (spSize + 15) / 16 * 16;

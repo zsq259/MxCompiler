@@ -41,8 +41,7 @@ public:
     void setPhiStmt(DomTreeNode* node, IRValueNode* value, IRVarNode* var) {
         auto &setMap = phiVarMap[node];
         if (!setMap.insert(var).second) return;
-        for (auto fid: node->frontier) {
-            auto fnode = domTreeBuilder->domTree->id2node[fid];
+        for (auto fnode: node->frontier) {
             auto phi = new IRPhiStmtNode(var);
             phiMap[fnode->name].push_back(phi);
             useMap[var].push_back(phi);

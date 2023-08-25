@@ -31,37 +31,29 @@ public:
     }
     void updateDom(CFGNode* node) {
         auto now = domTree->name2node[node->name];
-        std::set<int> dom = now->dom;
+        std::set<DomTreeNode*> dom = now->dom;
         int size = dom.size();
         for (auto p: node->pred) {
             auto tmp = domTree->name2node[p->name];
-            std::vector<int> newdom;
+            std::vector<DomTreeNode*> newdom;
             std::set_intersection(dom.begin(), dom.end(), tmp->dom.begin(), tmp->dom.end(), std::back_inserter(newdom));
             dom.clear();
-            for (auto id: newdom) dom.insert(id);
+            for (auto d: newdom) dom.insert(d);
         }
         if (!node->pred.size()) dom.clear();
-        now->dom.clear();
-        bool flag = false;
-        for (auto id: dom) {
-            if (!flag && id > now->id) now->dom.insert(now->id), flag = true;
-            now->dom.insert(id);
-        }
-        if (!flag) now->dom.insert(now->id);
+        now->dom = dom;
+        now->dom.insert(now);
         if (now->dom.size() != size) changeFlag = true;
     }
     void getDom() {
         std::queue<CFGNode*> que;
-        std::set<int> visited;
+        std::set<CFGNode*> visited;
         que.push(cfg->entry);
         while (!que.empty()) {
             auto now = que.front();
             que.pop();
-            if (visited.count(now->id)) continue;
-            visited.insert(now->id);
-            
+            if (!visited.insert(now).second) continue;
             updateDom(now);
-            
             for (auto next: now->next) {
                 que.push(next);
             }
@@ -87,9 +79,8 @@ public:
             for (auto p: b->pred) {
                 auto pred = domTree->name2node[p->name];
                 for (auto dom: pred->dom) {
-                    if(!now->dom.count(dom) || dom == now->id) domTree->id2node[dom]->frontier.insert(now->id);
-                }
-                
+                    if(!now->dom.count(dom) || dom == now) dom->frontier.insert(now);
+                }                
             }
         }
     }
@@ -97,8 +88,8 @@ public:
         for (auto it: domTree->name2node) {
             auto node = it.second;
             std::cerr << node->name << ": ";
-            for (auto id: node->frontier) {
-                std::cerr << domTree->id2node[id]->name << ", ";
+            for (auto frt: node->frontier) {
+                std::cerr << frt->name << ", ";
             }
             std::cerr << '\n';
         }
@@ -107,15 +98,12 @@ public:
         for (auto it: domTree->name2node) {
             auto node = it.second;
             std::cerr << node->name << ": ";
-            for (auto id: node->dom) {
-                std::cerr << domTree->id2node[id]->name << ", ";
+            for (auto d: node->dom) {
+                std::cerr << d->name << ", ";
             }
             std::cerr << '\n';
         }
         std::cerr << std::endl;
-    }
-    void printDomTree() {
-        domTree->print();
     }
     void printCFG() {
         cfg->print();

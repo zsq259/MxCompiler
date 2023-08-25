@@ -9,13 +9,10 @@
 #include "IRBaseVisitor.h"
 #include "ASMNode.h"
 #include "Register.h"
-#include "CFGBuilder.h"
 
 class ASMBuilder : public IRBaseVisitor {
 private:
     int spSize = 0;
-    CFGBuilder* cfgBuilder;
-    ControlFlowGraph* cfg;
     RegisterAllocator regAllocator;
     ASMProgramNode* program = nullptr;
     IRFunctionNode* currentFunction = nullptr;
@@ -25,9 +22,11 @@ private:
     std::set<ASMVarNode*> varSet;
     std::map<std::string, int> counter;
     std::map<std::string, std::vector<ASMLaInsNode*>> phiLaMap;
+    std::map<std::string, IRBlockNode*> blockMap;
+    std::vector<std::pair<ASMLocalVarNode*, ASMLocalVarNode*>> phiVars;
 
 public:
-    ASMBuilder() { cfgBuilder = new CFGBuilder; }
+    ASMBuilder() {}
     ~ASMBuilder() { 
         delete program; 
         for (auto v: varSet) delete v;
@@ -64,6 +63,7 @@ public:
     void storePtr(ASMVarNode* var, Register* reg);
     ASMLocalVarNode* registerLocalVar(IRVarNode* var, bool p_);
     ASMVarNode* getVarNode(IRVarNode* var);
+    void setPhiVar(IRBlockNode* node, IRBlockNode* nextBlock);
 };
 
 #endif
