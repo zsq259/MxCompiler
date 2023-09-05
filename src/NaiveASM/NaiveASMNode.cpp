@@ -1,11 +1,13 @@
 #include "NaiveASMNode.h"
 
 std::string NaiveASMLoadInsNode::to_string() {
-    return op + " " + dest->name + ", " + std::to_string(offset) + "(" + src->name + ")";
+    if (src) return op + " " + dest->name + ", " + std::to_string(offset) + "(" + src->name + ")";
+    else return op + " " + dest->name + ", " + label;
 }
 
 std::string NaiveASMStoreInsNode::to_string() {
-    return op + " " + src->name + ", " + std::to_string(offset) + "(" + dest->name + ")";
+    if (dest) return op + " " + src->name + ", " + std::to_string(offset) + "(" + dest->name + ")";
+    else return op + " " + src->name + ", " + label;
 }
 
 std::string NaiveASMLaInsNode::to_string() {

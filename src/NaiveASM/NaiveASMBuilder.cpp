@@ -25,9 +25,8 @@ void NaiveASMBuilder::getPtr(NaiveASMVarNode* var, Register* reg) {
     if (!var->is_ptr) throw std::runtime_error("not a pointer");
     if (dynamic_cast<NaiveASMGlobalVarNode*>(var)) {
         auto tmp = dynamic_cast<NaiveASMGlobalVarNode*>(var);
-        auto la = new NaiveASMLaInsNode(reg, tmp->name);
-        currentBlock->insts.push_back(la);
-        auto load = new NaiveASMLoadInsNode("lw", reg, reg, 0);
+        auto load = new NaiveASMLoadInsNode("lw", reg, nullptr, 0);
+        load->label = tmp->name;
         currentBlock->insts.push_back(load);
         auto load2 = new NaiveASMLoadInsNode("lw", reg, reg, 0);
         currentBlock->insts.push_back(load2);
@@ -44,11 +43,14 @@ void NaiveASMBuilder::getPtr(NaiveASMVarNode* var, Register* reg) {
 void NaiveASMBuilder::getVar(NaiveASMVarNode* var, Register* reg) {
     if (dynamic_cast<NaiveASMGlobalVarNode*>(var)) {
         auto tmp = dynamic_cast<NaiveASMGlobalVarNode*>(var);
-        auto la = new NaiveASMLaInsNode(reg, tmp->name);
-        currentBlock->insts.push_back(la);
         if (!var->is_ptr) {
-            auto load = new NaiveASMLoadInsNode("lw", reg, reg, 0);
+            auto load = new NaiveASMLoadInsNode("lw", reg, nullptr, 0);
+            load->label = tmp->name;
             currentBlock->insts.push_back(load);
+        }
+        else {
+            auto la = new NaiveASMLaInsNode(reg, tmp->name);
+            currentBlock->insts.push_back(la);
         }
     }
     else {
@@ -68,20 +70,6 @@ void NaiveASMBuilder::getValue(IRValueNode* value, Register* reg) {
         auto tmp = dynamic_cast<IRLiteralNode*>(value);
         auto load = new NaiveASMImmInsNode("addi", reg, regAllocator.getReg("zero"), tmp->value);
         currentBlock->insts.push_back(load);
-    }
-}
-
-void NaiveASMBuilder::getAddr(IRVarNode* var, Register* reg) {
-    auto ptr = varMap[var->name];
-    if (dynamic_cast<NaiveASMGlobalVarNode*>(ptr)) {
-        auto la = new NaiveASMLaInsNode(reg, dynamic_cast<NaiveASMGlobalVarNode*>(ptr)->name);
-        currentBlock->insts.push_back(la);
-    }
-    else {
-        auto tmp = dynamic_cast<NaiveASMLocalVarNode*>(ptr);
-        if (!tmp->is_ptr) throw std::runtime_error("not a pointer when get address: " + tmp->name);
-        auto load = new NaiveASMLoadInsNode("lw", reg, regAllocator.getReg("sp"), tmp->offset);
-        currentBlock->insts.push_back(load);        
     }
 }
 

@@ -46,7 +46,7 @@ public:
 
 class NaiveASMLoadInsNode: public NaiveASMInsNode {
 public:
-    std::string op;
+    std::string op, label;
     Register *dest = nullptr, *src = nullptr;
     int offset = 0;
     explicit NaiveASMLoadInsNode(std::string op_, Register* dest_, Register* src_, int offset_ = 0): 
@@ -56,7 +56,7 @@ public:
 
 class NaiveASMStoreInsNode: public NaiveASMInsNode {
 public:
-    std::string op;
+    std::string op, label;
     Register *dest = nullptr, *src = nullptr;
     int offset = 0;
     explicit NaiveASMStoreInsNode(std::string op_, Register* dest_, Register* src_, int offset_ = 0): 

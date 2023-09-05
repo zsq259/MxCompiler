@@ -61,7 +61,6 @@ public:
     void print() { std::cout << program->to_string(); }
     void getPtr(NaiveASMVarNode* var, Register* reg);
     void getVar(NaiveASMVarNode* var, Register* reg);
-    void getAddr(IRVarNode* var, Register* reg);
     void getValue(IRValueNode* value, Register* reg);
     void storeVar(NaiveASMVarNode* var, Register* reg);
     void storePtr(NaiveASMVarNode* var, Register* reg);
