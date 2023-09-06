@@ -292,12 +292,14 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         block->insts.push_back(spAdd);
         spAddIns = spAdd;
         int cnt = 0;
-        for (int i = 0; i < 12; ++i) {
-            auto var = new ASMLocalVarNode(".callee.saved." + std::to_string(i) + ".tmp" + std::to_string(counter["callee"]++), false);
-            varSet.insert(var);
-            varMap[var->name] = var;
-            auto mv = new ASMMoveInsNode(var, sReg[i]);
-            block->insts.push_back(mv);
+        if (block->name != "main") {
+            for (int i = 0; i < 12; ++i) {
+                auto var = new ASMLocalVarNode(".callee.saved." + std::to_string(i) + ".tmp" + std::to_string(counter["callee"]++), false);
+                varSet.insert(var);
+                varMap[var->name] = var;
+                auto mv = new ASMMoveInsNode(var, sReg[i]);
+                block->insts.push_back(mv);
+            }
         }
         for (int i = 8, k = currentFunction->args.size(); i < k; ++i) {
             auto arg = currentFunction->args[i];

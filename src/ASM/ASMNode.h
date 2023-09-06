@@ -1,5 +1,6 @@
 #ifndef ASM_NODE_H
 #define ASM_NODE_H
+#include <set>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -34,7 +35,11 @@ public:
     std::string to_string() override;
 };
 
-class ASMInsNode: public ASMNode {};
+class ASMInsNode: public ASMNode {
+public:
+    virtual void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) {}
+    virtual void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) {}
+};
 
 class ASMLaInsNode: public ASMInsNode {
 public:
@@ -42,6 +47,9 @@ public:
     std::string name;
     explicit ASMLaInsNode(ASMVarNode* dest_, std::string name_): dest(dest_), name(name_) {}
     std::string to_string() override;
+    void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
+        defSet[this].insert(dest);
+    }
 };
 
 class ASMLoadInsNode: public ASMInsNode {
@@ -52,6 +60,12 @@ public:
     explicit ASMLoadInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(src);
+    }
+    void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
+        defSet[this].insert(dest);
+    }
 };
 
 class ASMStoreInsNode: public ASMInsNode {
@@ -62,6 +76,10 @@ public:
     explicit ASMStoreInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(dest);
+        useSet[this].insert(src);
+    }
 };
 
 class ASMBinaryInsNode: public ASMInsNode {
@@ -71,6 +89,13 @@ public:
     explicit ASMBinaryInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src1_, ASMVarNode* src2_): 
         op(op_), dest(dest_), src1(src1_), src2(src2_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(src1);
+        useSet[this].insert(src2);
+    }
+    void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
+        defSet[this].insert(dest);
+    }
 };
 
 class ASMImmInsNode: public ASMInsNode {
@@ -81,6 +106,12 @@ public:
     explicit ASMImmInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int imm_): 
         op(op_), dest(dest_), src(src_), imm(imm_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(src);
+    }
+    void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
+        defSet[this].insert(dest);
+    }
 };
 
 class ASMJumpInsNode: public ASMInsNode {
@@ -102,6 +133,10 @@ public:
     explicit ASMBranchInsNode(std::string op_, ASMVarNode* rs1_, ASMVarNode* rs2_, std::string label_): 
         op(op_), src1(rs1_), src2(rs2_), label(label_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(src1);
+        useSet[this].insert(src2);
+    }
 };
 
 class ASMCallInsNode: public ASMInsNode {
@@ -109,6 +144,7 @@ public:
     std::string name;
     explicit ASMCallInsNode(std::string name_): name(name_) {}
     std::string to_string() override;
+
 };
 
 class ASMMoveInsNode: public ASMInsNode {
@@ -116,6 +152,12 @@ public:
     ASMVarNode *dest = nullptr, *src = nullptr;
     explicit ASMMoveInsNode(ASMVarNode* dest_, ASMVarNode* src_): dest(dest_), src(src_) {}
     std::string to_string() override;
+    void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
+        useSet[this].insert(src);
+    }
+    void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
+        defSet[this].insert(dest);
+    }
 };
 
 class ASMBlockNode: public ASMNode {
