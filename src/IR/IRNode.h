@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <list>
 #include "IRType.h"
 #include "IRBaseVisitor.h"
@@ -39,6 +40,8 @@ public:
 class IRStmtNode: public IRNode {
 public:
     virtual void replaceValue(IRValueNode* from, IRValueNode* to) {}
+    virtual void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) {}
+    virtual void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) {}
 };
 
 class IRBlockNode: public IRNode {
@@ -86,6 +89,9 @@ public:
     void print() { std::cout << to_string(); };
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) { visitor->visitBrCondStmt(this); }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(cond);
+    }
 };
 
 class IRBrStmtNode: public IRStmtNode {
@@ -109,6 +115,9 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
     }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        if (value) useSet[this].insert(value);
+    }
 };
 
 class IRBinaryStmtNode: public IRStmtNode {
@@ -126,6 +135,13 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (lhs == from) lhs = to;
         if (rhs == from) rhs = to;
+    }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(lhs);
+        useSet[this].insert(rhs);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
     }
 };
 
@@ -150,6 +166,12 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (ptr == dynamic_cast<IRVarNode*>(from)) ptr = dynamic_cast<IRVarNode*>(to);
     }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(ptr);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
+    }
 };
 
 class IRStoreStmtNode: public IRStmtNode {
@@ -164,6 +186,12 @@ public:
     void accept(IRBaseVisitor* visitor) { visitor->visitStoreStmt(this); }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
+    }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(value);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(ptr);
     }
 };
 
@@ -185,6 +213,13 @@ public:
         if (lhs == from) lhs = to;
         if (rhs == from) rhs = to;
     }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(lhs);
+        useSet[this].insert(rhs);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
+    }
 };
 
 class IRTruncStmtNode: public IRStmtNode {
@@ -199,6 +234,12 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
     }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(value);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
+    }
 };
 
 class IRZextStmtNode: public IRStmtNode {
@@ -212,6 +253,12 @@ public:
     void accept(IRBaseVisitor* visitor) { visitor->visitZextStmt(this); }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
+    }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(value);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
     }
 };
 
@@ -229,6 +276,12 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         for (auto &arg: args) if (arg == from) arg = to;
     }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        for (auto arg: args) useSet[this].insert(arg);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        if (var) defSet[this].insert(var);
+    }
 };
 
 class IRPhiStmtNode: public IRStmtNode {
@@ -242,6 +295,12 @@ public:
     void accept(IRBaseVisitor* visitor) {  visitor->visitPhiStmt(this); }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         for (auto &arg: values) if (arg.second == from) arg.second = to;
+    }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        for (auto &arg: values) useSet[this].insert(arg.second);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
     }
 };
 
@@ -259,6 +318,13 @@ public:
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (index == from) index = to;
         if (ptr == dynamic_cast<IRVarNode*>(from)) ptr = dynamic_cast<IRVarNode*>(to);
+    }
+    void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
+        useSet[this].insert(index);
+        useSet[this].insert(ptr);
+    }
+    void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) override {
+        defSet[this].insert(var);
     }
 };
 

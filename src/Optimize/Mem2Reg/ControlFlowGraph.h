@@ -18,6 +18,8 @@ class DomTreeBuilder;
 class Mem2RegBuilder;
 class CFGBuilder;
 class ASMBuilder;
+class NaiveASMBuilder;
+class LivenessAnalysiser;
 
 class ControlFlowGraph {
 private:
@@ -28,6 +30,8 @@ private:
     friend class Mem2RegBuilder;
     friend class CFGBuilder;
     friend class ASMBuilder;
+    friend class NaiveASMBuilder;
+    friend class LivenessAnalysiser;
 public:
     ~ControlFlowGraph() { 
         for (auto it: name2node) delete it.second;

@@ -10,15 +10,16 @@
 #include "ASMNode.h"
 #include "Register.h"
 #include "IRNode.h"
+#include "RegisterAllocator.h"
 
 class ASMBuilder : public IRBaseVisitor {
 private:
-    int spSize = 0;
     RegisterAllocator regAllocator;
     ASMProgramNode* program = nullptr;
     IRFunctionNode* currentFunction = nullptr;
     ASMBlockNode* currentBlock;
     ASMImmInsNode *spAddIns = nullptr, *spRetIns = nullptr;
+    ASMLocalVarNode *zeroReg, *spReg, *aReg[8], *raReg, *sReg[12];
     std::map<std::string, ASMVarNode*> varMap;
     std::set<ASMVarNode*> varSet;
     std::set<IRVarNode*> irVarSet;
@@ -28,7 +29,17 @@ private:
     std::vector<std::pair<ASMLocalVarNode*, ASMLocalVarNode*>> phiVars;
 
 public:
-    ASMBuilder() {}
+    ASMBuilder() {
+        zeroReg = new ASMLocalVarNode(".zero.tmp", false, regAllocator.getReg("zero"));
+        spReg = new ASMLocalVarNode(".sp.tmp", false, regAllocator.getReg("sp"));
+        raReg = new ASMLocalVarNode(".ra.tmp", false, regAllocator.getReg("ra"));
+        for (int i = 0; i < 8; ++i) {
+            aReg[i] = new ASMLocalVarNode(".a" + std::to_string(i) + ".tmp", false, regAllocator.getReg("a" + std::to_string(i)));
+        }
+        for (int i = 0; i < 12; ++i) {
+            sReg[i] = new ASMLocalVarNode(".s" + std::to_string(i) + ".tmp", false, regAllocator.getReg("s" + std::to_string(i)));
+        }
+    }
     ~ASMBuilder() { 
         delete program; 
         for (auto v: varSet) delete v;
@@ -58,12 +69,11 @@ public:
     void visitProgram(IRProgramNode* node) override;
 
     void print() { std::cout << program->to_string(); }
-    void getPtr(ASMVarNode* var, Register* reg);
-    void getVar(ASMVarNode* var, Register* reg);
-    void getAddr(IRVarNode* var, Register* reg);
-    void getValue(IRValueNode* value, Register* reg);
-    void storeVar(ASMVarNode* var, Register* reg);
-    void storePtr(ASMVarNode* var, Register* reg);
+    void getPtr(ASMVarNode* var, ASMVarNode* reg);
+    void getVar(ASMVarNode* var, ASMVarNode* reg);
+    void getValue(IRValueNode* value, ASMVarNode* reg);
+    void storeVar(ASMVarNode* var, ASMVarNode* reg);
+    void storePtr(ASMVarNode* var, ASMVarNode* reg);
     ASMLocalVarNode* registerLocalVar(IRVarNode* var, bool p_);
     ASMVarNode* getVarNode(IRVarNode* var);
     void setPhiVar(IRBlockNode* node, IRBlockNode* nextBlock);

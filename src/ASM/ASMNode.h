@@ -16,21 +16,21 @@ class ASMVarNode: public ASMNode {
 public:
     std::string name;
     bool is_ptr = false;
-    explicit ASMVarNode(std::string name_, bool p_): name(name_), is_ptr(p_) {}
+    Register* reg = nullptr;
+    explicit ASMVarNode(std::string name_, bool p_, Register* reg_ = nullptr): name(name_), is_ptr(p_), reg(reg_) {}
 };
 
 class ASMGlobalVarNode: public ASMVarNode {
 public:
-    explicit ASMGlobalVarNode(std::string name_, bool p_): ASMVarNode(name_, p_) {}
+    explicit ASMGlobalVarNode(std::string name_, bool p_, Register* reg_ = nullptr): ASMVarNode(name_, p_, reg_) {}
     std::string to_string() override;
 };
 
 class ASMLocalVarNode: public ASMVarNode {
 public:
-    Register* reg = nullptr;
     int offset;
-    explicit ASMLocalVarNode(std::string name_, int offset_, bool p_): 
-        ASMVarNode(name_, p_), offset(offset_) {}
+    explicit ASMLocalVarNode(std::string name_, bool p_, Register* reg_ = nullptr, int offset_ = 0): 
+        ASMVarNode(name_, p_, reg_), offset(offset_) {}
     std::string to_string() override;
 };
 
@@ -38,28 +38,28 @@ class ASMInsNode: public ASMNode {};
 
 class ASMLaInsNode: public ASMInsNode {
 public:
-    Register *dest = nullptr;
+    ASMVarNode *dest = nullptr;
     std::string name;
-    explicit ASMLaInsNode(Register* dest_, std::string name_): dest(dest_), name(name_) {}
+    explicit ASMLaInsNode(ASMVarNode* dest_, std::string name_): dest(dest_), name(name_) {}
     std::string to_string() override;
 };
 
 class ASMLoadInsNode: public ASMInsNode {
 public:
-    std::string op;
-    Register *dest = nullptr, *src = nullptr;
     int offset = 0;
-    explicit ASMLoadInsNode(std::string op_, Register* dest_, Register* src_, int offset_ = 0): 
+    std::string op;
+    ASMVarNode *dest = nullptr, *src = nullptr;
+    explicit ASMLoadInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
 };
 
 class ASMStoreInsNode: public ASMInsNode {
 public:
-    std::string op;
-    Register *dest = nullptr, *src = nullptr;
     int offset = 0;
-    explicit ASMStoreInsNode(std::string op_, Register* dest_, Register* src_, int offset_ = 0): 
+    std::string op;
+    ASMVarNode *dest = nullptr, *src = nullptr;
+    explicit ASMStoreInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
 };
@@ -67,8 +67,8 @@ public:
 class ASMBinaryInsNode: public ASMInsNode {
 public:
     std::string op;
-    Register *dest = nullptr, *src1 = nullptr, *src2 = nullptr;
-    explicit ASMBinaryInsNode(std::string op_, Register* dest_, Register* src1_, Register* src2_): 
+    ASMVarNode *dest = nullptr, *src1 = nullptr, *src2 = nullptr;
+    explicit ASMBinaryInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src1_, ASMVarNode* src2_): 
         op(op_), dest(dest_), src1(src1_), src2(src2_) {}
     std::string to_string() override;
 };
@@ -76,9 +76,9 @@ public:
 class ASMImmInsNode: public ASMInsNode {
 public:
     std::string op;
-    Register *dest = nullptr, *src = nullptr;
+    ASMVarNode *dest = nullptr, *src = nullptr;
     int imm = 0;
-    explicit ASMImmInsNode(std::string op_, Register* dest_, Register* src_, int imm_): 
+    explicit ASMImmInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int imm_): 
         op(op_), dest(dest_), src(src_), imm(imm_) {}
     std::string to_string() override;
 };
@@ -97,9 +97,9 @@ public:
 
 class ASMBranchInsNode: public ASMInsNode {
 public:
-    Register *src1, *src2;
+    ASMVarNode *src1, *src2;
     std::string op, label;
-    explicit ASMBranchInsNode(std::string op_, Register* rs1_, Register* rs2_, std::string label_): 
+    explicit ASMBranchInsNode(std::string op_, ASMVarNode* rs1_, ASMVarNode* rs2_, std::string label_): 
         op(op_), src1(rs1_), src2(rs2_), label(label_) {}
     std::string to_string() override;
 };
@@ -108,6 +108,13 @@ class ASMCallInsNode: public ASMInsNode {
 public:
     std::string name;
     explicit ASMCallInsNode(std::string name_): name(name_) {}
+    std::string to_string() override;
+};
+
+class ASMMoveInsNode: public ASMInsNode {
+public:
+    ASMVarNode *dest = nullptr, *src = nullptr;
+    explicit ASMMoveInsNode(ASMVarNode* dest_, ASMVarNode* src_): dest(dest_), src(src_) {}
     std::string to_string() override;
 };
 

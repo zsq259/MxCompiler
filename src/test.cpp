@@ -6,7 +6,9 @@
 #include "../Semantic/SemanticChecker.h"
 #include "../IR/IRBuilder.h"
 #include "../ASM/ASMBuilder.h"
+#include "../NaiveASM/NaiveASMBuilder.h"
 #include "../Optimize/Mem2Reg/Mem2RegBuilder.h"
+#include "../Optimize/RegAllocation/RegisterAllocator.h"
 #include "MxLexer.h"
 using std::cerr;
 
@@ -73,6 +75,7 @@ int main(int argc, char const *argv[]) {
 		}
 
 		ASMBuilder asmbuilder;
+		// NaiveASMBuilder asmbuilder;
 		asmbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk4\n";
 		for (int i = 1; i < argc; ++i) {

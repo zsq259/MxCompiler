@@ -1,23 +1,51 @@
 #include "ASMNode.h"
 
 std::string ASMLoadInsNode::to_string() {
-    return op + " " + dest->name + ", " + std::to_string(offset) + "(" + src->name + ")";
+    if (!dest->reg) {
+        return op + " " + dest->name + ", " + std::to_string(offset) + "(" + src->name + ")";
+        throw std::runtime_error("load dest reg is nullptr");
+    }
+    if (dynamic_cast<ASMLocalVarNode*>(src)) {
+        if (!src->reg) {
+            return op + " " + dest->name + ", " + std::to_string(offset) + "(" + src->name + ")";
+            throw std::runtime_error("load src reg is nullptr");
+        }
+        return op + " " + dest->reg->name + ", " + std::to_string(offset) + "(" + src->reg->name + ")";
+    }
+    else 
+        return op + " " + dest->reg->name + ", " + src->name;
 }
 
 std::string ASMStoreInsNode::to_string() {
-    return op + " " + src->name + ", " + std::to_string(offset) + "(" + dest->name + ")";
+    if (!src->reg || !dest->reg) {
+        return op + " " + src->name + ", " + std::to_string(offset) + "(" + dest->name + ")";
+        throw std::runtime_error("store src or dest reg is nullptr");
+    }
+    return op + " " + src->reg->name + ", " + std::to_string(offset) + "(" + dest->reg->name + ")";
 }
 
 std::string ASMLaInsNode::to_string() {
-    return "la " + dest->name + ", " + name;
+    if (!dest->reg) {
+        return "la " + dest->name + ", " + name;
+        throw std::runtime_error("la dest reg is nullptr");
+    }
+    return "la " + dest->reg->name + ", " + name;
 }
 
 std::string ASMBinaryInsNode::to_string() {
-    return op + " " + dest->name + ", " + src1->name + ", " + src2->name;
+    if (!dest->reg || !src1->reg || !src2->reg) {
+        return op + " " + dest->name + ", " + src1->name + ", " + src2->name;
+        throw std::runtime_error("binary src or dest reg is nullptr");
+    }
+    return op + " " + dest->reg->name + ", " + src1->reg->name + ", " + src2->reg->name;
 }
 
 std::string ASMImmInsNode::to_string() {
-    return op + " " + dest->name + ", " + src->name + ", " + std::to_string(imm);
+    if (!dest->reg || !src->reg) {
+        return op + " " + dest->name + ", " + src->name + ", " + std::to_string(imm);
+        throw std::runtime_error("imm src or dest reg is nullptr");
+    }
+    return op + " " + dest->reg->name + ", " + src->reg->name + ", " + std::to_string(imm);
 }
 
 std::string ASMJumpInsNode::to_string() {
@@ -29,11 +57,23 @@ std::string ASMRetInsNode::to_string() {
 }
 
 std::string ASMBranchInsNode::to_string() {
-    return op + " " + src1->name + ", " + src2->name + ", " + label;
+    if (!src1->reg || !src2->reg) {
+        return op + " " + src1->name + ", " + src2->name + ", " + label;
+        throw std::runtime_error("branch src reg is nullptr");
+    }
+    return op + " " + src1->reg->name + ", " + src2->reg->name + ", " + label;
 }
 
 std::string ASMCallInsNode::to_string() {
     return "call " + name;
+}
+
+std::string ASMMoveInsNode::to_string() {
+    if (!dest->reg || !src->reg) {
+        return "mv " + dest->name + ", " + src->name;
+        throw std::runtime_error("move src or dest reg is nullptr");
+    }
+    return "mv " + dest->reg->name + ", " + src->reg->name;
 }
 
 std::string ASMLocalVarNode::to_string() {
