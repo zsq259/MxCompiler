@@ -1,10 +1,13 @@
 #ifndef ASM_NODE_H
 #define ASM_NODE_H
 #include <set>
+#include <map>
 #include <string>
 #include <vector>
 #include <iostream>
 #include "Register.h"
+
+static std::map<std::string, int> counter;
 
 class ASMNode {
 public:
@@ -15,10 +18,11 @@ public:
 
 class ASMVarNode: public ASMNode {
 public:
+    int offset;
     std::string name;
     bool is_ptr = false;
     Register* reg = nullptr;
-    explicit ASMVarNode(std::string name_, bool p_, Register* reg_ = nullptr): name(name_), is_ptr(p_), reg(reg_) {}
+    explicit ASMVarNode(std::string name_, bool p_, Register* reg_ = nullptr, int offset_ = 0): name(name_), is_ptr(p_), reg(reg_), offset(offset_) {}
 };
 
 class ASMGlobalVarNode: public ASMVarNode {
@@ -29,9 +33,9 @@ public:
 
 class ASMLocalVarNode: public ASMVarNode {
 public:
-    int offset;
+    
     explicit ASMLocalVarNode(std::string name_, bool p_, Register* reg_ = nullptr, int offset_ = 0): 
-        ASMVarNode(name_, p_, reg_), offset(offset_) {}
+        ASMVarNode(name_, p_, reg_, offset_) {}
     std::string to_string() override;
 };
 
@@ -39,6 +43,7 @@ class ASMInsNode: public ASMNode {
 public:
     virtual void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) {}
     virtual void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) {}
+    virtual void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {}
 };
 
 class ASMLaInsNode: public ASMInsNode {
@@ -50,6 +55,9 @@ public:
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
         defSet[this].insert(dest);
     }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (dest->reg && dest->reg->id == 2) throw std::runtime_error("la dest is sp");
+    }
 };
 
 class ASMLoadInsNode: public ASMInsNode {
@@ -57,7 +65,7 @@ public:
     int offset = 0;
     std::string op;
     ASMVarNode *dest = nullptr, *src = nullptr;
-    explicit ASMLoadInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
+    explicit ASMLoadInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
@@ -66,6 +74,9 @@ public:
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
         defSet[this].insert(dest);
     }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (dest->reg && dest->reg->id == 2) throw std::runtime_error("load dest is sp");
+    }
 };
 
 class ASMStoreInsNode: public ASMInsNode {
@@ -73,12 +84,20 @@ public:
     int offset = 0;
     std::string op;
     ASMVarNode *dest = nullptr, *src = nullptr;
-    explicit ASMStoreInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_ = 0): 
+    explicit ASMStoreInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_): 
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
         useSet[this].insert(dest);
         useSet[this].insert(src);
+    }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (src->reg && src->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".store.tmp" + std::to_string(counter[".store.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
+            loadIns.push_back(load);
+            src = tmp;
+        }
     }
 };
 
@@ -96,6 +115,26 @@ public:
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
         defSet[this].insert(dest);
     }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (src1->reg && src1->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src1, src1->offset);
+            loadIns.push_back(load);
+            src1 = tmp;
+        }
+        if (src2->reg && src2->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src2, src2->offset);
+            loadIns.push_back(load);
+            src2 = tmp;
+        }
+        if (dest->reg && dest->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
+            auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
+            storeIns.push_back(store);
+            dest = tmp;
+        }
+    }
 };
 
 class ASMImmInsNode: public ASMInsNode {
@@ -111,6 +150,20 @@ public:
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
         defSet[this].insert(dest);
+    }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (src->reg && src->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".imm.tmp" + std::to_string(counter[".imm.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
+            loadIns.push_back(load);
+            src = tmp;
+        }
+        if (dest->reg && dest->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".imm.tmp" + std::to_string(counter[".imm.tmp"]++), false);
+            auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
+            storeIns.push_back(store);
+            dest = tmp;
+        }
     }
 };
 
@@ -137,6 +190,20 @@ public:
         useSet[this].insert(src1);
         useSet[this].insert(src2);
     }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (src1->reg && src1->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".branch.tmp" + std::to_string(counter[".branch.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src1, src1->offset);
+            loadIns.push_back(load);
+            src1 = tmp;
+        }
+        if (src2->reg && src2->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".branch.tmp" + std::to_string(counter[".branch.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src2, src2->offset);
+            loadIns.push_back(load);
+            src2 = tmp;
+        }
+    }
 };
 
 class ASMCallInsNode: public ASMInsNode {
@@ -158,6 +225,20 @@ public:
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
         defSet[this].insert(dest);
     }
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+        if (src->reg && src->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".move.tmp" + std::to_string(counter[".move.tmp"]++), false);
+            auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
+            loadIns.push_back(load);
+            src = tmp;
+        }
+        if (dest->reg && dest->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".move.tmp" + std::to_string(counter[".move.tmp"]++), false);
+            auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
+            storeIns.push_back(store);
+            dest = tmp;
+        }
+    }
 };
 
 class ASMBlockNode: public ASMNode {
@@ -173,6 +254,7 @@ public:
 
 class ASMFunctionNode: public ASMNode {
 public:
+    ASMImmInsNode *spAddIns = nullptr, *spRetIns = nullptr;
     std::vector<ASMBlockNode*> blocks;
 
     ~ASMFunctionNode() override {

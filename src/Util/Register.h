@@ -7,7 +7,7 @@
 class Register {
 public:
     std::string name;
-    int value;
+    int id;
     std::string to_string() { return name; }
 };
 

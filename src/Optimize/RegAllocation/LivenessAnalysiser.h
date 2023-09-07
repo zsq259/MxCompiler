@@ -15,6 +15,8 @@ public:
     ASMCFGNode(ASMBlockNode* block_): block(block_) {}
 };
 
+class RegisterAllocator;
+
 class LivenessAnalysiser {
 private:
     ASMFunctionNode* function;
@@ -22,6 +24,8 @@ private:
     std::map<ASMNode*, std::set<ASMVarNode*> > useSet, defSet, inSet, outSet;
     std::map<std::string, ASMCFGNode*> blockMap;
     bool changeFlag = false;
+    
+    friend class RegisterAllocator;
 public:
     explicit LivenessAnalysiser(ASMFunctionNode* f_):function(f_) {
         for (auto block: function->blocks) {
@@ -46,6 +50,9 @@ public:
                 }
             }
         }
+    }
+    ~LivenessAnalysiser() {
+        for (auto p: blockMap) delete p.second;
     }
     void getUseDef(ASMCFGNode* node) {
         auto block = node->block;

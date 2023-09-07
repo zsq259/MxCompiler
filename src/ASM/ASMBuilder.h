@@ -17,9 +17,9 @@ private:
     RegisterAllocator regAllocator;
     ASMProgramNode* program = nullptr;
     IRFunctionNode* currentFunction = nullptr;
+    ASMFunctionNode* currentASMFunction = nullptr;
     ASMBlockNode* currentBlock;
-    ASMImmInsNode *spAddIns = nullptr, *spRetIns = nullptr;
-    ASMLocalVarNode *zeroReg, *spReg, *aReg[8], *raReg, *sReg[12];
+    ASMLocalVarNode* raVar = nullptr;
     std::map<std::string, ASMVarNode*> varMap;
     std::set<ASMVarNode*> varSet;
     std::set<IRVarNode*> irVarSet;
@@ -29,17 +29,7 @@ private:
     std::vector<std::pair<ASMLocalVarNode*, ASMLocalVarNode*>> phiVars;
 
 public:
-    ASMBuilder() {
-        zeroReg = new ASMLocalVarNode(".zero.tmp", false, regAllocator.getReg("zero"));
-        spReg = new ASMLocalVarNode(".sp.tmp", false, regAllocator.getReg("sp"));
-        raReg = new ASMLocalVarNode(".ra.tmp", false, regAllocator.getReg("ra"));
-        for (int i = 0; i < 8; ++i) {
-            aReg[i] = new ASMLocalVarNode(".a" + std::to_string(i) + ".tmp", false, regAllocator.getReg("a" + std::to_string(i)));
-        }
-        for (int i = 0; i < 12; ++i) {
-            sReg[i] = new ASMLocalVarNode(".s" + std::to_string(i) + ".tmp", false, regAllocator.getReg("s" + std::to_string(i)));
-        }
-    }
+    ASMBuilder() {}
     ~ASMBuilder() { 
         delete program; 
         for (auto v: varSet) delete v;
