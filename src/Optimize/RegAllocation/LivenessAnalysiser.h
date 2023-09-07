@@ -23,8 +23,9 @@ private:
     ASMCFGNode* entry;
     std::map<ASMNode*, std::set<ASMVarNode*> > useSet, defSet, inSet, outSet;
     std::map<std::string, ASMCFGNode*> blockMap;
+    std::set<ASMCFGNode*> visited;
     bool changeFlag = false;
-    
+
     friend class RegisterAllocator;
 public:
     explicit LivenessAnalysiser(ASMFunctionNode* f_):function(f_) {
@@ -32,21 +33,20 @@ public:
             auto node = new ASMCFGNode(block);
             blockMap[block->name] = node;
         }
-        entry = blockMap["main"];
+        entry = blockMap[function->blocks[0]->name];
         for (auto block: function->blocks) {
-            auto now = blockMap[block->name];
+            auto now = blockMap[block->name];            
             for (auto ins: block->insts) {
                 if (auto j = dynamic_cast<ASMJumpInsNode*>(ins)) {
-                    auto next = blockMap[j->label];
+                    auto next = blockMap[j->label];                    
                     now->next.push_back(next);
                     next->prev.push_back(now);
                     break;
                 }
                 if (auto b = dynamic_cast<ASMBranchInsNode*>(ins)) {
-                    auto next = blockMap[b->label];
+                    auto next = blockMap[b->label];        
                     now->next.push_back(next);
                     next->prev.push_back(now);
-                    break;
                 }
             }
         }
@@ -55,10 +55,19 @@ public:
         for (auto p: blockMap) delete p.second;
     }
     void getUseDef(ASMCFGNode* node) {
+        if (visited.contains(node)) return;
+        // std::cerr << "___________________________________________\n";
+        visited.insert(node);
         auto block = node->block;
         for (auto ins: block->insts) {
             ins->getUse(useSet);
             ins->getDef(defSet);
+            // std::cerr << "ins: " << ins->to_string() << std::endl;
+            // for (auto v: useSet[ins]) std::cerr << v->to_string() << " ";
+            // std::cerr << '\n';
+            for (auto v: useSet[ins]) if (!v) {                
+                throw std::runtime_error("useSet null");
+            }
         }
         for (auto ins: block->insts) {
             auto tmpSet = useSet[ins];
@@ -67,23 +76,39 @@ public:
 
             for (auto v: defSet[ins]) defSet[block].insert(v);
         }
+        // std::cerr << "now: " << block->name << std::endl;
+        // std::cerr << "use: ";
+        // for (auto v: useSet[block]) std::cerr << v->to_string() << " ";
+        // std::cerr << std::endl;
+        // std::cerr << "++++++++++++++++++++++++++++++++++++++++++++\n";
         for (auto child: node->next) getUseDef(child);
     }
     void getBlockInOut(ASMCFGNode* node) {
+        if (visited.contains(node)) return;
+        visited.insert(node);
         auto block = node->block;
         for (auto child: node->next) getBlockInOut(child);
         for (auto child: node->next) {
             for (auto v: inSet[child->block]) changeFlag |= outSet[block].insert(v).second;
         }
+        auto tmpSet = inSet[block];
         inSet[block] = outSet[block];
         for (auto v: defSet[block]) inSet[block].erase(v);
-        for (auto v: useSet[block]) changeFlag |= inSet[block].insert(v).second;
+        for (auto v: useSet[block]) inSet[block].insert(v);
+        for (auto v: inSet[block]) changeFlag |= (tmpSet.find(v) == tmpSet.end());
+        
+        // std::cerr << "now: " << block->name << std::endl;
+        // std::cerr << "out: ";
+        // for (auto v: outSet[block]) std::cerr << v->to_string() << " ";
+        // std::cerr << std::endl;
     }
     void getStmtInOut(ASMCFGNode* node) {
+        if (visited.contains(node)) return;
+        visited.insert(node);
         auto block = node->block;
         for (auto child: node->next) getStmtInOut(child);
-        auto it = block->insts.end();
         auto &tmpSet = outSet[block];
+        auto it = block->insts.end();
         while (true) {
             it--;
             inSet[*it] = outSet[*it] = tmpSet;
@@ -94,12 +119,16 @@ public:
         }
     }
     void LivenessAnalysis() {
+        visited.clear();
         getUseDef(entry);
         changeFlag = true;
         while (changeFlag) {
+            
             changeFlag = false;
+            visited.clear();
             getBlockInOut(entry);
         }
+        visited.clear();
         getStmtInOut(entry);
     }
 };

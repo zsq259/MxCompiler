@@ -69,16 +69,16 @@ public:
     void build(ASMFunctionNode* function) {
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
-                for (auto def: livenessAnalysiser->defSet[ins]) {
+                for (auto def: livenessAnalysiser->defSet[ins]) {                    
                     for (auto otherDef: livenessAnalysiser->defSet[ins]) {
                         if (def == otherDef) continue;
                             interferenceGraph[def].insert(otherDef);
-                            interferenceGraph[otherDef].insert(def);
+                            interferenceGraph[otherDef].insert(def);                            
                     }
                     for (auto out: livenessAnalysiser->outSet[ins]) {
                         if (def == out) continue;
                         interferenceGraph[def].insert(out);
-                        interferenceGraph[out].insert(def);
+                        interferenceGraph[out].insert(def);                    
                     }
                 }
             }
@@ -113,9 +113,14 @@ public:
         auto node = *it;
         spillWorkList.erase(it);
         simplifyWorkList.insert(node);
+        // if (!dynamic_cast<ASMLaInsNode*>(node))
         spilledStack.push_back(node);
     }
     void assignColors() {
+        if (selectStack.empty()) {
+            return ;
+            throw std::runtime_error("selectStack is empty");
+        }
         auto it = selectStack.end();
         while (true) {
             --it;
@@ -136,6 +141,7 @@ public:
     }
     void rewrite(ASMFunctionNode* function) {
         for (auto node: spilledStack) {
+            if (node->reg) continue;
             node->reg = getReg("sp");
             node->offset = spSize;
             spSize += 4;
@@ -145,6 +151,7 @@ public:
         for (auto block: function->blocks) {
             for (auto it = block->insts.begin(); it != block->insts.end();) {
                 auto ins = *it;
+                if (ins == function->spAddIns || ins == function->spRetIns) { ++it; continue; }
                 loadIns.clear();
                 storeIns.clear();
                 ins->rewrite(loadIns, storeIns);
@@ -159,15 +166,22 @@ public:
                 }
             }
         }
+        spilledStack.clear();
     }
     void work(ASMFunctionNode* function) {
         spSize = 0;
         while (true) {
+            
             livenessAnalysiser = new LivenessAnalysiser(function);
+            // std::cerr << "ojbk\n";
             livenessAnalysiser->LivenessAnalysis();
+            // std::cerr << "ojbk1\n";
             addCallDef(function);
+            // std::cerr << "ojbk2\n";
             build(function);
+            // std::cerr << "ojbk3" << std::endl;
             MakeWorkList();
+            // std::cerr << "ojbk4" << std::endl;
             while (true) {
                 if (!simplifyWorkList.empty() ) simplify();
                 else if (!moveWorkList.empty()) {}
@@ -175,8 +189,11 @@ public:
                 else if (!spillWorkList.empty()) selectSpill();
                 else break;
             }
+            // std::cerr << "ojbk5\n";
             assignColors();
+            // std::cerr << "ojbk6\n";
             delete livenessAnalysiser;
+            // std::cerr << "ojbk7\n";
             if (spilledStack.empty()) break;
             rewrite(function);
         }

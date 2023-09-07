@@ -73,27 +73,27 @@ void ASMBuilder::getValue(IRValueNode* value, ASMVarNode* reg) {
 
 void ASMBuilder::storeVar(ASMVarNode* var, ASMVarNode* reg) {
     if (dynamic_cast<ASMGlobalVarNode*>(var)) {
-        auto tmp = dynamic_cast<ASMGlobalVarNode*>(var);
-        auto la = new ASMLaInsNode(tmp, tmp->name);
+        auto tmp = new ASMLocalVarNode(".tmp." + to_string(counter[".tmp."]++), false);
+        auto la = new ASMLaInsNode(tmp, var->name);
         currentBlock->insts.push_back(la);
         auto store = new ASMStoreInsNode("sw", tmp, reg, 0);
         currentBlock->insts.push_back(store);
     }
     else {
-        auto tmp = dynamic_cast<ASMLocalVarNode*>(var);
-        auto store = new ASMStoreInsNode("sw", tmp, reg, 0);
-        currentBlock->insts.push_back(store);
+        auto mv = new ASMMoveInsNode(var, reg);
+        currentBlock->insts.push_back(mv);
     }
 }
 
 void ASMBuilder::storePtr(ASMVarNode* var, ASMVarNode* reg) {
     if (!var->is_ptr) throw std::runtime_error("not a pointer");
     if (dynamic_cast<ASMGlobalVarNode*>(var)) {
-        auto la = new ASMLaInsNode(var, var->name);
+        auto tmp = new ASMLocalVarNode(".tmp." + to_string(counter[".tmp."]++), false);
+        auto la = new ASMLaInsNode(tmp, var->name);
         currentBlock->insts.push_back(la);
-        auto load = new ASMLoadInsNode("lw", var, var, 0);
+        auto load = new ASMLoadInsNode("lw", tmp, tmp, 0);
         currentBlock->insts.push_back(load);
-        auto store = new ASMStoreInsNode("sw", var, reg, 0);
+        auto store = new ASMStoreInsNode("sw", tmp, reg, 0);
         currentBlock->insts.push_back(store);
     }
     else {
@@ -222,8 +222,10 @@ void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
     if(node->value) {
         getValue(node->value, regAllocator.aReg[0]);
     }
-    auto raLoad = new ASMLoadInsNode("lw", raVar, regAllocator.spReg, 0);
-    currentBlock->insts.push_back(raLoad);
+    // auto raLoad = new ASMLoadInsNode("lw", raVar, regAllocator.spReg, 0);
+    // currentBlock->insts.push_back(raLoad);
+    auto raMove = new ASMMoveInsNode(regAllocator.raReg, raVar);
+    currentBlock->insts.push_back(raMove);
     auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
     currentASMFunction->spRetIns = spAdd;
     currentBlock->insts.push_back(spAdd);
@@ -294,6 +296,7 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         if (block->name != "main") {
             for (int i = 0; i < 12; ++i) {
                 auto var = new ASMLocalVarNode(".callee.saved." + std::to_string(i) + ".tmp" + std::to_string(counter["callee"]++), false);
+                calleeSavedVar[i] = var;
                 varSet.insert(var);
                 varMap[var->name] = var;
                 auto mv = new ASMMoveInsNode(var, regAllocator.sReg[i]);
@@ -320,8 +323,11 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
         varSet.insert(raVar);
         varMap["..ra" + currentFunction->name] = raVar;
-        auto raStore = new ASMStoreInsNode("sw", raVar, regAllocator.raReg, 0);
-        block->insts.push_back(raStore);
+
+        // auto raStore = new ASMStoreInsNode("sw", raVar, regAllocator.raReg, 0);
+        // block->insts.push_back(raStore);
+        auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
+        block->insts.push_back(raMove);
     }
     else {
         block = new ASMBlockNode(".L" + node->label);
@@ -334,7 +340,6 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
 
     auto finalinst = currentBlock->insts.back();
     currentBlock->insts.pop_back();
-    
     phiVars.clear();
     if (auto stmt = dynamic_cast<IRBrCondStmtNode*>(node->stmts.back())) {
         setPhiVar(node, blockMap[stmt->trueLabel]);
@@ -357,12 +362,20 @@ void ASMBuilder::visitFunction(IRFunctionNode* node) {
     currentFunction = node;
     currentASMFunction = function;
     blockMap.clear();
-    for (auto block: node->blocks) {
-        blockMap[block->label] = block;
+    for (auto block: node->blocks) blockMap[block->label] = block;
+    for (auto block: node->blocks) block->accept(this); 
+
+    if (node->name != "main") {
+        auto finalinst = currentBlock->insts.back();
+        currentBlock->insts.pop_back();
+        for (int i = 0; i < 12; ++i) {
+            auto var = calleeSavedVar[i];
+            auto mv = new ASMMoveInsNode(regAllocator.sReg[i], var);
+            currentBlock->insts.push_back(mv);
+        }
+        currentBlock->insts.push_back(finalinst);
     }
-    for (auto block: node->blocks) {
-        block->accept(this);
-    }
+
     regAllocator.work(function);
     currentFunction = nullptr;
     currentASMFunction = nullptr;
@@ -388,10 +401,6 @@ void ASMBuilder::visitProgram(IRProgramNode* node) {
     program = new ASMProgramNode;
     if (node->globalVars.size()) program->data = new ASMDataSectionNode;
     if (node->functions.size()) program->text = new ASMTextSectionNode;
-    for (auto globalVar : node->globalVars) {
-        globalVar->accept(this);
-    }
-    for (auto function : node->functions) {
-        function->accept(this);
-    }
+    for (auto globalVar : node->globalVars) globalVar->accept(this);
+    for (auto function : node->functions) function->accept(this);
 }
