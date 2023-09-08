@@ -69,12 +69,19 @@ public:
         }
     }
     void collectVarLive(ASMFunctionNode* function) {
-        int cnt = 0;
+        int cnt = 0, sum = 0;
+        for (auto block: function->blocks) {
+            for (auto ins: block->insts) ++sum;            
+        }
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
                 for (auto var: livenessAnalysiser->defSet[ins]) {
                     if (var->reg) continue;
-                    if (!liveBegin.count(var)) liveBegin[var] = cnt;                    
+                    if (!liveBegin.count(var)) {
+                        auto &tmp = liveBegin[var];
+                        tmp = cnt;
+                        if (dynamic_cast<ASMLoadInsNode*>(ins) || dynamic_cast<ASMStoreInsNode*>(ins)) tmp += sum;
+                    }
                 }
                 ++cnt;
             }
@@ -138,7 +145,7 @@ public:
         auto it = spillWorkSet.begin();
         for (auto it_ = spillWorkSet.begin(); it_ != spillWorkSet.end(); ++it_) {
 
-            if (liveBegin[*it_] > liveBegin[*it]) it = it_;
+            if (liveBegin[*it_] < liveBegin[*it]) it = it_;
         }
 
         auto node = *it;
@@ -183,7 +190,7 @@ public:
     }
     void rewrite(ASMFunctionNode* function) {
         for (auto node: spilledStack) {
-            if (node->reg) continue;
+            if (node->reg) continue;        
             node->reg = getReg("sp");
             node->offset = spSize;
             spSize += 4;
