@@ -66,7 +66,9 @@ public:
     std::string op;
     ASMVarNode *dest = nullptr, *src = nullptr;
     explicit ASMLoadInsNode(std::string op_, ASMVarNode* dest_, ASMVarNode* src_, int offset_): 
-        op(op_), dest(dest_), src(src_), offset(offset_) {}
+        op(op_), dest(dest_), src(src_), offset(offset_) {
+            // if (offset < 0) throw std::runtime_error("offset < 0" + dest->name + " " + src->name);
+        }
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
         useSet[this].insert(src);

@@ -14,9 +14,11 @@ private:
     std::map<ASMVarNode*, std::set<ASMVarNode*> > interferenceGraph;
     std::map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
     std::map<ASMVarNode*, int> liveBegin;
+    std::map<ASMVarNode*, ASMVarNode*> dsuMap;
     std::vector<ASMVarNode*> spilledStack, selectStack;
-    std::vector<ASMVarNode*> simplifyWorkList, moveWorkList, freezeWorkList, spillWorkList;
-    std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet;
+    std::vector<ASMVarNode*> simplifyWorkList, spillWorkList;
+    std::vector<ASMMoveInsNode*> moveWorkList;
+    std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet, freezeWorkSet;
     bool selected[32];
     LivenessAnalysiser* livenessAnalysiser = nullptr;
 public:
@@ -105,9 +107,22 @@ public:
             }
         }
     }
-    void MakeWorkList() {
+    ASMVarNode* dsuFind(ASMVarNode* node) {
+        if (dsuMap[node] == node) return node;
+        return dsuMap[node] = dsuFind(dsuMap[node]);
+    }
+    void MakeWorkList(ASMFunctionNode* function) {
+        // dsuMap.clear();
+        // for (auto block: function->blocks) {
+        //     for (auto ins: block->insts) {
+        //         if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {            
+        //             dsuMap.emplace(mv->src, mv->src);
+        //             dsuMap.emplace(mv->dest, mv->dest);
+        //         }
+        //     }
+        // }
         for (auto node: interferenceGraph) {
-            if (!node.first->reg){            
+            if (!node.first->reg && !dsuMap.contains(node.first)){
                 if (node.second.size() < K) {
                     if (simplifyWorkSet.insert(node.first).second) simplifyWorkList.push_back(node.first);
                     // else std::cerr << "node: " << node.first->name << '\n';
@@ -115,6 +130,23 @@ public:
                 else spillWorkSet.insert(node.first);
             }
         }
+        
+        // for (auto block: function->blocks) {
+        //     for (auto ins: block->insts) {
+        //         if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {                
+        //             auto a = mv->src, b = mv->dest;
+        //             bool flag = true;
+        //             for (auto v: interferenceGraph[a]) {
+        //                 if (v == b) { flag = false; break; }
+        //                 if (interferenceGraph[v].size() >= K && !interferenceGraph[v].contains(b)) { flag = false; break; }
+        //             }
+        //             if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }
+        //             auto fa = dsuFind(a), fb = dsuFind(b);
+        //             dsuMap[fa] = fb;
+        //             moveWorkList.push_back(mv);
+        //         }
+        //     }
+        // }
 
         
     }
@@ -132,14 +164,38 @@ public:
             }
             if (node->reg) {
                 throw std::runtime_error("simplify node->reg is not null: " + node->reg->name);
-            }
-            for (auto v: selectStack) { if (v == node) throw std::runtime_error("simplify node in selectStack"); }
+            }            
             selectStack.push_back(node); // may be spill or color            
 
         }
 
         simplifyWorkList.clear();
         simplifyWorkSet.clear();
+    }
+    void coalesce() {
+        for (auto it: dsuMap) {
+            auto node = it.first;
+            auto fa = dsuFind(node);
+            if (fa == node) continue;
+            freezeWorkSet.erase(node);
+            if (interferenceGraph[fa].contains(node)) throw std::runtime_error("coalesce node in interferenceGraph");
+            for (auto t: interferenceGraph[node]) interferenceGraph[fa].insert(t);
+        }
+        for (auto mv: moveWorkList) {
+            auto a = mv->src, b = mv->dest;            
+            auto fa = dsuFind(a), fb = dsuFind(b);
+            mv->src = fa; mv->dest = fb;
+        }
+        moveWorkList.clear();        
+    }
+    void freeze() {        
+        auto it = freezeWorkSet.begin();
+        for (auto it_ = freezeWorkSet.begin(); it_ != freezeWorkSet.end(); ++it_) {
+            if (interferenceGraph[*it_].size() < interferenceGraph[*it].size()) it = it_;
+        }
+        auto node = *it;
+        freezeWorkSet.erase(it);
+        if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
     }
     void selectSpill() {
         auto it = spillWorkSet.begin();
@@ -192,7 +248,7 @@ public:
         for (auto node: spilledStack) {
             if (node->reg) continue;        
             node->reg = getReg("sp");
-            node->offset = spSize;
+            node->offset = spSize;        
             spSize += 4;
         }
         std::vector<ASMInsNode*> loadIns;
@@ -217,6 +273,20 @@ public:
         }
         spilledStack.clear();
     }
+    void removeSameMove(ASMFunctionNode* function) {
+        for (auto block: function->blocks) {
+            for (auto it = block->insts.begin(); it != block->insts.end();) {
+                auto ins = *it;
+                if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {
+                    if (mv->src->reg == mv->dest->reg) {
+                        it = block->insts.erase(it);
+                        continue;
+                    }
+                }
+                ++it;
+            }
+        }
+    }
     void work(ASMFunctionNode* function) {
         spSize = 0;
         while (true) {
@@ -230,12 +300,12 @@ public:
             build(function);
             collectVarLive(function);
             // std::cerr << "ojbk3" << std::endl;
-            MakeWorkList();
+            MakeWorkList(function);
             // std::cerr << "ojbk4" << std::endl;
             while (true) {
                 if (!simplifyWorkList.empty() ) simplify();
-                else if (!moveWorkList.empty()) {}
-                else if (!freezeWorkList.empty()) {}
+                else if (!moveWorkList.empty()) {} //coalesce();
+                else if (!freezeWorkSet.empty()) {} //freeze();
                 else if (!spillWorkSet.empty()) selectSpill();
                 else break;
             }
@@ -250,6 +320,7 @@ public:
         spSize = (spSize + 15) / 16 * 16;
         function->spAddIns->imm = -spSize;
         function->spRetIns->imm = spSize;
+        removeSameMove(function);
     }
 
 };
