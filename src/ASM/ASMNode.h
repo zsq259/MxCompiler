@@ -75,7 +75,11 @@ public:
         defSet[this].insert(dest);
     }
     void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (dest->reg && dest->reg->id == 2) throw std::runtime_error("load dest is sp");
+        // if (dest->reg && dest->reg->id == 2) throw std::runtime_error("load dest is sp");
+        if (dest->reg && dest->reg->id == 2) {
+            auto tmp = new ASMLocalVarNode(".load.tmp" + std::to_string(counter[".load.tmp"]++), false);            
+            dest = tmp;
+        }
     }
 };
 
@@ -227,17 +231,23 @@ public:
         defSet[this].insert(dest);
     }
     void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src->reg && src->reg->id == 2) {
+        if (src->reg && src->reg->id == 2 && dest->reg && dest->reg->id == 2) {
             auto tmp = new ASMLocalVarNode(".move.tmp" + std::to_string(counter[".move.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
             loadIns.push_back(load);
-            src = tmp;
-        }
-        if (dest->reg && dest->reg->id == 2) {
-            auto tmp = new ASMLocalVarNode(".move.tmp" + std::to_string(counter[".move.tmp"]++), false);
             auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
             storeIns.push_back(store);
-            dest = tmp;
+            dest = src = tmp;
+        }
+        else if (src->reg && src->reg->id == 2) {            
+            auto load = new ASMLoadInsNode("lw", dest, src, src->offset);
+            loadIns.push_back(load);
+            src = dest;
+        }
+        else if (dest->reg && dest->reg->id == 2) {
+            auto store = new ASMStoreInsNode("sw", dest, src, dest->offset);
+            storeIns.push_back(store);
+            dest = src;
         }
     }
 };

@@ -222,10 +222,19 @@ void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
     if(node->value) {
         getValue(node->value, regAllocator.aReg[0]);
     }
-    // auto raLoad = new ASMLoadInsNode("lw", raVar, regAllocator.spReg, 0);
-    // currentBlock->insts.push_back(raLoad);
+
     auto raMove = new ASMMoveInsNode(regAllocator.raReg, raVar);
     currentBlock->insts.push_back(raMove);
+    
+    if (currentFunction->name != "main") {
+        for (int i = 0; i < 12; ++i) {
+            auto var = calleeSavedVar[i];
+            auto mv = new ASMMoveInsNode(regAllocator.sReg[i], var);
+            currentBlock->insts.push_back(mv);
+        }
+    }
+
+    
     auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
     currentASMFunction->spRetIns = spAdd;
     currentBlock->insts.push_back(spAdd);
@@ -292,7 +301,15 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
         block->insts.push_back(spAdd);
         currentASMFunction->spAddIns = spAdd;
-        int cnt = 0;
+
+        raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
+        varSet.insert(raVar);
+        varMap["..ra" + currentFunction->name] = raVar;
+
+        auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
+        block->insts.push_back(raMove);
+
+        
         if (block->name != "main") {
             for (int i = 0; i < 12; ++i) {
                 auto var = new ASMLocalVarNode(".callee.saved." + std::to_string(i) + ".tmp" + std::to_string(counter["callee"]++), false);
@@ -303,6 +320,8 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
                 block->insts.push_back(mv);
             }
         }
+
+        int cnt = 0;
         for (int i = 8, k = currentFunction->args.size(); i < k; ++i) {
             auto arg = currentFunction->args[i];
             auto var = new ASMLocalVarNode(arg.second, false);
@@ -319,15 +338,6 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
             varMap[arg.second] = var;
             storeVar(var, regAllocator.aReg[i]);
         }
-
-        raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
-        varSet.insert(raVar);
-        varMap["..ra" + currentFunction->name] = raVar;
-
-        // auto raStore = new ASMStoreInsNode("sw", raVar, regAllocator.raReg, 0);
-        // block->insts.push_back(raStore);
-        auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
-        block->insts.push_back(raMove);
     }
     else {
         block = new ASMBlockNode(".L" + node->label);
@@ -365,17 +375,6 @@ void ASMBuilder::visitFunction(IRFunctionNode* node) {
     for (auto block: node->blocks) blockMap[block->label] = block;
     for (auto block: node->blocks) block->accept(this); 
 
-    if (node->name != "main") {
-        auto finalinst = currentBlock->insts.back();
-        currentBlock->insts.pop_back();
-        for (int i = 0; i < 12; ++i) {
-            auto var = calleeSavedVar[i];
-            auto mv = new ASMMoveInsNode(regAllocator.sReg[i], var);
-            currentBlock->insts.push_back(mv);
-        }
-        currentBlock->insts.push_back(finalinst);
-    }
-
     regAllocator.work(function);
     currentFunction = nullptr;
     currentASMFunction = nullptr;
@@ -392,7 +391,7 @@ void ASMBuilder::visitGlobalVarStmt(IRGlobalVarStmtNode* node) {
     }
     auto globalVar = new ASMGlobalVarStmtNode(node->var->name, str, is_string);
     program->data->globalVarStmts.push_back(globalVar);
-    auto var = new ASMGlobalVarNode(node->var->name, is_string);
+    auto var = new ASMGlobalVarNode(node->var->name, is_string, regAllocator.getReg("zero"));
     varSet.insert(var);
     varMap[node->var->name] = var;
 }

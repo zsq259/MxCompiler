@@ -13,8 +13,10 @@ private:
     std::map<std::string, PhysicalRegister*> name2reg;
     std::map<ASMVarNode*, std::set<ASMVarNode*> > interferenceGraph;
     std::map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
+    std::map<ASMVarNode*, int> liveBegin;
     std::vector<ASMVarNode*> spilledStack, selectStack;
-    std::set<ASMVarNode*> simplifyWorkList, moveWorkList, freezeWorkList, spillWorkList;
+    std::vector<ASMVarNode*> simplifyWorkList, moveWorkList, freezeWorkList, spillWorkList;
+    std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet;
     bool selected[32];
     LivenessAnalysiser* livenessAnalysiser = nullptr;
 public:
@@ -66,6 +68,18 @@ public:
             }
         }
     }
+    void collectVarLive(ASMFunctionNode* function) {
+        int cnt = 0;
+        for (auto block: function->blocks) {
+            for (auto ins: block->insts) {
+                for (auto var: livenessAnalysiser->defSet[ins]) {
+                    if (var->reg) continue;
+                    if (!liveBegin.count(var)) liveBegin[var] = cnt;                    
+                }
+                ++cnt;
+            }
+        }
+    }
     void build(ASMFunctionNode* function) {
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
@@ -86,34 +100,50 @@ public:
     }
     void MakeWorkList() {
         for (auto node: interferenceGraph) {
-            if (!node.first->reg){
-                if (node.second.size() < K) simplifyWorkList.insert(node.first);            
-                else spillWorkList.insert(node.first);
+            if (!node.first->reg){            
+                if (node.second.size() < K) {
+                    if (simplifyWorkSet.insert(node.first).second) simplifyWorkList.push_back(node.first);
+                    // else std::cerr << "node: " << node.first->name << '\n';
+                }
+                else spillWorkSet.insert(node.first);
             }
         }
 
         
     }
     void simplify() {
-        for (auto node: simplifyWorkList) {
+        for (int i = 0; i < simplifyWorkList.size(); ++i) {
+            auto node = simplifyWorkList[i];
             auto &neighbors = interferenceGraph[node];
             for (auto otherNode: neighbors) {
                 auto size = interferenceGraph[otherNode].size();
                 auto sum = interferenceGraph[otherNode].erase(node);
-                if (sum && size == K) {
-                    simplifyWorkList.insert(otherNode);
+                if (sum && size == K && !otherNode->reg) {
+                    if (simplifyWorkSet.insert(otherNode).second) simplifyWorkList.push_back(otherNode);
+                    spillWorkSet.erase(otherNode);
                 }
             }
-            selectStack.push_back(node); // may be spill or color
+            if (node->reg) {
+                throw std::runtime_error("simplify node->reg is not null: " + node->reg->name);
+            }
+            for (auto v: selectStack) { if (v == node) throw std::runtime_error("simplify node in selectStack"); }
+            selectStack.push_back(node); // may be spill or color            
+
         }
+
         simplifyWorkList.clear();
+        simplifyWorkSet.clear();
     }
     void selectSpill() {
-        auto it = spillWorkList.begin();
+        auto it = spillWorkSet.begin();
+        for (auto it_ = spillWorkSet.begin(); it_ != spillWorkSet.end(); ++it_) {
+
+            if (liveBegin[*it_] > liveBegin[*it]) it = it_;
+        }
+
         auto node = *it;
-        spillWorkList.erase(it);
-        simplifyWorkList.insert(node);
-        // if (!dynamic_cast<ASMLaInsNode*>(node))
+        spillWorkSet.erase(it);
+        if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
         spilledStack.push_back(node);
     }
     void assignColors() {
@@ -121,15 +151,27 @@ public:
             return ;
             throw std::runtime_error("selectStack is empty");
         }
+        for (auto node: selectStack) {
+            
+            if (node->reg) {
+                std::cerr << "node: " << node << ' ' << node->reg << '\n';    
+                std::cerr << node->to_string() <<'\n';
+                throw std::runtime_error("color node->reg is not null: " + node->reg->name);
+            }
+        }
         auto it = selectStack.end();
         while (true) {
             --it;
             auto node = *it;
+            if (node->reg) {            
+                std::cerr << node->to_string() <<'\n';                
+                throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name);
+            }
             for (int i = 0; i < 32; ++i) selected[i] = false;
             for (auto neighbor: interferenceGraph[node]) {
                 if (neighbor->reg) selected[neighbor->reg->id] = true;
             }
-            for (int i = 8; i < 32; ++i) {
+            for (int i = 8; i < 32; ++i) {                
                 if (!selected[i]) { node->reg = &x[i]; break; }
             }
             if (!node->reg) { 
@@ -179,6 +221,7 @@ public:
             addCallDef(function);
             // std::cerr << "ojbk2\n";
             build(function);
+            collectVarLive(function);
             // std::cerr << "ojbk3" << std::endl;
             MakeWorkList();
             // std::cerr << "ojbk4" << std::endl;
@@ -186,7 +229,7 @@ public:
                 if (!simplifyWorkList.empty() ) simplify();
                 else if (!moveWorkList.empty()) {}
                 else if (!freezeWorkList.empty()) {}
-                else if (!spillWorkList.empty()) selectSpill();
+                else if (!spillWorkSet.empty()) selectSpill();
                 else break;
             }
             // std::cerr << "ojbk5\n";

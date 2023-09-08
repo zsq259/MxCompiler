@@ -22,7 +22,7 @@ private:
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
     std::map<std::string, int> counter;
-    std::set<IRPhiStmtNode*> phiRenameSet;
+    std::vector<IRPhiStmtNode*> phiRenameList;
     std::set<CFGNode*> visited;
     std::set<std::string> allocaSet;
     std::map<DomTreeNode*, std::set<IRVarNode*>> phiVarMap;
@@ -38,7 +38,7 @@ public:
         useMap.clear();
         renameMap.clear();
         phiMap.clear();
-        phiRenameSet.clear();
+        phiRenameList.clear();
         visited.clear();
         phiVarMap.clear();
     }
@@ -181,12 +181,12 @@ public:
                 irNodeSet.insert(var);
                 auto phi = new IRPhiStmtNode(var);
                 block->stmts.push_front(phi);
-                phiRenameSet.insert(phi);
+                phiRenameList.push_back(phi);
                 pl = pr;
             }
         }
         visitCFG(domTreeBuilder->cfg->entry, nullptr);
-        for (auto phi: phiRenameSet) {
+        for (auto phi: phiRenameList) {
             phi->var->name += ".rename" + std::to_string(counter[phi->var->name + ".rename"]++);
         }
         for (auto it = node->blocks.begin(); it != node->blocks.end();) {

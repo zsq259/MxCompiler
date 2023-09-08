@@ -89,11 +89,13 @@ std::any ASTBuilder::visitSuite(MxParser::SuiteContext *ctx) {
     if (ctx->block()) {
         auto res = visit(ctx->block());
         if (auto node = *any_cast<ASTStmtNode*>(&res)) return node;
+        else throw std::runtime_error("suite block error");
     }
     auto node = new ASTBlockNode;
     if (ctx->stmt()) {
         auto res = visit(ctx->stmt());
         if (auto st = *any_cast<ASTStmtNode*>(&res)) node->stmts.push_back(st);
+        else throw std::runtime_error("suite stmt error");
     }
     return static_cast<ASTStmtNode*>(node);
 }

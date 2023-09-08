@@ -56,15 +56,11 @@ public:
     }
     void getUseDef(ASMCFGNode* node) {
         if (visited.contains(node)) return;
-        // std::cerr << "___________________________________________\n";
         visited.insert(node);
         auto block = node->block;
         for (auto ins: block->insts) {
             ins->getUse(useSet);
             ins->getDef(defSet);
-            // std::cerr << "ins: " << ins->to_string() << std::endl;
-            // for (auto v: useSet[ins]) std::cerr << v->to_string() << " ";
-            // std::cerr << '\n';
             for (auto v: useSet[ins]) if (!v) {                
                 throw std::runtime_error("useSet null");
             }
@@ -76,11 +72,6 @@ public:
 
             for (auto v: defSet[ins]) defSet[block].insert(v);
         }
-        // std::cerr << "now: " << block->name << std::endl;
-        // std::cerr << "use: ";
-        // for (auto v: useSet[block]) std::cerr << v->to_string() << " ";
-        // std::cerr << std::endl;
-        // std::cerr << "++++++++++++++++++++++++++++++++++++++++++++\n";
         for (auto child: node->next) getUseDef(child);
     }
     void getBlockInOut(ASMCFGNode* node) {
@@ -96,11 +87,6 @@ public:
         for (auto v: defSet[block]) inSet[block].erase(v);
         for (auto v: useSet[block]) inSet[block].insert(v);
         for (auto v: inSet[block]) changeFlag |= (tmpSet.find(v) == tmpSet.end());
-        
-        // std::cerr << "now: " << block->name << std::endl;
-        // std::cerr << "out: ";
-        // for (auto v: outSet[block]) std::cerr << v->to_string() << " ";
-        // std::cerr << std::endl;
     }
     void getStmtInOut(ASMCFGNode* node) {
         if (visited.contains(node)) return;
