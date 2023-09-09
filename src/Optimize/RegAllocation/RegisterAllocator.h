@@ -143,7 +143,7 @@ public:
                     for (auto v: neighbors_a) {
                         if (v == fb) { flag = false; break; }
                         auto &tmp = interferenceGraph[v];
-                        if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
+                        // if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
                         if (tmp.size() + !tmp.contains(fb) >= K) ++sum;
                     }
                     for (auto v: neighbors_b) {
