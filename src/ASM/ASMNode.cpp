@@ -153,3 +153,13 @@ std::string ASMProgramNode::to_string() {
     if (text) ret += text->to_string(), ret += '\n';
     return ret;   
 }
+
+void ASMLoadInsNode::rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+    // if (dest->reg && dest->reg->id == 2) throw std::runtime_error("load dest is sp");
+    if (dest->reg && dest->reg->id == 2) {
+        auto tmp = new ASMLocalVarNode(".load.tmp" + std::to_string(counter[".load.tmp"]++), false);    
+        auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
+        storeIns.push_back(store);        
+        dest = tmp;
+    }
+}

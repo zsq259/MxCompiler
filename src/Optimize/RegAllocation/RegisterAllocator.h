@@ -16,8 +16,7 @@ private:
     std::map<ASMVarNode*, int> liveBegin;
     std::map<ASMVarNode*, ASMVarNode*> dsuMap;
     std::vector<ASMVarNode*> spilledStack, selectStack;
-    std::vector<ASMVarNode*> simplifyWorkList, spillWorkList;
-    std::vector<ASMMoveInsNode*> moveWorkList;
+    std::vector<ASMVarNode*> simplifyWorkList, spillWorkList, moveWorkList;
     std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet, freezeWorkSet;
     bool selected[32];
     LivenessAnalysiser* livenessAnalysiser = nullptr;
@@ -83,6 +82,7 @@ public:
                         auto &tmp = liveBegin[var];
                         tmp = cnt;
                         if (dynamic_cast<ASMLoadInsNode*>(ins) || dynamic_cast<ASMStoreInsNode*>(ins)) tmp += sum;
+                        if (dynamic_cast<ASMLaInsNode*>(ins)) tmp += sum * 2;
                     }
                 }
                 ++cnt;
@@ -112,43 +112,69 @@ public:
         return dsuMap[node] = dsuFind(dsuMap[node]);
     }
     void MakeWorkList(ASMFunctionNode* function) {
-        // dsuMap.clear();
-        // for (auto block: function->blocks) {
-        //     for (auto ins: block->insts) {
-        //         if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {            
-        //             dsuMap.emplace(mv->src, mv->src);
-        //             dsuMap.emplace(mv->dest, mv->dest);
-        //         }
-        //     }
-        // }
-        for (auto node: interferenceGraph) {
-            if (!node.first->reg && !dsuMap.contains(node.first)){
-                if (node.second.size() < K) {
-                    if (simplifyWorkSet.insert(node.first).second) simplifyWorkList.push_back(node.first);
-                    // else std::cerr << "node: " << node.first->name << '\n';
+        dsuMap.clear();
+        for (auto block: function->blocks) {
+            for (auto ins: block->insts) {
+                if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {
+                    bool flag = false;
+                    auto src = mv->src, dest = mv->dest;
+                    if (src->reg || dest->reg) {
+                        if (!src->reg) freezeWorkSet.insert(src);
+                        if (!dest->reg) freezeWorkSet.insert(dest);
+                        continue;         
+                    }
+                    dsuMap.emplace(src, src);
+                    dsuMap.emplace(dest, dest);
                 }
-                else spillWorkSet.insert(node.first);
+            }
+        }                        
+        
+        for (auto block: function->blocks) {
+            for (auto ins: block->insts) {
+                if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {                
+                    if (mv->src->reg || mv->dest->reg) continue;
+                    auto a = mv->src, b = mv->dest;
+                    auto fa = dsuFind(a), fb = dsuFind(b);
+                    if (fa == fb) continue;
+                    bool flag = true;
+                    auto &neighbors_a = interferenceGraph[fa];
+                    auto &neighbors_b = interferenceGraph[fb];
+                    for (auto v: neighbors_a) {
+                        if (v == fb) { flag = false; break; }
+                        if (interferenceGraph[v].size() >= K && !interferenceGraph[v].contains(fb)) { flag = false; break; }
+                    }
+                    auto suma = neighbors_a.size(), sumb = neighbors_b.size();
+                    // if (suma < K && sumb < K && suma + sumb >= K) flag = false;
+                    // flag = false;
+                    if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }
+                    if (function->blocks[0]->name == "makeHeap") std::cerr << "merge: " << a->name << ' ' << b->name << '\n';
+                    dsuMap[fa] = fb;
+                    for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
+                    interferenceGraph.erase(fa);        
+                }
             }
         }
         
-        // for (auto block: function->blocks) {
-        //     for (auto ins: block->insts) {
-        //         if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {                
-        //             auto a = mv->src, b = mv->dest;
-        //             bool flag = true;
-        //             for (auto v: interferenceGraph[a]) {
-        //                 if (v == b) { flag = false; break; }
-        //                 if (interferenceGraph[v].size() >= K && !interferenceGraph[v].contains(b)) { flag = false; break; }
-        //             }
-        //             if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }
-        //             auto fa = dsuFind(a), fb = dsuFind(b);
-        //             dsuMap[fa] = fb;
-        //             moveWorkList.push_back(mv);
-        //         }
-        //     }
-        // }
-
-        
+        for (auto it: dsuMap) {
+            auto node = it.first;
+            auto fa = dsuFind(node);
+            if (fa == node) continue;
+            freezeWorkSet.erase(node);
+            moveWorkList.push_back(node);
+            
+        }
+        simplifyWorkSet.clear();
+        simplifyWorkList.clear();
+        for (auto node: interferenceGraph) {
+            if (!node.first->reg &&  !freezeWorkSet.contains(node.first)){
+                
+                if (node.second.size() < K) {
+                    if (simplifyWorkSet.insert(node.first).second) simplifyWorkList.push_back(node.first);
+                    else std::cerr << "nodeeee: " << node.first->name << '\n';
+                }
+                else spillWorkSet.insert(node.first);
+            }
+        }                
     }
     void simplify() {
         for (int i = 0; i < simplifyWorkList.size(); ++i) {
@@ -159,34 +185,28 @@ public:
                 auto sum = interferenceGraph[otherNode].erase(node);
                 if (sum && size == K && !otherNode->reg) {
                     if (simplifyWorkSet.insert(otherNode).second) simplifyWorkList.push_back(otherNode);
+                    else std::cerr << "nodeeee: " << otherNode->name << '\n';
                     spillWorkSet.erase(otherNode);
                 }
             }
             if (node->reg) {
                 throw std::runtime_error("simplify node->reg is not null: " + node->reg->name);
-            }            
+            }
+            // for (auto v: selectStack) if (v == node) throw std::runtime_error("simplify node in selectStack");
             selectStack.push_back(node); // may be spill or color            
-
+            freezeWorkSet.erase(node);
         }
 
         simplifyWorkList.clear();
-        simplifyWorkSet.clear();
+        // simplifyWorkSet.clear();
     }
-    void coalesce() {
-        for (auto it: dsuMap) {
-            auto node = it.first;
-            auto fa = dsuFind(node);
-            if (fa == node) continue;
-            freezeWorkSet.erase(node);
-            if (interferenceGraph[fa].contains(node)) throw std::runtime_error("coalesce node in interferenceGraph");
-            for (auto t: interferenceGraph[node]) interferenceGraph[fa].insert(t);
+    void coalesce(ASMFunctionNode* function) {
+        for (auto it: dsuMap) dsuFind(it.first);
+
+        for (auto block: function->blocks) {
+            for (auto ins: block->insts) ins->coalesce(dsuMap);
         }
-        for (auto mv: moveWorkList) {
-            auto a = mv->src, b = mv->dest;            
-            auto fa = dsuFind(a), fb = dsuFind(b);
-            mv->src = fa; mv->dest = fb;
-        }
-        moveWorkList.clear();        
+        moveWorkList.clear();
     }
     void freeze() {        
         auto it = freezeWorkSet.begin();
@@ -195,7 +215,11 @@ public:
         }
         auto node = *it;
         freezeWorkSet.erase(it);
-        if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
+        if (interferenceGraph[node].size() < K) {
+            if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
+            else std::cerr << "nodeeee: " << node->name << '\n';
+        }
+        else spillWorkSet.insert(node);
     }
     void selectSpill() {
         auto it = spillWorkSet.begin();
@@ -207,6 +231,7 @@ public:
         auto node = *it;
         spillWorkSet.erase(it);
         if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
+        else std::cerr << "nodeeee: " << node->name << '\n';
         spilledStack.push_back(node);
     }
     void assignColors() {
@@ -227,7 +252,6 @@ public:
             --it;
             auto node = *it;
             if (node->reg) {            
-                std::cerr << node->to_string() <<'\n';                
                 throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name);
             }
             for (int i = 0; i < 32; ++i) selected[i] = false;
@@ -248,8 +272,9 @@ public:
         for (auto node: spilledStack) {
             if (node->reg) continue;        
             node->reg = getReg("sp");
-            node->offset = spSize;        
+            node->offset = spSize;
             spSize += 4;
+            // if (node->offset == 8) std::cerr << "node: " << node->name << '\n';
         }
         std::vector<ASMInsNode*> loadIns;
         std::vector<ASMInsNode*> storeIns;
@@ -288,6 +313,7 @@ public:
         }
     }
     void work(ASMFunctionNode* function) {
+        if (function->blocks[0]->name == "makeHeap") std::cerr << "funcname: " << function->blocks[0]->name << '\n';
         spSize = 0;
         while (true) {
             
@@ -304,8 +330,8 @@ public:
             // std::cerr << "ojbk4" << std::endl;
             while (true) {
                 if (!simplifyWorkList.empty() ) simplify();
-                else if (!moveWorkList.empty()) {} //coalesce();
-                else if (!freezeWorkSet.empty()) {} //freeze();
+                else if (!moveWorkList.empty()) coalesce(function);
+                else if (!freezeWorkSet.empty()) freeze();
                 else if (!spillWorkSet.empty()) selectSpill();
                 else break;
             }
@@ -320,7 +346,7 @@ public:
         spSize = (spSize + 15) / 16 * 16;
         function->spAddIns->imm = -spSize;
         function->spRetIns->imm = spSize;
-        removeSameMove(function);
+        // removeSameMove(function);
     }
 
 };
