@@ -139,18 +139,18 @@ public:
                     bool flag = true;
                     auto &neighbors_a = interferenceGraph[fa];
                     auto &neighbors_b = interferenceGraph[fb];
-                    int sum = 0;
+                    // int sum = 0;
                     for (auto v: neighbors_a) {
                         if (v == fb) { flag = false; break; }
                         auto &tmp = interferenceGraph[v];
-                        // if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
-                        if (tmp.size() + !tmp.contains(fb) >= K) ++sum;
+                        if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
+                        // if (tmp.size() + !tmp.contains(fb) >= K) ++sum;
                     }
-                    for (auto v: neighbors_b) {
-                        auto tmp = interferenceGraph[v];
-                        if (!tmp.contains(fa) && tmp.size() >= K) ++sum;
-                    }
-                    if (sum >= K) flag = false;
+                    // for (auto v: neighbors_b) {
+                    //     auto tmp = interferenceGraph[v];
+                    //     if (!tmp.contains(fa) && tmp.size() >= K) ++sum;
+                    // }
+                    // if (sum >= K) flag = false;
                     if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }                    
                     dsuMap[fa] = fb;
                     for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
@@ -174,7 +174,7 @@ public:
                 
                 if (node.second.size() < K) {
                     if (simplifyWorkSet.insert(node.first).second) simplifyWorkList.push_back(node.first);
-                    else std::cerr << "nodeeee: " << node.first->name << '\n';
+                    else throw std::runtime_error("node: " + node.first->name + "in simplifyWorkSet");
                 }
                 else spillWorkSet.insert(node.first);
             }
@@ -189,7 +189,7 @@ public:
                 auto sum = interferenceGraph[otherNode].erase(node);
                 if (sum && size == K && !otherNode->reg) {
                     if (simplifyWorkSet.insert(otherNode).second) simplifyWorkList.push_back(otherNode);
-                    else std::cerr << "nodeeee: " << otherNode->name << '\n';
+                    else throw std::runtime_error("node: " + otherNode->name + "in simplifyWorkSet");
                     spillWorkSet.erase(otherNode);
                 }
             }
@@ -221,7 +221,7 @@ public:
         freezeWorkSet.erase(it);
         if (interferenceGraph[node].size() < K) {
             if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
-            else std::cerr << "nodeeee: " << node->name << '\n';
+            else throw std::runtime_error("node: " + node->name + "in simplifyWorkSet");
         }
         else spillWorkSet.insert(node);
     }
@@ -235,20 +235,14 @@ public:
         auto node = *it;
         spillWorkSet.erase(it);
         if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
-        else std::cerr << "nodeeee: " << node->name << '\n';
+        else throw std::runtime_error("node: " + node->name + "in simplifyWorkSet");
         spilledStack.push_back(node);
     }
     void assignColors() {
-        if (selectStack.empty()) {
-            return ;
-            throw std::runtime_error("selectStack is empty");
-        }
+        if (selectStack.empty()) return ;
         for (auto node: selectStack) {
-            
             if (node->reg) {
-                std::cerr << "node: " << node << ' ' << node->reg << '\n';    
-                std::cerr << node->to_string() <<'\n';
-                throw std::runtime_error("color node->reg is not null: " + node->reg->name);
+                throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name + "before color");
             }
         }
         auto it = selectStack.end();
@@ -256,7 +250,7 @@ public:
             --it;
             auto node = *it;
             if (node->reg) {            
-                throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name);
+                throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name + "when color");
             }
             for (int i = 0; i < 32; ++i) selected[i] = false;
             for (auto neighbor: interferenceGraph[node]) {
@@ -278,7 +272,6 @@ public:
             node->reg = getReg("sp");
             node->offset = spSize;
             spSize += 4;
-            // if (node->offset == 8) std::cerr << "node: " << node->name << '\n';
         }
         std::vector<ASMInsNode*> loadIns;
         std::vector<ASMInsNode*> storeIns;
@@ -316,34 +309,24 @@ public:
             }
         }
     }
-    void work(ASMFunctionNode* function) {
-        if (function->blocks[0]->name == "makeHeap") std::cerr << "funcname: " << function->blocks[0]->name << '\n';
+    void work(ASMFunctionNode* function) {        
         spSize = 0;
         while (true) {
-            
             livenessAnalysiser = new LivenessAnalysiser(function);
-            // std::cerr << "ojbk\n";
-            livenessAnalysiser->LivenessAnalysis();
-            // std::cerr << "ojbk1\n";
-            addCallDef(function);
-            // std::cerr << "ojbk2\n";
+            livenessAnalysiser->LivenessAnalysis();            
+            addCallDef(function);            
             build(function);
-            collectVarLive(function);
-            // std::cerr << "ojbk3" << std::endl;
-            MakeWorkList(function);
-            // std::cerr << "ojbk4" << std::endl;
+            collectVarLive(function);            
+            MakeWorkList(function);            
             while (true) {
                 if (!simplifyWorkList.empty() ) simplify();
                 else if (!moveWorkList.empty()) coalesce(function);
                 else if (!freezeWorkSet.empty()) freeze();
                 else if (!spillWorkSet.empty()) selectSpill();
                 else break;
-            }
-            // std::cerr << "ojbk5\n";
-            assignColors();
-            // std::cerr << "ojbk6\n";
-            delete livenessAnalysiser;
-            // std::cerr << "ojbk7\n";
+            }            
+            assignColors();            
+            delete livenessAnalysiser;            
             if (spilledStack.empty()) break;
             rewrite(function);
         }

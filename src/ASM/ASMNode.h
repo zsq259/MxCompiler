@@ -102,7 +102,6 @@ public:
     explicit ASMMoveInsNode(ASMVarNode* dest_, ASMVarNode* src_): dest(dest_), src(src_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        if (!src) std::cerr << "src is nullptr\n";
         useSet[this].insert(src);
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
