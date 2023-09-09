@@ -147,7 +147,7 @@ public:
                     // if (suma < K && sumb < K && suma + sumb >= K) flag = false;
                     // flag = false;
                     if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }
-                    if (function->blocks[0]->name == "makeHeap") std::cerr << "merge: " << a->name << ' ' << b->name << '\n';
+                    // if (function->blocks[0]->name == "makeHeap") std::cerr << "merge: " << a->name << ' ' << b->name << '\n';
                     dsuMap[fa] = fb;
                     for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
                     interferenceGraph.erase(fa);        
@@ -346,7 +346,7 @@ public:
         spSize = (spSize + 15) / 16 * 16;
         function->spAddIns->imm = -spSize;
         function->spRetIns->imm = spSize;
-        // removeSameMove(function);
+        removeSameMove(function);
     }
 
 };
