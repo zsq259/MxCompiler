@@ -139,12 +139,18 @@ public:
                     bool flag = true;
                     auto &neighbors_a = interferenceGraph[fa];
                     auto &neighbors_b = interferenceGraph[fb];
+                    int sum = 0;
                     for (auto v: neighbors_a) {
                         if (v == fb) { flag = false; break; }
-                        if (interferenceGraph[v].size() >= K && !interferenceGraph[v].contains(fb)) { flag = false; break; }
+                        auto &tmp = interferenceGraph[v];
+                        if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
+                        if (tmp.size() + !tmp.contains(fb) >= K) ++sum;
                     }
-                    auto suma = neighbors_a.size(), sumb = neighbors_b.size();
-                    if (suma < K && sumb < K && suma + sumb >= K) flag = false;                    
+                    for (auto v: neighbors_b) {
+                        auto tmp = interferenceGraph[v];
+                        if (!tmp.contains(fa) && tmp.size() >= K) ++sum;
+                    }
+                    if (sum >= K) flag = false;
                     if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }                    
                     dsuMap[fa] = fb;
                     for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
