@@ -74,8 +74,8 @@ int main(int argc, char const *argv[]) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }
 		}
 
-		ASMBuilder asmbuilder;
-		// NaiveASMBuilder asmbuilder;
+		// ASMBuilder asmbuilder;
+		NaiveASMBuilder asmbuilder;
 		asmbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk4\n";
 		for (int i = 1; i < argc; ++i) {
