@@ -4,16 +4,17 @@
 #include "ASMNode.h"
 #include "Register.h"
 #include "LivenessAnalysiser.h"
+#include <unordered_map>
 
 class RegisterAllocator {
 private:
     const int K = 27;
     int spSize = 0;
     PhysicalRegister x[32];
-    std::map<std::string, PhysicalRegister*> name2reg;
-    std::map<ASMVarNode*, std::set<ASMVarNode*> > interferenceGraph;
-    std::map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
-    std::map<ASMVarNode*, int> liveBegin;
+    std::unordered_map<std::string, PhysicalRegister*> name2reg;
+    std::unordered_map<ASMVarNode*, std::set<ASMVarNode*> > interferenceGraph;
+    std::unordered_map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
+    std::unordered_map<ASMVarNode*, int> liveBegin;
     std::map<ASMVarNode*, ASMVarNode*> dsuMap;
     std::vector<ASMVarNode*> spilledStack, selectStack;
     std::vector<ASMVarNode*> simplifyWorkList, spillWorkList, moveWorkList;
