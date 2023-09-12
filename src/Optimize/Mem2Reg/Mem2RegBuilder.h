@@ -86,7 +86,7 @@ public:
         }
         if (visited.count(node)) { renameMap = copyMap; return; }
         visited.insert(node);        
-        for (std::deque<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
+        for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
@@ -150,13 +150,13 @@ public:
         useMap.clear();
         defMap.clear();
         std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
-        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::deque<IRStmtNode*>::iterator > > stmtMap;
+        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator* > > stmtMap;
         std::set<IRValueNode*> varSet, visited;
         std::set<IRStmtNode*> deleted;
         for (auto block: node->blocks)
             for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
                 auto stmt = *it;
-                stmtMap.emplace(stmt, std::make_pair(block, it));
+                stmtMap.emplace(stmt, std::make_pair(block, &it));
                 stmt->collectUse(useMap);
                 stmt->collectDef(defMap);
                 stmt->getUse(useSet);
@@ -183,7 +183,7 @@ public:
                 }
                 deleted.insert(stmt);    
                 auto p = stmtMap[stmt];
-                p.first->stmts.erase(p.second);
+                p.first->stmts.erase(*p.second);
             }
         }
     }
@@ -207,6 +207,7 @@ public:
                 irNodeSet.insert(var);
                 auto phi = new IRPhiStmtNode(var);
                 block->stmts.push_front(phi);
+                // block->stmts.insert(block->stmts.begin(), phi);
                 phiRenameList.push_back(phi);
                 pl = pr;
             }
