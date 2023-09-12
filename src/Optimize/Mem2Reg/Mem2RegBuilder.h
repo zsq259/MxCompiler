@@ -150,13 +150,13 @@ public:
         useMap.clear();
         defMap.clear();
         std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
-        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator* > > stmtMap;
+        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
         std::set<IRValueNode*> varSet, visited;
         std::set<IRStmtNode*> deleted;
         for (auto block: node->blocks)
             for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
                 auto stmt = *it;
-                stmtMap.emplace(stmt, std::make_pair(block, &it));
+                stmtMap.emplace(stmt, std::make_pair(block, it));
                 stmt->collectUse(useMap);
                 stmt->collectDef(defMap);
                 stmt->getUse(useSet);
@@ -164,7 +164,8 @@ public:
             }
         for (auto block: node->blocks)
             for (auto stmt: block->stmts) {
-                for (auto var: defSet[stmt]) varSet.insert(var);
+                auto &tmpSet = defSet[stmt];
+                for (auto var: tmpSet) varSet.insert(var);
             }
         std::queue<IRValueNode*> que;
         for (auto var: varSet) if (useMap[var].empty()) que.push(var);
@@ -183,7 +184,7 @@ public:
                 }
                 deleted.insert(stmt);    
                 auto p = stmtMap[stmt];
-                p.first->stmts.erase(*p.second);
+                p.first->stmts.erase(p.second);
             }
         }
     }
