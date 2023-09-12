@@ -319,7 +319,9 @@ public:
             build(function);
             collectVarLive(function);            
             MakeWorkList(function);            
+            
             while (true) {
+                // std::cerr << simplifyWorkList.size() << ' ' << moveWorkList.size() << ' ' << freezeWorkSet.size() << ' ' << spillWorkSet.size() << '\n';
                 if (!simplifyWorkList.empty() ) simplify();
                 else if (!moveWorkList.empty()) coalesce(function);
                 else if (!freezeWorkSet.empty()) freeze();

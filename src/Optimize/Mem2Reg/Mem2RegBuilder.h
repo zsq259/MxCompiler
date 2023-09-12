@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <queue>
 #include <algorithm>
 #include "DomTree.h"
 #include "DomTreeBuilder.h"
@@ -18,7 +19,7 @@ class Mem2RegBuilder : public IRBaseVisitor {
 private:
     IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
-    std::map<IRValueNode*, std::vector<IRStmtNode*>> useMap;
+    std::map<IRValueNode*, std::set<IRStmtNode*>> useMap, defMap;
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
     std::map<std::string, int> counter;
@@ -49,7 +50,7 @@ public:
             auto phi = new IRPhiStmtNode(var);
             irNodeSet.insert(phi);
             phiMap[fnode->name].push_back(phi);
-            useMap[var].push_back(phi);
+            useMap[var].insert(phi);
             setPhiStmt(fnode, value, var);
         }
     }
@@ -108,23 +109,7 @@ public:
     void collectVarUse(IRFunctionNode* node) {
         for (auto block: node->blocks) {
             for (auto stmt: block->stmts) {
-                if (auto s = dynamic_cast<IRRetStmtNode*>(stmt)) useMap[s->value].push_back(s);
-                else if (auto s = dynamic_cast<IRBinaryStmtNode*>(stmt)) useMap[s->lhs].push_back(s), useMap[s->rhs].push_back(s);
-                else if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) useMap[s->value].push_back(s);
-                else if (auto s = dynamic_cast<IRLoadStmtNode*>(stmt)) useMap[s->ptr].push_back(s);
-                else if (auto s = dynamic_cast<IRIcmpStmtNode*>(stmt)) useMap[s->lhs].push_back(s), useMap[s->rhs].push_back(s);
-                else if (auto s = dynamic_cast<IRTruncStmtNode*>(stmt)) useMap[s->value].push_back(s);
-                else if (auto s = dynamic_cast<IRZextStmtNode*>(stmt)) useMap[s->value].push_back(s);
-                else if (auto s = dynamic_cast<IRCallStmtNode*>(stmt)) {
-                    for (auto arg: s->args) useMap[arg].push_back(s);
-                }
-                else if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
-                    for (auto arg: s->values) useMap[arg.second].push_back(s);
-                }
-                else if (auto s = dynamic_cast<IRGetElementPtrStmtNode*>(stmt)) {
-                    useMap[s->ptr].push_back(s);
-                    useMap[s->index].push_back(s);
-                }
+                stmt->collectUse(useMap);            
             }
         }
     }
@@ -160,6 +145,45 @@ public:
             }
         }
         for (auto next: node->next) eliminateCriticalEdge(next);
+    }
+    void eliminateDeadCode(IRFunctionNode* node) {
+        useMap.clear();
+        defMap.clear();
+        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
+        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator> > stmtMap;
+        std::set<IRValueNode*> varSet;
+        std::set<IRStmtNode*> deleted;
+        for (auto block: node->blocks)
+            for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
+                auto stmt = *it;
+                stmtMap.emplace(stmt, std::make_pair(block, it));
+                stmt->collectUse(useMap);
+                stmt->collectDef(defMap);
+                stmt->getUse(useSet);
+                stmt->getDef(defSet);
+            }
+        for (auto block: node->blocks)
+            for (auto stmt: block->stmts) {
+                for (auto var: defSet[stmt]) varSet.insert(var);
+            }
+        std::queue<IRValueNode*> que;
+        for (auto var: varSet) if (useMap[var].empty()) que.push(var);
+        while (!que.empty()) {
+            auto var = que.front(); que.pop();            
+            for (auto stmt: defMap[var]) {
+                if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
+                
+                
+                auto &tmpDefSet = defSet[stmt];
+                for (auto v: tmpDefSet) {                    
+                    useMap[v].erase(stmt);
+                    if (useMap[v].empty()) que.push(v);
+                }
+                deleted.insert(stmt);    
+                auto p = stmtMap[stmt];
+                p.first->stmts.erase(p.second);
+            }
+        }
     }
     void visitFunction(IRFunctionNode* node) override {
         if (!node->blocks.size()) return;
@@ -199,6 +223,7 @@ public:
         }
         visited.clear();
         eliminateCriticalEdge(domTreeBuilder->cfg->entry);
+        eliminateDeadCode(node);
         currentFunction = nullptr;
     }
     void visitProgram(IRProgramNode* node) override {
