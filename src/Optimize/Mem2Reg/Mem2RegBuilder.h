@@ -183,7 +183,7 @@ public:
                 }
                 deleted.insert(stmt);    
                 auto p = stmtMap[stmt];
-                p.first->stmts.erase(p.second);
+                p.first->stmts.erase(*p.second);
             }
         }
     }
