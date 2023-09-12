@@ -162,31 +162,31 @@ public:
                 stmt->getUse(useSet);
                 stmt->getDef(defSet);
             }
-        for (auto block: node->blocks)
-            for (auto stmt: block->stmts) {
-                auto &tmpSet = defSet[stmt];
-                for (auto var: tmpSet) varSet.insert(var);
-            }
-        std::queue<IRValueNode*> que;
-        for (auto var: varSet) if (useMap[var].empty()) que.push(var);
-        while (!que.empty()) {
-            auto var = que.front(); que.pop();
-            if (visited.contains(var)) continue;
-            visited.insert(var);    
-            for (auto stmt: defMap[var]) {
-                if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
+        // for (auto block: node->blocks)
+        //     for (auto stmt: block->stmts) {
+        //         auto &tmpSet = defSet[stmt];
+        //         for (auto var: tmpSet) varSet.insert(var);
+        //     }
+        // std::queue<IRValueNode*> que;
+        // for (auto var: varSet) if (useMap[var].empty()) que.push(var);
+        // while (!que.empty()) {
+        //     auto var = que.front(); que.pop();
+        //     if (visited.contains(var)) continue;
+        //     visited.insert(var);    
+        //     for (auto stmt: defMap[var]) {
+        //         if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
                 
                 
-                auto &tmpDefSet = defSet[stmt];
-                for (auto v: tmpDefSet) {                    
-                    useMap[v].erase(stmt);
-                    if (useMap[v].empty() && !visited.contains(v)) que.push(v);
-                }
-                deleted.insert(stmt);    
-                auto p = stmtMap[stmt];
-                p.first->stmts.erase(p.second);
-            }
-        }
+        //         auto &tmpDefSet = defSet[stmt];
+        //         for (auto v: tmpDefSet) {                    
+        //             useMap[v].erase(stmt);
+        //             if (useMap[v].empty() && !visited.contains(v)) que.push(v);
+        //         }
+        //         deleted.insert(stmt);    
+        //         auto p = stmtMap[stmt];
+        //         p.first->stmts.erase(p.second);
+        //     }
+        // }
     }
     void visitFunction(IRFunctionNode* node) override {
         if (!node->blocks.size()) return;
