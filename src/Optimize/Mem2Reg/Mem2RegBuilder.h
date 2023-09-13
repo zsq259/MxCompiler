@@ -20,8 +20,7 @@ class Mem2RegBuilder : public IRBaseVisitor {
 private:
     IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
-    std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;
-    std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
+    std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;    
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
     std::map<std::string, int> counter;
@@ -150,7 +149,7 @@ public:
     }
     void eliminateDeadCode(IRFunctionNode* node) {
         useMap.clear();
-        defMap.clear();
+        std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
         std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
         std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
         std::set<IRValueNode*> varSet, visited;
@@ -159,7 +158,7 @@ public:
             for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
                 auto stmt = *it;
                 stmtMap.emplace(stmt, std::make_pair(block, it));
-                if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) defMap[b->var].push_back(stmt);
+                // if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) defMap[b->var].push_back(stmt);
                 // stmt->collectUse(useMap);
                 // stmt->collectDef(defMap);
                 // stmt->getUse(useSet);
