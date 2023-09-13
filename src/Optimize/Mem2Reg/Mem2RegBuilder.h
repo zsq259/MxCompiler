@@ -157,8 +157,8 @@ public:
             for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
                 auto stmt = *it;
                 stmtMap.emplace(stmt, std::make_pair(block, it));
-                stmt->collectUse(useMap);
-                // stmt->collectDef(defMap);
+                // stmt->collectUse(useMap);
+                stmt->collectDef(defMap);
                 // stmt->getUse(useSet);
                 // stmt->getDef(defSet);
             }

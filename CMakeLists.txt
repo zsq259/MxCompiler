@@ -62,4 +62,16 @@ foreach (test_file ${test_files})
     set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 10)
 endforeach ()
 
+set(CodegenPath "${TestdataPath}/optim2")
+file(GLOB_RECURSE test_files RELATIVE ${CodegenPath} ${CodegenPath}/**.mx)
+foreach (test_file ${test_files})
+    string(REGEX REPLACE ".*/" "" filename "${test_file}")
+
+    set(testname "opt2|${filename}")
+    add_test(NAME ${testname}
+            COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
+    set_tests_properties(${testname} PROPERTIES LABELS "opt2" TIMEOUT 10)
+endforeach ()
+
 enable_testing()
