@@ -160,7 +160,7 @@ public:
                 // stmt->collectUse(useMap);
                 // stmt->collectDef(defMap);
                 // stmt->getUse(useSet);
-                // stmt->getDef(defSet);
+                stmt->getDef(defSet);
             }
         // for (auto block: node->blocks)
         //     for (auto stmt: block->stmts) {
