@@ -158,8 +158,8 @@ public:
                 auto stmt = *it;
                 stmtMap.emplace(stmt, std::make_pair(block, it));
                 // stmt->collectUse(useMap);
-                stmt->collectDef(defMap);
-                // stmt->getUse(useSet);
+                // stmt->collectDef(defMap);
+                stmt->getUse(useSet);
                 // stmt->getDef(defSet);
             }
         // for (auto block: node->blocks)
