@@ -342,7 +342,7 @@ public:
     std::string to_string() override;
     void accept(IRBaseVisitor* visitor) {  visitor->visitPhiStmt(this); }
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
-        for (auto &arg: values) useMap[arg.second].insert(this);
+        // for (auto &arg: values) useMap[arg.second].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::set<IRStmtNode*>> &defMap) override {
         defMap[var].insert(this);
