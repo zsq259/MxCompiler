@@ -145,7 +145,7 @@ public:
         useMap[rhs].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (lhs == from) lhs = to;
@@ -182,7 +182,7 @@ public:
         useMap[ptr].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (ptr == dynamic_cast<IRVarNode*>(from)) ptr = dynamic_cast<IRVarNode*>(to);
@@ -237,7 +237,7 @@ public:
         useMap[rhs].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (lhs == from) lhs = to;
@@ -265,7 +265,7 @@ public:
         useMap[value].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
@@ -291,7 +291,7 @@ public:
         useMap[value].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (value == from) value = to;
@@ -319,7 +319,7 @@ public:
         for (auto arg: args) useMap[arg].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        if (var) defMap[var].push_back(this);
+        // if (var) defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         for (auto &arg: args) if (arg == from) arg = to;
@@ -345,7 +345,7 @@ public:
         for (auto &arg: values) useMap[arg.second].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         for (auto &arg: values) if (arg.second == from) arg.second = to;
@@ -374,7 +374,7 @@ public:
         useMap[ptr].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        defMap[var].push_back(this);
+        // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (index == from) index = to;
