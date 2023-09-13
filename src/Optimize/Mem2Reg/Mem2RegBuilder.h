@@ -19,7 +19,8 @@ class Mem2RegBuilder : public IRBaseVisitor {
 private:
     IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
-    std::map<IRValueNode*, std::set<IRStmtNode*>> useMap, defMap;
+    std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;
+    std::map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
     std::map<std::string, int> counter;
@@ -158,9 +159,9 @@ public:
                 auto stmt = *it;
                 stmtMap.emplace(stmt, std::make_pair(block, it));
                 // stmt->collectUse(useMap);
-                // stmt->collectDef(defMap);
+                stmt->collectDef(defMap);
                 // stmt->getUse(useSet);
-                stmt->getDef(defSet);
+                // stmt->getDef(defSet);
             }
         // for (auto block: node->blocks)
         //     for (auto stmt: block->stmts) {
