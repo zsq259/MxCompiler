@@ -146,7 +146,7 @@ public:
         useMap[rhs].insert(this);
     }
     void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        // defMap[var].push_back(this);
+        defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         if (lhs == from) lhs = to;
