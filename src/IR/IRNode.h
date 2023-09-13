@@ -345,7 +345,7 @@ public:
         for (auto &arg: values) useMap[arg.second].insert(this);
     }
     void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
-        // defMap[var].push_back(this);
+        defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
         for (auto &arg: values) if (arg.second == from) arg.second = to;
