@@ -6,6 +6,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include "IRType.h"
 #include "IRBaseVisitor.h"
@@ -40,7 +41,7 @@ public:
 class IRStmtNode: public IRNode {
 public:
     virtual void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) {}
-    virtual void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) {}
+    virtual void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) {}
     virtual void replaceValue(IRValueNode* from, IRValueNode* to) {}
     virtual void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) {}
     virtual void getDef(std::map<IRNode*, std::set<IRValueNode*> > &defSet) {}
@@ -144,7 +145,7 @@ public:
         useMap[lhs].insert(this);
         useMap[rhs].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -181,7 +182,7 @@ public:
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
         useMap[ptr].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -236,7 +237,7 @@ public:
         useMap[lhs].insert(this);
         useMap[rhs].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -264,7 +265,7 @@ public:
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
         useMap[value].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -290,7 +291,7 @@ public:
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
         useMap[value].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -318,7 +319,7 @@ public:
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
         for (auto arg: args) useMap[arg].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         if (var) defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -344,7 +345,7 @@ public:
     void collectUse(std::map<IRValueNode*, std::set<IRStmtNode*>> &useMap) override {
         for (auto &arg: values) useMap[arg.second].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         // defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {
@@ -373,7 +374,7 @@ public:
         useMap[index].insert(this);
         useMap[ptr].insert(this);
     }
-    void collectDef(std::map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
+    void collectDef(std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> &defMap) override {
         defMap[var].push_back(this);
     }
     void replaceValue(IRValueNode* from, IRValueNode* to) override {

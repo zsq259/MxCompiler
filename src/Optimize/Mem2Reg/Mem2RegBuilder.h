@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <queue>
+#include <unordered_map>
 #include <algorithm>
 #include "DomTree.h"
 #include "DomTreeBuilder.h"
@@ -20,7 +21,7 @@ private:
     IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
     std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;
-    std::map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
+    std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
     std::map<std::string, int> counter;
