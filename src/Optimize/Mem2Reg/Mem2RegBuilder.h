@@ -162,7 +162,7 @@ public:
                 // stmtMap.emplace(stmt, std::make_pair(block, it));
                 if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) { 
                     defMap[b->var].push_back(stmt);
-                    if (++cnt > 1000) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
+                    if (++cnt > 100) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
                 }
 
                 // stmt->collectUse(useMap);
