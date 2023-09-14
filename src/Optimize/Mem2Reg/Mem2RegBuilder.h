@@ -56,26 +56,25 @@ public:
         }
     }
     void setPtrDef(DomTreeNode* node) {
-        for (auto it = node->block->stmts.begin(); it != node->block->stmts.end();) {
-            auto stmt = *it;
+        auto &stmts = node->block->stmts;    
+        for (int i = 0; i < stmts.size(); ) {
+            auto stmt = stmts[i];
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
-
-                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
-                if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++it; continue; }
+                if (!allocaSet.count(s->ptr->name)) { ++i; continue; }
+                if (dynamic_cast<IRGlobalVarNode*>(s->ptr)) { ++i; continue; }
                 auto var = new IRVarNode(s->value->type, s->ptr->name, s->ptr->isConst);
                 irNodeSet.insert(var);
                 setPhiStmt(node, s->value, var);
-                ++it;
+                ++i;
             }
-            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), it = node->block->stmts.erase(it), delete s;
-            else ++it;
-        }
+            else if (auto s = dynamic_cast<IRAllocaStmtNode*>(stmt)) allocaSet.insert(s->var->name), stmts.erase(stmts.begin() + i), delete s;
+            else ++i;
+        }        
     }
     void visitCFG(CFGNode* node, CFGNode* fa) {
         auto copyMap = renameMap;
-        auto &stmts = node->block->stmts;
-        for (auto it = stmts.begin(); it != stmts.end(); ++it) {
-            auto stmt = *it;
+        auto &stmts = node->block->stmts;        
+        for (auto stmt: stmts) {            
             if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->var->name)) break;
                 if (!renameMap[s->var->name].size()) {
@@ -214,8 +213,7 @@ public:
                 while (pr < len && phis[pl]->var->name == phis[pr]->var->name) ++pr;
                 auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name, phis[pl]->var->isConst);
                 irNodeSet.insert(var);
-                auto phi = new IRPhiStmtNode(var);
-                // block->stmts.push_front(phi);
+                auto phi = new IRPhiStmtNode(var);                
                 block->stmts.insert(block->stmts.begin(), phi);
                 phiRenameList.push_back(phi);
                 pl = pr;
@@ -225,13 +223,14 @@ public:
         for (auto phi: phiRenameList) {
             phi->var->name += ".rename" + std::to_string(counter[phi->var->name + ".rename"]++);
         }
-        for (auto it = node->blocks.begin(); it != node->blocks.end();) {
-            auto block = *it;
+        auto &blocks = node->blocks;        
+        for (int i = 0; i < blocks.size(); ) {
+            auto block = blocks[i];
             if (!visited.count(domTreeBuilder->cfg->name2node[block->label])) {
                 delete block;
-                it = node->blocks.erase(it);
+                blocks.erase(blocks.begin() + i);
             }
-            else ++it;
+            else ++i;
         }
         visited.clear();
         eliminateCriticalEdge(domTreeBuilder->cfg->entry);

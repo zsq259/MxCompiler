@@ -62,7 +62,7 @@ foreach (test_file ${test_files})
     set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 10)
 endforeach ()
 
-set(CodegenPath "${TestdataPath}/optim2")
+set(CodegenPath "${TestdataPath}/optim")
 file(GLOB_RECURSE test_files RELATIVE ${CodegenPath} ${CodegenPath}/**.mx)
 foreach (test_file ${test_files})
     string(REGEX REPLACE ".*/" "" filename "${test_file}")
