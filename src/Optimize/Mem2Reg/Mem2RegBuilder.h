@@ -154,12 +154,16 @@ public:
         // std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
         // std::set<IRValueNode*> varSet, visited;
         // std::set<IRStmtNode*> deleted;
+        int cnt = 0;
         for (auto block: node->blocks)
             for (auto stmt: block->stmts) {
             // for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
                 // auto stmt = *it;
                 // stmtMap.emplace(stmt, std::make_pair(block, it));
-                if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) defMap[b->var].push_back(stmt);
+                if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) { 
+                    defMap[b->var].push_back(stmt);
+                    if (++cnt > 1000) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
+                }
 
                 // stmt->collectUse(useMap);
                 // stmt->collectDef(defMap);
