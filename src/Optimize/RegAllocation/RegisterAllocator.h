@@ -16,7 +16,7 @@ private:
     std::unordered_map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
     std::unordered_map<ASMVarNode*, int> liveBegin;
     std::map<ASMVarNode*, ASMVarNode*> dsuMap;
-    std::vector<ASMVarNode*> spilledStack, selectStack;
+    std::vector<ASMVarNode*> spilledStack, selectStack, coloredList;
     std::vector<ASMVarNode*> simplifyWorkList, spillWorkList, moveWorkList;
     std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet, freezeWorkSet;
     bool selected[32];
@@ -78,12 +78,13 @@ public:
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
                 for (auto var: livenessAnalysiser->defSet[ins]) {
-                    if (var->reg) continue;
+                    // if (var->reg) continue;
                     if (!liveBegin.count(var)) {
                         auto &tmp = liveBegin[var];
                         tmp = cnt;
-                        if (dynamic_cast<ASMLoadInsNode*>(ins) || dynamic_cast<ASMStoreInsNode*>(ins)) tmp += sum;
-                        if (dynamic_cast<ASMLaInsNode*>(ins)) tmp += sum * 2;
+                        if (dynamic_cast<ASMLoadInsNode*>(ins) || dynamic_cast<ASMStoreInsNode*>(ins)) tmp += sum * 2;
+                        if (dynamic_cast<ASMLaInsNode*>(ins)) tmp += sum;
+                        if (var->reg) tmp += sum * 3;
                     }
                 }
                 ++cnt;
@@ -93,20 +94,21 @@ public:
     void build(ASMFunctionNode* function) {
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
-                for (auto def: livenessAnalysiser->defSet[ins]) {                    
+                for (auto def: livenessAnalysiser->defSet[ins]) {          
+                    auto name = def->to_string();                    
                     for (auto otherDef: livenessAnalysiser->defSet[ins]) {
                         if (def == otherDef) continue;
                             interferenceGraph[def].insert(otherDef);
-                            interferenceGraph[otherDef].insert(def);                            
+                            interferenceGraph[otherDef].insert(def);                              
                     }
                     for (auto out: livenessAnalysiser->outSet[ins]) {
                         if (def == out) continue;
                         interferenceGraph[def].insert(out);
-                        interferenceGraph[out].insert(def);                    
-                    }
+                        interferenceGraph[out].insert(def);                                            
+                    }                    
                 }
             }
-        }
+        }            
     }
     ASMVarNode* dsuFind(ASMVarNode* node) {
         if (dsuMap[node] == node) return node;
@@ -139,19 +141,12 @@ public:
                     if (fa == fb) continue;
                     bool flag = true;
                     auto &neighbors_a = interferenceGraph[fa];
-                    auto &neighbors_b = interferenceGraph[fb];
-                    // int sum = 0;
+                    auto &neighbors_b = interferenceGraph[fb];                    
                     for (auto v: neighbors_a) {
                         if (v == fb) { flag = false; break; }
                         auto &tmp = interferenceGraph[v];
-                        if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }
-                        // if (tmp.size() + !tmp.contains(fb) >= K) ++sum;
-                    }
-                    // for (auto v: neighbors_b) {
-                    //     auto tmp = interferenceGraph[v];
-                    //     if (!tmp.contains(fa) && tmp.size() >= K) ++sum;
-                    // }
-                    // if (sum >= K) flag = false;
+                        if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }                        
+                    }                    
                     if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }                    
                     dsuMap[fa] = fb;
                     for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
@@ -232,12 +227,10 @@ public:
 
             if (liveBegin[*it_] < liveBegin[*it]) it = it_;
         }
-
-        auto node = *it;
+        auto node = *it;        
         spillWorkSet.erase(it);
         if (simplifyWorkSet.insert(node).second) simplifyWorkList.push_back(node);
-        else throw std::runtime_error("node: " + node->name + "in simplifyWorkSet");
-        spilledStack.push_back(node);
+        else throw std::runtime_error("node: " + node->name + "in simplifyWorkSet");                        
     }
     void assignColors() {
         if (selectStack.empty()) return ;
@@ -257,19 +250,28 @@ public:
             for (auto neighbor: interferenceGraph[node]) {
                 if (neighbor->reg) selected[neighbor->reg->id] = true;
             }
-            for (int i = 8; i < 32; ++i) {                
-                if (!selected[i]) { node->reg = &x[i]; break; }
+            for (int i = 5; i < 32; ++i) {                
+                if (!selected[i]) { node->reg = &x[i]; coloredList.push_back(node); break; }
             }
             if (!node->reg) { 
+                for (auto n: spilledStack) if (n == node) throw std::runtime_error("spill node in spilledStack");                
                 spilledStack.push_back(node);
+            }
+            else {
+                for (int j = 0; j < spilledStack.size(); ++j) if (spilledStack[j] == node) {
+                    spilledStack.erase(spilledStack.begin() + j);
+                    break;
+                }
             }
             if (it == selectStack.begin()) break;
         }
         selectStack.clear();
     }
     void rewrite(ASMFunctionNode* function) {
+        std::set<ASMVarNode*> rewriteSet;        
         for (auto node: spilledStack) {
-            if (node->reg) continue;        
+            if (node->reg) throw std::runtime_error("spilledStack node->reg is not null: " + node->reg->name);            
+            rewriteSet.insert(node);
             node->reg = getReg("sp");
             node->offset = spSize;
             spSize += 4;
@@ -282,7 +284,7 @@ public:
                 if (ins == function->spAddIns || ins == function->spRetIns) { ++it; continue; }
                 loadIns.clear();
                 storeIns.clear();
-                ins->rewrite(loadIns, storeIns);
+                ins->rewrite(loadIns, storeIns, rewriteSet);
                 for (auto load: loadIns) {
                     it = block->insts.insert(it, load);
                     ++it;
@@ -294,7 +296,9 @@ public:
                 }
             }
         }
-        spilledStack.clear();
+        spilledStack.clear();        
+        for (auto node: coloredList) node->reg = nullptr;        
+        coloredList.clear();
     }
     void removeSameMove(ASMFunctionNode* function) {
         for (auto block: function->blocks) {
@@ -311,17 +315,15 @@ public:
         }
     }
     void work(ASMFunctionNode* function) {        
-        spSize = 0;
-        while (true) {
+        spSize = 0;        
+        while (true) {            
             livenessAnalysiser = new LivenessAnalysiser(function);
             livenessAnalysiser->LivenessAnalysis();            
             addCallDef(function);            
-            build(function);
-            collectVarLive(function);            
-            MakeWorkList(function);            
-            
-            while (true) {
-                // std::cerr << simplifyWorkList.size() << ' ' << moveWorkList.size() << ' ' << freezeWorkSet.size() << ' ' << spillWorkSet.size() << '\n';
+            collectVarLive(function);
+            build(function);            
+            MakeWorkList(function);                    
+            while (true) {                
                 if (!simplifyWorkList.empty() ) simplify();
                 else if (!moveWorkList.empty()) coalesce(function);
                 else if (!freezeWorkSet.empty()) freeze();
@@ -330,9 +332,10 @@ public:
             }            
             assignColors();            
             delete livenessAnalysiser;            
-            if (spilledStack.empty()) break;
+            if (spilledStack.empty()) break;            
             rewrite(function);
         }
+        coloredList.clear();
         spSize = (spSize + 15) / 16 * 16;
         function->spAddIns->imm = -spSize;
         function->spRetIns->imm = spSize;

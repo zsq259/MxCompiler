@@ -154,9 +154,9 @@ std::string ASMProgramNode::to_string() {
     return ret;   
 }
 
-void ASMLoadInsNode::rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
+void ASMLoadInsNode::rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
     // if (dest->reg && dest->reg->id == 2) throw std::runtime_error("load dest is sp");
-    if (dest->reg && dest->reg->id == 2) {
+    if (rewriteSet.contains(dest)) {
         auto tmp = new ASMLocalVarNode(".load.tmp" + std::to_string(counter[".load.tmp"]++), false);    
         auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
         storeIns.push_back(store);        

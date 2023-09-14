@@ -358,10 +358,12 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
     else if (auto stmt = dynamic_cast<IRBrStmtNode*>(node->stmts.back())) {
         setPhiVar(node, blockMap[stmt->label]);
     }
-    for (auto p: phiVars) {
+    // for (auto p: phiVars) {
+    for (int i = phiVars.size() - 1; i >= 0; --i) {
+        auto p = phiVars[i];
         auto mv = new ASMMoveInsNode(p.second, p.first);
         currentBlock->insts.push_back(mv);
-    }
+    }    
     currentBlock->insts.push_back(finalinst);
 }
 

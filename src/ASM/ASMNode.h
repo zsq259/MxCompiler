@@ -43,7 +43,7 @@ class ASMInsNode: public ASMNode {
 public:
     virtual void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) {}
     virtual void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) {}
-    virtual void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {}
+    virtual void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {}
     virtual void coalesce(std::map<ASMVarNode*, ASMVarNode*> &dsuMap) {}
 };
 
@@ -58,12 +58,12 @@ public:
         }
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(src);
+        if (!src->reg || src->reg->id != 2) useSet[this].insert(src);
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
-        defSet[this].insert(dest);
+        if (!dest->reg || dest->reg->id != 2) defSet[this].insert(dest);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) override;
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) override;
     void coalesce(std::map<ASMVarNode*, ASMVarNode*> &dsuMap) {
         if (dsuMap.contains(dest)) dest = dsuMap[dest];
         if (dsuMap.contains(src)) src = dsuMap[src];
@@ -79,11 +79,11 @@ public:
         op(op_), dest(dest_), src(src_), offset(offset_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(dest);
-        useSet[this].insert(src);
+        if (!dest->reg || dest->reg->id != 2)useSet[this].insert(dest);
+        if (!src->reg || src->reg->id != 2) useSet[this].insert(src);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src->reg && src->reg->id == 2) {
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(dest)) {
             auto tmp = new ASMLocalVarNode(".store.tmp" + std::to_string(counter[".store.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
             loadIns.push_back(load);
@@ -102,13 +102,13 @@ public:
     explicit ASMMoveInsNode(ASMVarNode* dest_, ASMVarNode* src_): dest(dest_), src(src_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(src);
+        if (!src->reg || src->reg->id != 2) useSet[this].insert(src);
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
-        defSet[this].insert(dest);
+        if (!dest->reg || dest->reg->id != 2) defSet[this].insert(dest);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src->reg && src->reg->id == 2 && dest->reg && dest->reg->id == 2) {
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(src) && rewriteSet.contains(dest)) {
             auto tmp = new ASMLocalVarNode(".move.tmp" + std::to_string(counter[".move.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
             loadIns.push_back(load);
@@ -116,12 +116,12 @@ public:
             storeIns.push_back(store);
             dest = src = tmp;
         }
-        else if (src->reg && src->reg->id == 2) {            
+        else if (rewriteSet.contains(src)) {
             auto load = new ASMLoadInsNode("lw", dest, src, src->offset);
             loadIns.push_back(load);
             src = dest;
         }
-        else if (dest->reg && dest->reg->id == 2) {
+        else if (rewriteSet.contains(dest)) {
             auto store = new ASMStoreInsNode("sw", dest, src, dest->offset);
             storeIns.push_back(store);
             dest = src;
@@ -140,10 +140,10 @@ public:
     explicit ASMLaInsNode(ASMVarNode* dest_, std::string name_): dest(dest_), name(name_) {}
     std::string to_string() override;
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
-        defSet[this].insert(dest);
+        if (!dest->reg || dest->reg->id != 2) defSet[this].insert(dest);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (dest->reg && dest->reg->id == 2) {
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(dest)) {
             auto tmp = new ASMLocalVarNode(".la.tmp" + std::to_string(counter[".la.tmp"]++), false);
             auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
             storeIns.push_back(store);
@@ -164,26 +164,26 @@ public:
         op(op_), dest(dest_), src1(src1_), src2(src2_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(src1);
-        useSet[this].insert(src2);
+        if (!src1->reg || src1->reg->id != 2) useSet[this].insert(src1);
+        if (!src2->reg || src2->reg->id != 2) useSet[this].insert(src2);
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
-        defSet[this].insert(dest);
+        if (!dest->reg || dest->reg->id != 2) defSet[this].insert(dest);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src1->reg && src1->reg->id == 2) {
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(src1)) {
             auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src1, src1->offset);
             loadIns.push_back(load);
             src1 = tmp;
         }
-        if (src2->reg && src2->reg->id == 2) {
+        if (rewriteSet.contains(src2)) {
             auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src2, src2->offset);
             loadIns.push_back(load);
             src2 = tmp;
         }
-        if (dest->reg && dest->reg->id == 2) {
+        if (rewriteSet.contains(dest)) {
             auto tmp = new ASMLocalVarNode(".binary.tmp" + std::to_string(counter[".binary.tmp"]++), false);
             auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
             storeIns.push_back(store);
@@ -206,20 +206,20 @@ public:
         op(op_), dest(dest_), src(src_), imm(imm_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(src);
+        if (!src->reg || src->reg->id != 2) useSet[this].insert(src);
     }
     void getDef(std::map<ASMNode*, std::set<ASMVarNode*> > &defSet) override {
-        defSet[this].insert(dest);
+        if (!dest->reg || dest->reg->id != 2) defSet[this].insert(dest);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src->reg && src->reg->id == 2) {
-            auto tmp = new ASMLocalVarNode(".imm.tmp" + std::to_string(counter[".imm.tmp"]++), false);
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(src)) {
+            auto tmp = new ASMLocalVarNode(".imm.src.tmp" + std::to_string(counter[".imm.src.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src, src->offset);
             loadIns.push_back(load);
             src = tmp;
         }
-        if (dest->reg && dest->reg->id == 2) {
-            auto tmp = new ASMLocalVarNode(".imm.tmp" + std::to_string(counter[".imm.tmp"]++), false);
+        if (rewriteSet.contains(dest)) {
+            auto tmp = new ASMLocalVarNode(".imm.dest.tmp" + std::to_string(counter[".imm.dest.tmp"]++), false);
             auto store = new ASMStoreInsNode("sw", dest, tmp, dest->offset);
             storeIns.push_back(store);
             dest = tmp;
@@ -251,17 +251,17 @@ public:
         op(op_), src1(rs1_), src2(rs2_), label(label_) {}
     std::string to_string() override;
     void getUse(std::map<ASMNode*, std::set<ASMVarNode*> > &useSet) override {
-        useSet[this].insert(src1);
-        useSet[this].insert(src2);
+        if (!src1->reg || src1->reg->id != 2) useSet[this].insert(src1);
+        if (!src2->reg || src2->reg->id != 2) useSet[this].insert(src2);
     }
-    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns) {
-        if (src1->reg && src1->reg->id == 2) {
+    void rewrite(std::vector<ASMInsNode*> &loadIns, std::vector<ASMInsNode*> &storeIns, std::set<ASMVarNode*> &rewriteSet) {
+        if (rewriteSet.contains(src1)) {
             auto tmp = new ASMLocalVarNode(".branch.tmp" + std::to_string(counter[".branch.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src1, src1->offset);
             loadIns.push_back(load);
             src1 = tmp;
         }
-        if (src2->reg && src2->reg->id == 2) {
+        if (rewriteSet.contains(src2)) {
             auto tmp = new ASMLocalVarNode(".branch.tmp" + std::to_string(counter[".branch.tmp"]++), false);
             auto load = new ASMLoadInsNode("lw", tmp, src2, src2->offset);
             loadIns.push_back(load);
