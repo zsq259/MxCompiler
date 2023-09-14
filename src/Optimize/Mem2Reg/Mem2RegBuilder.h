@@ -73,7 +73,8 @@ public:
     }
     void visitCFG(CFGNode* node, CFGNode* fa) {
         auto copyMap = renameMap;
-        for (auto it = node->block->stmts.begin(); it != node->block->stmts.end(); ++it) {
+        auto &stmts = node->block->stmts;
+        for (auto it = stmts.begin(); it != stmts.end(); ++it) {
             auto stmt = *it;
             if (auto s = dynamic_cast<IRPhiStmtNode*>(stmt)) {
                 if (!allocaSet.count(s->var->name)) break;
@@ -87,22 +88,21 @@ public:
         }
         if (visited.count(node)) { renameMap = copyMap; return; }
         visited.insert(node);        
-        for (std::list<IRStmtNode*>::iterator it = node->block->stmts.begin(); it != node->block->stmts.end();) {
-            auto stmt = *it;
+        for (int i = 0; i < stmts.size(); ) {
+            auto stmt = stmts[i];
             if (auto s = dynamic_cast<IRStoreStmtNode*>(stmt)) {
-                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
+                if (!allocaSet.count(s->ptr->name)) { ++i; continue; }
                 renameMap[s->ptr->name].push_back(s->value);
-                it = node->block->stmts.erase(it);
+                stmts.erase(stmts.begin() + i);
                 delete s;
             }
             else if (auto s = dynamic_cast<IRLoadStmtNode*>(stmt)) {
-                if (!allocaSet.count(s->ptr->name)) { ++it; continue; }
-                // if (!renameMap[s->ptr->name].size()) { ++it; continue; }
+                if (!allocaSet.count(s->ptr->name)) { ++i; continue; }                
                 for (auto t: useMap[s->var]) t->replaceValue(s->var, renameMap[s->ptr->name].back());
-                it = node->block->stmts.erase(it);                
+                stmts.erase(stmts.begin() + i);
                 delete s;
             }
-            else ++it;
+            else ++i;
         }
         for (auto next: node->next) visitCFG(next, node);
         renameMap = copyMap;
@@ -162,7 +162,7 @@ public:
                 // stmtMap.emplace(stmt, std::make_pair(block, it));
                 if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) { 
                     defMap[b->var].push_back(stmt);
-                    if (++cnt > 1) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
+                    if (++cnt > 100) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
                 }
 
                 // stmt->collectUse(useMap);
@@ -215,8 +215,8 @@ public:
                 auto var = new IRVarNode(phis[pl]->var->type, phis[pl]->var->name, phis[pl]->var->isConst);
                 irNodeSet.insert(var);
                 auto phi = new IRPhiStmtNode(var);
-                block->stmts.push_front(phi);
-                // block->stmts.insert(block->stmts.begin(), phi);
+                // block->stmts.push_front(phi);
+                block->stmts.insert(block->stmts.begin(), phi);
                 phiRenameList.push_back(phi);
                 pl = pr;
             }

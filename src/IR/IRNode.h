@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <list>
 #include <map>
 #include <unordered_map>
 #include <set>
@@ -50,7 +49,7 @@ public:
 class IRBlockNode: public IRNode {
 public:
     std::string label;
-    std::list<IRStmtNode*> stmts;
+    std::vector<IRStmtNode*> stmts;
 
     explicit IRBlockNode(std::string label_): label(label_) {}
     ~IRBlockNode() { 
@@ -406,7 +405,7 @@ public:
     IRType* retType = nullptr;
     std::string name;
     std::vector<std::pair<IRType*, std::string>> args;
-    std::list<IRBlockNode*> blocks;
+    std::vector<IRBlockNode*> blocks;
 
     explicit IRFunctionNode(IRType* retType_, std::string name_): retType(retType_), name(name_) {}
     ~IRFunctionNode() { 
