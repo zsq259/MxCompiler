@@ -148,17 +148,19 @@ public:
         for (auto next: node->next) eliminateCriticalEdge(next);
     }
     void eliminateDeadCode(IRFunctionNode* node) {
-        useMap.clear();
+        // useMap.clear();
         std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
-        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
-        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
-        std::set<IRValueNode*> varSet, visited;
-        std::set<IRStmtNode*> deleted;
+        // std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
+        // std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
+        // std::set<IRValueNode*> varSet, visited;
+        // std::set<IRStmtNode*> deleted;
         for (auto block: node->blocks)
-            for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
-                auto stmt = *it;
-                stmtMap.emplace(stmt, std::make_pair(block, it));
+            for (auto stmt: block->stmts) {
+            // for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
+                // auto stmt = *it;
+                // stmtMap.emplace(stmt, std::make_pair(block, it));
                 if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) defMap[b->var].push_back(stmt);
+
                 // stmt->collectUse(useMap);
                 // stmt->collectDef(defMap);
                 // stmt->getUse(useSet);
