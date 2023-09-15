@@ -147,53 +147,48 @@ public:
         for (auto next: node->next) eliminateCriticalEdge(next);
     }
     void eliminateDeadCode(IRFunctionNode* node) {
-        // useMap.clear();
+        useMap.clear();
         std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
-        // std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
-        // std::map<IRStmtNode*, std::pair<IRBlockNode*, std::list<IRStmtNode*>::iterator > > stmtMap;
-        // std::set<IRValueNode*> varSet, visited;
-        // std::set<IRStmtNode*> deleted;
-        int cnt = 0;
+        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
+        std::map<IRStmtNode*, std::pair<IRBlockNode*, std::vector<IRStmtNode*>::iterator > > stmtMap;
+        std::set<IRValueNode*> varSet, visited;
+        std::set<IRStmtNode*> deleted;        
         for (auto block: node->blocks)
             for (auto stmt: block->stmts) {
-            // for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
-                // auto stmt = *it;
-                // stmtMap.emplace(stmt, std::make_pair(block, it));
-                if (auto b = dynamic_cast<IRBinaryStmtNode*>(stmt)) { 
-                    defMap[b->var].push_back(stmt);
-                    // if (++cnt > 100) throw std::runtime_error("eliminateDeadCode: too many binary stmts");
+                for (auto it = block->stmts.begin(); it != block->stmts.end(); ++it) {
+                    auto stmt = *it;
+                    stmtMap.emplace(stmt, std::make_pair(block, it));                
+                    stmt->collectUse(useMap);
+                    stmt->collectDef(defMap);
+                    stmt->getUse(useSet);
+                    stmt->getDef(defSet);
                 }
-
-                // stmt->collectUse(useMap);
-                // stmt->collectDef(defMap);
-                // stmt->getUse(useSet);
-                // stmt->getDef(defSet);
             }
-        // for (auto block: node->blocks)
-        //     for (auto stmt: block->stmts) {
-        //         auto &tmpSet = defSet[stmt];
-        //         for (auto var: tmpSet) varSet.insert(var);
-        //     }
-        // std::queue<IRValueNode*> que;
-        // for (auto var: varSet) if (useMap[var].empty()) que.push(var);
-        // while (!que.empty()) {
-        //     auto var = que.front(); que.pop();
-        //     if (visited.contains(var)) continue;
-        //     visited.insert(var);    
-        //     for (auto stmt: defMap[var]) {
-        //         if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
+        for (auto block: node->blocks)
+            for (auto stmt: block->stmts) {
+                auto &tmpSet = defSet[stmt];
+                for (auto var: tmpSet) varSet.insert(var);
+            }
+        std::queue<IRValueNode*> que;
+        for (auto var: varSet) if (useMap[var].empty()) que.push(var);
+        while (!que.empty()) {
+            auto var = que.front(); que.pop();
+            if (visited.contains(var)) continue;
+            visited.insert(var);    
+            for (auto stmt: defMap[var]) {
+                if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
                 
                 
-        //         auto &tmpDefSet = defSet[stmt];
-        //         for (auto v: tmpDefSet) {                    
-        //             useMap[v].erase(stmt);
-        //             if (useMap[v].empty() && !visited.contains(v)) que.push(v);
-        //         }
-        //         deleted.insert(stmt);    
-        //         auto p = stmtMap[stmt];
-        //         p.first->stmts.erase(p.second);
-        //     }
-        // }
+                auto &tmpDefSet = defSet[stmt];
+                for (auto v: tmpDefSet) {                    
+                    useMap[v].erase(stmt);
+                    if (useMap[v].empty() && !visited.contains(v)) que.push(v);
+                }
+                deleted.insert(stmt);    
+                auto p = stmtMap[stmt];
+                p.first->stmts.erase(p.second);
+            }
+        }
     }
     void visitFunction(IRFunctionNode* node) override {
         if (!node->blocks.size()) return;
