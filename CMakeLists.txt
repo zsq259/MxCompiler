@@ -14,12 +14,16 @@ include_directories(/usr/local/include/c++/11)
 include_directories(MxAntlr/)
 include_directories(SYSTEM src)
 include_directories(src/AST)
-include_directories(src/Util)
+include_directories(src/Utils)
+include_directories(src/Semantic)
 include_directories(src/IR)
 include_directories(src/ASM)
 include_directories(src/NaiveASM)
 include_directories(src/Optimize/Mem2Reg)
 include_directories(src/Optimize/RegAllocation)
+include_directories(src/Optimize/DeadCodeElimination)
+include_directories(src/Optimize/ConstantPropagation)
+
 
 file(GLOB_RECURSE sources src/*.cpp src/*.h)
 
