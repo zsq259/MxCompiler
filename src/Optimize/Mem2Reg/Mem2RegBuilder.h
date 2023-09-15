@@ -172,7 +172,7 @@ public:
         std::queue<IRValueNode*> que;
         for (auto var: varSet) if (useMap[var].empty()) que.push(var);
         while (!que.empty()) {
-            auto var = que.front(); que.pop();
+            auto var = que.front(); que.pop();            
             if (visited.contains(var)) continue;
             visited.insert(var);    
             for (auto stmt: defMap[var]) {
@@ -186,7 +186,7 @@ public:
                 }
                 deleted.insert(stmt);    
                 auto p = stmtMap[stmt];
-                auto stmts = p.first->stmts;
+                auto &stmts = p.first->stmts;
                 stmts.erase(stmts.begin() + p.second);
             }
         }
