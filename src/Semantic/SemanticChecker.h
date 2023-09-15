@@ -1,7 +1,7 @@
 #ifndef SEMANTIC_CHECKER_H
 #define SEMANTIC_CHECKER_H
 #include "../AST/ASTBaseVisitor.h"
-#include "../Util/Scope.h"
+#include "Scope.h"
 
 class SemanticChecker: public ASTBaseVisitor {
 private:

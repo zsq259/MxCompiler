@@ -57,7 +57,7 @@ public:
     void visitGlobalVarStmt(IRGlobalVarStmtNode* node) override;
     void visitFunction(IRFunctionNode* node) override;
     void visitProgram(IRProgramNode* node) override;
-
+    
     void print() { std::cout << program->to_string(); }
     void getPtr(ASMVarNode* var, ASMVarNode* reg);
     void getVar(ASMVarNode* var, ASMVarNode* reg);

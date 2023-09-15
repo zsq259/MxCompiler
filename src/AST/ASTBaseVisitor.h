@@ -1,6 +1,6 @@
 #ifndef AST_BASE_VISITOR_H
 #define AST_BASE_VISITOR_H
-#include "../Util/Scope.h"
+#include "../Utils/Scope.h"
 
 class ASTBaseVisitor;
 

@@ -10,6 +10,7 @@
 #include "DomTreeBuilder.h"
 #include "IRBaseVisitor.h"
 #include "IRNode.h"
+#include "DeadCodeEliminator.h"
 
 static IRIntType intType(32);
 static IRPtrType ptrType;
@@ -20,6 +21,7 @@ class Mem2RegBuilder : public IRBaseVisitor {
 private:
     IRFunctionNode* currentFunction = nullptr;
     DomTreeBuilder* domTreeBuilder = nullptr;
+    DeadCodeEliminator deadCodeEliminator;
     std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;    
     std::map<std::string, std::vector<IRValueNode*>> renameMap;
     std::map<std::string, std::vector<IRPhiStmtNode*>> phiMap;
@@ -146,59 +148,10 @@ public:
         }
         for (auto next: node->next) eliminateCriticalEdge(next);
     }
-    void eliminateDeadCode(IRFunctionNode* node) {
-        useMap.clear();
-        std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
-        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;        
-        std::set<IRValueNode*> varSet, visited;
-        std::set<IRStmtNode*> deleted;        
-        for (auto block: node->blocks) {
-            auto &stmts = block->stmts;            
-            for (int i = 0, k = stmts.size(); i < k; ++i) {
-                auto stmt = stmts[i];                
-                stmt->collectUse(useMap);
-                stmt->collectDef(defMap);
-                stmt->getUse(useSet);
-                stmt->getDef(defSet);
-            }            
-        }
-        for (auto block: node->blocks)
-            for (auto stmt: block->stmts) {
-                auto &tmpSet = defSet[stmt];
-                for (auto var: tmpSet) varSet.insert(var);
-            }
-        std::queue<IRValueNode*> que;
-        for (auto var: varSet) if (useMap[var].empty()) que.push(var);
-        while (!que.empty()) {
-            auto var = que.front(); que.pop();            
-            if (visited.contains(var)) continue;
-            visited.insert(var);    
-            for (auto stmt: defMap[var]) {
-                if (deleted.contains(stmt) || dynamic_cast<IRCallStmtNode*>(stmt)) continue;
-                
-                
-                auto &tmpDefSet = defSet[stmt];
-                for (auto v: tmpDefSet) {                    
-                    useMap[v].erase(stmt);
-                    if (useMap[v].empty() && !visited.contains(v)) que.push(v);
-                }
-                deleted.insert(stmt);                    
-            }
-        }
-        for (auto block: node->blocks) {
-            auto &stmts = block->stmts;
-            for (int i = 0; i < stmts.size(); ) {
-                auto stmt = stmts[i];
-                if (deleted.contains(stmt)) {
-                    stmts.erase(stmts.begin() + i);
-                    delete stmt;
-                }
-                else ++i;
-            }
-        }
-    }
+    
     void visitFunction(IRFunctionNode* node) override {
         if (!node->blocks.size()) return;
+        deadCodeEliminator.EliminateUnReadchable(node);                
         currentFunction = node;
         clear();
         domTreeBuilder->visit(node);
@@ -236,7 +189,7 @@ public:
         }
         visited.clear();
         eliminateCriticalEdge(domTreeBuilder->cfg->entry);
-        eliminateDeadCode(node);
+        deadCodeEliminator.EliminateNoUse(node);
         currentFunction = nullptr;
     }
     void visitProgram(IRProgramNode* node) override {

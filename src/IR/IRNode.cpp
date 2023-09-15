@@ -170,3 +170,7 @@ std::string IRGetElementPtrStmtNode::to_string() {
     ret += ", ptr " + ptr->to_string() + ", i32 " + index->to_string();
     return ret;
 }
+
+std::string IRUnReachableStmtNode::to_string() {
+    return "unreachable";
+}

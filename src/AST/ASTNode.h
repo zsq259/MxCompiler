@@ -5,8 +5,8 @@
 #include <cstdio>
 #include <cstring>
 #include "ASTBaseVisitor.h"
-#include "../Util/Scope.h"
-#include "../Util/Type.h"
+#include "Scope.h"
+#include "Type.h"
 using std::string;
 using std::vector;
 using std::pair;

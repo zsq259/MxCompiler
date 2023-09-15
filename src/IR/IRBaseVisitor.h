@@ -31,6 +31,7 @@ class IRZextStmtNode;
 class IRCallStmtNode;
 class IRPhiStmtNode;
 class IRGetElementPtrStmtNode;
+class IRUnReachableStmtNode;
 class IRGlobalVarStmtNode;
 class IRFunctionNode;
 class IRProgramNode;
@@ -59,6 +60,7 @@ public:
     virtual void visitCallStmt(IRCallStmtNode* node) {}
     virtual void visitPhiStmt(IRPhiStmtNode* node) {}
     virtual void visitGetElementPtrStmt(IRGetElementPtrStmtNode* node) {}
+    virtual void visitUnReachableStmt(IRUnReachableStmtNode* node) {}
     virtual void visitGlobalVarStmt(IRGlobalVarStmtNode* node) {}
     virtual void visitFunction(IRFunctionNode* node) {}
     virtual void visitProgram(IRProgramNode* node) {}

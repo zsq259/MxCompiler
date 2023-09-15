@@ -4,7 +4,9 @@
 #include "ASMNode.h"
 #include "Register.h"
 #include "LivenessAnalysiser.h"
+#include "DomTreeBuilder.h"
 #include <unordered_map>
+
 
 class RegisterAllocator {
 private:
@@ -315,7 +317,7 @@ public:
         }
     }
     void work(ASMFunctionNode* function) {        
-        spSize = 0;        
+        spSize = 0;                
         while (true) {            
             livenessAnalysiser = new LivenessAnalysiser(function);
             livenessAnalysiser->LivenessAnalysis();            
@@ -331,7 +333,7 @@ public:
                 else break;
             }            
             assignColors();            
-            delete livenessAnalysiser;            
+            delete livenessAnalysiser;                        
             if (spilledStack.empty()) break;            
             rewrite(function);
         }
@@ -340,7 +342,7 @@ public:
         function->spAddIns->imm = -spSize;
         function->spRetIns->imm = spSize;
         removeSameMove(function);
-    }
+    }    
 
 };
 

@@ -317,8 +317,18 @@ void IRBuilder::visitFunctionNode(ASTFunctionNode *node) {
 
     
     for (auto &b: func->blocks) {
-        if (b->stmts.empty() || (!dynamic_cast<IRBrStmtNode*>(b->stmts.back()) && !dynamic_cast<IRBrCondStmtNode*>(b->stmts.back()))) {
-            b->stmts.push_back(new IRBrStmtNode(retBlock->label));
+        auto &stmts = b->stmts;
+        for (auto stmt: stmts) {
+            if (dynamic_cast<IRBrStmtNode*>(stmt) || dynamic_cast<IRBrCondStmtNode*>(stmt) || dynamic_cast<IRRetStmtNode*>(stmt)) {
+                while (stmts.back() != stmt) {                    
+                    stmts.pop_back();
+                }
+                break;
+            }             
+        }        
+        if (stmts.empty() || (!dynamic_cast<IRBrStmtNode*>(stmts.back()) && !dynamic_cast<IRBrCondStmtNode*>(stmts.back()) && !dynamic_cast<IRRetStmtNode*>(stmts.back()))) {            
+            if (ret) stmts.push_back(new IRUnReachableStmtNode);
+            else stmts.push_back(new IRBrStmtNode(retBlock->label));
         }
     }
     currentBlock = retBlock;
