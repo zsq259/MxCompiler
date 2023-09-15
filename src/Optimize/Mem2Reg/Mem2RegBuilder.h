@@ -149,15 +149,13 @@ public:
     void eliminateDeadCode(IRFunctionNode* node) {
         useMap.clear();
         std::unordered_map<IRValueNode*, std::vector<IRStmtNode*>> defMap;
-        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;
-        std::map<IRStmtNode*, std::pair<IRBlockNode*, int>> stmtMap;
+        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;        
         std::set<IRValueNode*> varSet, visited;
         std::set<IRStmtNode*> deleted;        
         for (auto block: node->blocks) {
             auto &stmts = block->stmts;            
             for (int i = 0, k = stmts.size(); i < k; ++i) {
-                auto stmt = stmts[i];
-                stmtMap.emplace(stmt, std::make_pair(block, i));  
+                auto stmt = stmts[i];                
                 stmt->collectUse(useMap);
                 stmt->collectDef(defMap);
                 stmt->getUse(useSet);
@@ -184,10 +182,18 @@ public:
                     useMap[v].erase(stmt);
                     if (useMap[v].empty() && !visited.contains(v)) que.push(v);
                 }
-                deleted.insert(stmt);    
-                auto p = stmtMap[stmt];
-                auto &stmts = p.first->stmts;
-                stmts.erase(stmts.begin() + p.second);
+                deleted.insert(stmt);                    
+            }
+        }
+        for (auto block: node->blocks) {
+            auto &stmts = block->stmts;
+            for (int i = 0; i < stmts.size(); ) {
+                auto stmt = stmts[i];
+                if (deleted.contains(stmt)) {
+                    stmts.erase(stmts.begin() + i);
+                    delete stmt;
+                }
+                else ++i;
             }
         }
     }
