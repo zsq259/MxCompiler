@@ -71,6 +71,10 @@ int main(int argc, char const *argv[]) {
 		Mem2RegBuilder mem2regbuilder;
 		mem2regbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk3\n";
+
+		ConstantPropagator constantpropagator;
+		constantpropagator.visit(irbuilder.root());
+		std::cerr << "okkkkk4\n";
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }
 		}
@@ -78,7 +82,7 @@ int main(int argc, char const *argv[]) {
 		ASMBuilder asmbuilder;
 		// NaiveASMBuilder asmbuilder;
 		asmbuilder.visit(irbuilder.root());
-		std::cerr << "okkkkk4\n";
+		std::cerr << "okkkkk5\n";
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-S") asmbuilder.print();
 		}

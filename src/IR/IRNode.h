@@ -97,6 +97,9 @@ public:
     void getUse(std::map<IRNode*, std::set<IRValueNode*> > &useSet) override {
         useSet[this].insert(cond);
     }
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+        if (cond == from) cond = to;
+    }
 };
 
 class IRBrStmtNode: public IRStmtNode {
@@ -147,7 +150,7 @@ public:
     void collectDef(std::unordered_map<IRValueNode*, IRStmtNode*> &defMap) override {
         defMap[var] = this;
     }
-    void replaceValue(IRValueNode* from, IRValueNode* to) override {
+    void replaceValue(IRValueNode* from, IRValueNode* to) override {        
         if (lhs == from) lhs = to;
         if (rhs == from) rhs = to;
     }

@@ -107,7 +107,7 @@ public:
                 else ++i;
             }
         }
-    }
+    }    
 };
 
 #endif

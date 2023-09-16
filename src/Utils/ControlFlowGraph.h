@@ -21,6 +21,7 @@ class ASMBuilder;
 class NaiveASMBuilder;
 class LivenessAnalysiser;
 class DeadCodeEliminator;
+class ConstantPropagator;
 
 class ControlFlowGraph {
 private:
@@ -34,6 +35,7 @@ private:
     friend class NaiveASMBuilder;
     friend class LivenessAnalysiser;
     friend class DeadCodeEliminator;
+    friend class ConstantPropagator;
 public:
     ~ControlFlowGraph() { 
         for (auto it: name2node) delete it.second;

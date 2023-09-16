@@ -9,8 +9,8 @@ public:
         auto cfg = new ControlFlowGraph;
         for (auto block: node->blocks) {
             cfg->addNode(block);
-        }
-        cfg->entry = cfg->name2node["entry"];
+        }        
+        cfg->entry = cfg->name2node["entry"];        
         for (auto block: node->blocks) {
             for (auto stmt: block->stmts) {
                 if (auto br = dynamic_cast<IRBrStmtNode*>(stmt)) {
