@@ -246,6 +246,7 @@ public:
             deleted.insert(defMap[var]);
             for (auto stmt: useMap[var]) {
                 stmt->replaceValue(var, value);
+                useMap[value].insert(stmt);
                 stmt->accept(this);                
             }
             useMap.erase(var);
