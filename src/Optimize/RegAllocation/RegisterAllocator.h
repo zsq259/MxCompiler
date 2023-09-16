@@ -242,8 +242,9 @@ public:
         auto it = spillWorkSet.begin();
         for (auto it_ = spillWorkSet.begin(); it_ != spillWorkSet.end(); ++it_) {
 
-            if (liveBegin[*it_] < liveBegin[*it]) it = it_;
-            // // if (interferenceGraph[*it_].size() > interferenceGraph[*it].size()) it = it_;
+            // if (liveBegin[*it_] < liveBegin[*it]) it = it_;
+            // if (interferenceGraph[*it_].size() > interferenceGraph[*it].size()) it = it_;
+            if (liveEnd[*it_] - liveBegin[*it_] > liveEnd[*it] - liveBegin[*it]) it = it_;            
             // auto val1 = 1ll * interferenceGraph[*it_].size() * (liveEnd[*it_] - liveBegin[*it_]);
             // auto val2 = 1ll * interferenceGraph[*it].size() * (liveEnd[*it] - liveBegin[*it]);
             // if (val1 > val2) it = it_;
