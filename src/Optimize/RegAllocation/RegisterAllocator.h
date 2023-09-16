@@ -16,7 +16,7 @@ private:
     std::unordered_map<std::string, PhysicalRegister*> name2reg;
     std::unordered_map<ASMVarNode*, std::set<ASMVarNode*> > interferenceGraph;
     std::unordered_map<ASMVarNode*, std::set<ASMInsNode*>> defMap, setMap;
-    std::unordered_map<ASMVarNode*, int> liveBegin;
+    std::unordered_map<ASMVarNode*, int> liveBegin, liveEnd;
     std::map<ASMVarNode*, ASMVarNode*> dsuMap;
     std::vector<ASMVarNode*> spilledStack, selectStack, coloredList;
     std::vector<ASMVarNode*> simplifyWorkList, spillWorkList, moveWorkList;
@@ -99,8 +99,9 @@ public:
                         if (dynamic_cast<ASMLaInsNode*>(ins)) tmp += sum;
                         if (var->reg) tmp += sum * 3;
                     }
-                }
-                ++cnt;
+                    liveEnd[var] = cnt;
+                    ++cnt;
+                }                
             }
         }
     }
@@ -242,7 +243,10 @@ public:
         for (auto it_ = spillWorkSet.begin(); it_ != spillWorkSet.end(); ++it_) {
 
             // if (liveBegin[*it_] < liveBegin[*it]) it = it_;
-            if (interferenceGraph[*it_].size() > interferenceGraph[*it].size()) it = it_;
+            // if (interferenceGraph[*it_].size() > interferenceGraph[*it].size()) it = it_;
+            auto val1 = 1ll * interferenceGraph[*it_].size() * (liveEnd[*it_] - liveBegin[*it_]);
+            auto val2 = 1ll * interferenceGraph[*it].size() * (liveEnd[*it] - liveBegin[*it]);
+            if (val1 > val2) it = it_;
         }
         auto node = *it;        
         spillWorkSet.erase(it);
