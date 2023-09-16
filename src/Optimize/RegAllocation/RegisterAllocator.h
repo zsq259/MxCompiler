@@ -134,11 +134,7 @@ public:
                 if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {
                     bool flag = false;
                     auto src = mv->src, dest = mv->dest;                    
-                    if (src->reg && dest->reg) {
-                        // if (!src->reg) freezeWorkSet.insert(src);
-                        // if (!dest->reg) freezeWorkSet.insert(dest);
-                        continue;         
-                    }
+                    if (src->reg && dest->reg) continue;                    
                     dsuMap.emplace(src, src);
                     dsuMap.emplace(dest, dest);
                 }
@@ -245,7 +241,8 @@ public:
         auto it = spillWorkSet.begin();
         for (auto it_ = spillWorkSet.begin(); it_ != spillWorkSet.end(); ++it_) {
 
-            if (liveBegin[*it_] < liveBegin[*it]) it = it_;
+            // if (liveBegin[*it_] < liveBegin[*it]) it = it_;
+            if (interferenceGraph[*it_].size() > interferenceGraph[*it].size()) it = it_;
         }
         auto node = *it;        
         spillWorkSet.erase(it);
@@ -269,14 +266,10 @@ public:
             for (int i = 0; i < 32; ++i) selected[i] = false;            
 
             for (auto neighbor: interferenceGraph[node]) {
-                if (neighbor->reg) {
-                    // std::cerr << neighbor->name << ' ' << neighbor->reg->name << '\n';
+                if (neighbor->reg) {                    
                     selected[neighbor->reg->id] = true;
                 }
-            }
-            // for (int i = 5; i < 32; ++i) {                
-            //     if (!selected[i]) { node->reg = &x[i]; coloredList.push_back(node); break; }
-            // }
+            }            
             for (int i = 0; i < K; ++i) {
                 auto var = regList[i];
                 auto reg = var->reg;
