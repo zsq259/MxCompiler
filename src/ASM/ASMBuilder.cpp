@@ -223,17 +223,8 @@ void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
         getValue(node->value, regAllocator.aReg[0]);
     }
 
-    auto raMove = new ASMMoveInsNode(regAllocator.raReg, raVar);
-    currentBlock->insts.push_back(raMove);
-    
-    if (currentFunction->name != "main") {
-        for (int i = 0; i < 12; ++i) {
-            auto var = calleeSavedVar[i];
-            auto mv = new ASMMoveInsNode(regAllocator.sReg[i], var);
-            currentBlock->insts.push_back(mv);
-        }
-    }
-
+    // auto raMove = new ASMMoveInsNode(regAllocator.raReg, raVar);
+    // currentBlock->insts.push_back(raMove);    
     
     auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
     currentASMFunction->spRetIns = spAdd;
@@ -302,25 +293,13 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
         block->insts.push_back(spAdd);
         currentASMFunction->spAddIns = spAdd;
 
-        raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
-        varSet.insert(raVar);
-        varMap["..ra" + currentFunction->name] = raVar;
+        // raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
+        // varSet.insert(raVar);
+        // varMap["..ra" + currentFunction->name] = raVar;
 
-        auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
-        block->insts.push_back(raMove);
-
+        // auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
+        // block->insts.push_back(raMove);        
         
-        if (block->name != "main") {
-            for (int i = 0; i < 12; ++i) {
-                auto var = new ASMLocalVarNode(".callee.saved." + std::to_string(i) + ".tmp" + std::to_string(counter["callee"]++), false);
-                calleeSavedVar[i] = var;
-                varSet.insert(var);
-                varMap[var->name] = var;
-                auto mv = new ASMMoveInsNode(var, regAllocator.sReg[i]);
-                block->insts.push_back(mv);
-            }
-        }
-
         int cnt = 0;
         for (int i = 8, k = currentFunction->args.size(); i < k; ++i) {
             auto arg = currentFunction->args[i];

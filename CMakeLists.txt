@@ -67,14 +67,27 @@ foreach (test_file ${test_files})
     set_tests_properties(${testname} PROPERTIES LABELS "asm" TIMEOUT 10)
 endforeach ()
 
-set(CodegenPath "${TestdataPath}/optim")
-file(GLOB_RECURSE test_files RELATIVE ${CodegenPath} ${CodegenPath}/**.mx)
+set(OptimPath "${TestdataPath}/optim-new")
+file(GLOB_RECURSE test_files RELATIVE ${OptimPath} ${OptimPath}/**.mx)
+foreach (test_file ${test_files})
+    string(REGEX REPLACE ".*/" "" filename "${test_file}")
+
+    set(testname "opt|${filename}")
+    add_test(NAME ${testname}
+            COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${OptimPath}/${test_file}
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
+    set_tests_properties(${testname} PROPERTIES LABELS "opt1" TIMEOUT 30)
+endforeach ()
+
+
+set(Optim2Path "${TestdataPath}/optim2")
+file(GLOB_RECURSE test_files RELATIVE ${Optim2Path} ${Optim2Path}/**.mx)
 foreach (test_file ${test_files})
     string(REGEX REPLACE ".*/" "" filename "${test_file}")
 
     set(testname "opt2|${filename}")
     add_test(NAME ${testname}
-            COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${CodegenPath}/${test_file}
+            COMMAND "${PROJECT_SOURCE_DIR}/run-risc-v.bash" $<TARGET_FILE:mxc> ${Optim2Path}/${test_file}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/test")
     set_tests_properties(${testname} PROPERTIES LABELS "opt2" TIMEOUT 10)
 endforeach ()

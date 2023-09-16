@@ -21,7 +21,11 @@ private:
     std::vector<ASMVarNode*> spilledStack, selectStack, coloredList;
     std::vector<ASMVarNode*> simplifyWorkList, spillWorkList, moveWorkList;
     std::set<ASMVarNode*> simplifyWorkSet, spillWorkSet, freezeWorkSet;
-    bool selected[32];
+    std::set<ASMLocalVarNode*> usedReg;
+    std::vector<ASMLocalVarNode*> regList, unused;
+    std::vector<ASMInsNode*> calleeSaveIns, calleeLoadIns;    
+    ASMBlockNode* returnBlock;    
+    bool selected[32], called;
     LivenessAnalysiser* livenessAnalysiser = nullptr;
 public:
     ASMLocalVarNode *zeroReg, *spReg, *aReg[8], *raReg, *sReg[12], *tReg[7];
@@ -54,6 +58,9 @@ public:
         for (int i = 0; i < 7; ++i) {
             tReg[i] = new ASMLocalVarNode(".t" + std::to_string(i) + ".tmp", false, getReg("t" + std::to_string(i)));
         }
+        for (int i = 0; i < 7; ++i) regList.push_back(tReg[i]);
+        for (int i = 0; i < 8; ++i) regList.push_back(aReg[i]);
+        for (int i = 0; i < 12; ++i) regList.push_back(sReg[i]);
     }
     Register* getReg(const std::string &name) {
         return name2reg[name];
@@ -61,13 +68,17 @@ public:
     void addCallDef(ASMFunctionNode* function) {
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
-                if (dynamic_cast<ASMCallInsNode*>(ins)) {                    
+                if (dynamic_cast<ASMCallInsNode*>(ins)) {                   
+                    called = true; 
                     for (int i = 0; i < 8; ++i) {
                         livenessAnalysiser->defSet[ins].insert(aReg[i]);
                     }
                     for (int i = 0; i < 7; ++i) {
                         livenessAnalysiser->defSet[ins].insert(tReg[i]);
                     }
+                }
+                if (auto ret = dynamic_cast<ASMRetInsNode*>(ins)) {
+                    returnBlock = block;
                 }
             }
         }
@@ -122,10 +133,10 @@ public:
             for (auto ins: block->insts) {
                 if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {
                     bool flag = false;
-                    auto src = mv->src, dest = mv->dest;
-                    if (src->reg || dest->reg) {
-                        if (!src->reg) freezeWorkSet.insert(src);
-                        if (!dest->reg) freezeWorkSet.insert(dest);
+                    auto src = mv->src, dest = mv->dest;                    
+                    if (src->reg && dest->reg) {
+                        // if (!src->reg) freezeWorkSet.insert(src);
+                        // if (!dest->reg) freezeWorkSet.insert(dest);
                         continue;         
                     }
                     dsuMap.emplace(src, src);
@@ -137,10 +148,13 @@ public:
         for (auto block: function->blocks) {
             for (auto ins: block->insts) {
                 if (auto mv = dynamic_cast<ASMMoveInsNode*>(ins)) {                
-                    if (mv->src->reg || mv->dest->reg) continue;
+                    if (mv->src->reg && mv->dest->reg) continue;
                     auto a = mv->src, b = mv->dest;
+                    
+                    
                     auto fa = dsuFind(a), fb = dsuFind(b);
                     if (fa == fb) continue;
+                    if (fa->reg) std::swap(fa, fb);                    
                     bool flag = true;
                     auto &neighbors_a = interferenceGraph[fa];
                     auto &neighbors_b = interferenceGraph[fb];                    
@@ -149,7 +163,11 @@ public:
                         auto &tmp = interferenceGraph[v];
                         if (tmp.size() >= K && !tmp.contains(fb)) { flag = false; break; }                        
                     }                    
-                    if (!flag) { freezeWorkSet.insert(a); freezeWorkSet.insert(b); continue; }                    
+                    if (!flag) { 
+                        if (!a->reg) freezeWorkSet.insert(a);
+                        if (!b->reg) freezeWorkSet.insert(b);
+                        continue; 
+                    }  
                     dsuMap[fa] = fb;
                     for (auto v: neighbors_a) neighbors_b.insert(v), interferenceGraph[v].insert(fb), interferenceGraph[v].erase(fa);                                            
                     interferenceGraph.erase(fa);        
@@ -248,12 +266,26 @@ public:
             if (node->reg) {            
                 throw std::runtime_error("color node: " + node->name + " ->reg is not null: " + node->reg->name + "when color");
             }
-            for (int i = 0; i < 32; ++i) selected[i] = false;
+            for (int i = 0; i < 32; ++i) selected[i] = false;            
+
             for (auto neighbor: interferenceGraph[node]) {
-                if (neighbor->reg) selected[neighbor->reg->id] = true;
+                if (neighbor->reg) {
+                    // std::cerr << neighbor->name << ' ' << neighbor->reg->name << '\n';
+                    selected[neighbor->reg->id] = true;
+                }
             }
-            for (int i = 5; i < 32; ++i) {                
-                if (!selected[i]) { node->reg = &x[i]; coloredList.push_back(node); break; }
+            // for (int i = 5; i < 32; ++i) {                
+            //     if (!selected[i]) { node->reg = &x[i]; coloredList.push_back(node); break; }
+            // }
+            for (int i = 0; i < K; ++i) {
+                auto var = regList[i];
+                auto reg = var->reg;
+                if (!selected[reg->id]) {
+                    node->reg = reg;
+                    coloredList.push_back(node);
+                    usedReg.insert(var);
+                    break;
+                }
             }
             if (!node->reg) { 
                 for (auto n: spilledStack) if (n == node) throw std::runtime_error("spill node in spilledStack");                
@@ -316,12 +348,31 @@ public:
             }
         }
     }
+    void calleeSave(ASMLocalVarNode* saveReg) {
+        if (!called && unused.size()) {
+            auto reg = unused.back();
+            unused.pop_back();
+            auto mv = new ASMMoveInsNode(reg, saveReg);
+            calleeSaveIns.push_back(mv);
+            auto mv_ = new ASMMoveInsNode(saveReg, reg);
+            calleeLoadIns.push_back(mv_);
+        }
+        else {
+            auto var = new ASMLocalVarNode(".saveReg.tmp", false, getReg("sp"), spSize);
+            spSize += 4;
+            auto store = new ASMStoreInsNode("sw", var, saveReg, var->offset);
+            calleeSaveIns.push_back(store);
+            auto load = new ASMLoadInsNode("lw", saveReg, var, var->offset);
+            calleeLoadIns.push_back(load);
+        }
+    }
     void work(ASMFunctionNode* function) {        
-        spSize = 0;                
-        while (true) {            
+        spSize = 0;
+        called = false;
+        while (true) {
             livenessAnalysiser = new LivenessAnalysiser(function);
             livenessAnalysiser->LivenessAnalysis();            
-            addCallDef(function);            
+            addCallDef(function);
             collectVarLive(function);
             build(function);            
             MakeWorkList(function);                    
@@ -331,16 +382,39 @@ public:
                 else if (!freezeWorkSet.empty()) freeze();
                 else if (!spillWorkSet.empty()) selectSpill();
                 else break;
-            }            
+            }
+            usedReg.clear();
             assignColors();            
             delete livenessAnalysiser;                        
             if (spilledStack.empty()) break;            
             rewrite(function);
         }
         coloredList.clear();
+        calleeSaveIns.clear();
+        calleeLoadIns.clear();
+        unused.clear();
+        for (int i = 0, k = 15; i < k; ++i) {
+            auto reg = regList[i];
+            if (!usedReg.contains(reg)) unused.push_back(reg);
+        }
+        calleeSave(raReg);        
+        for (int i = 0; i < 12; ++i) if (usedReg.contains(sReg[i])) calleeSave(sReg[i]);
+        auto &insts = function->blocks.front()->insts;
+        int pos = 0;
+        auto spAddIns = function->spAddIns;
+        auto spRetIns = function->spRetIns;
+        for (int i = 0, k = insts.size(); i < k; ++i) if (insts[i] == spAddIns) { pos = i; break; }
+        insts.insert(insts.begin() + pos + 1, calleeSaveIns.begin(), calleeSaveIns.end());
+        
+
+        auto &insts_ = returnBlock->insts;
+        pos = 0;
+        for (int i = 0, k = insts_.size(); i < k; ++i) if (insts_[i] == spRetIns) { pos = i; break; }
+        insts_.insert(insts_.begin() + pos, calleeLoadIns.begin(), calleeLoadIns.end());
+
         spSize = (spSize + 15) / 16 * 16;
-        function->spAddIns->imm = -spSize;
-        function->spRetIns->imm = spSize;
+        spAddIns->imm = -spSize;
+        spRetIns->imm = spSize;
         removeSameMove(function);
     }    
 
