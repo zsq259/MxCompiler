@@ -20,6 +20,7 @@ private:
     ASMFunctionNode* currentASMFunction = nullptr;
     ASMBlockNode* currentBlock;
     ASMLocalVarNode *raVar = nullptr, *calleeSavedVar[12];
+    ASMImmInsNode* spRet = nullptr;
     std::map<std::string, ASMVarNode*> varMap;
     std::set<ASMVarNode*> varSet;
     std::set<IRVarNode*> irVarSet;

@@ -72,8 +72,8 @@ int main(int argc, char const *argv[]) {
 		mem2regbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk3\n";
 
-		// ConstantPropagator constantpropagator;
-		// constantpropagator.visit(irbuilder.root());
+		ConstantPropagator constantpropagator;
+		constantpropagator.visit(irbuilder.root());
 		std::cerr << "okkkkk4\n";
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-emit-llvm") { irbuilder.print(); return 0; }

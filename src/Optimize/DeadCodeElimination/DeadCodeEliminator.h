@@ -80,6 +80,7 @@ public:
             }
         std::queue<IRValueNode*> que;
         for (auto var: varSet) if (useMap[var].empty()) que.push(var);
+        // for (auto var: varSet) std::cerr << var->to_string() << ' ' << useMap[var].size() << '\n';
         while (!que.empty()) {
             auto var = que.front(); que.pop();            
             if (visited.contains(var)) continue;

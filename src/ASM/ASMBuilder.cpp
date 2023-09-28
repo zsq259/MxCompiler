@@ -225,10 +225,9 @@ void ASMBuilder::visitRetStmt(IRRetStmtNode* node) {
 
     // auto raMove = new ASMMoveInsNode(regAllocator.raReg, raVar);
     // currentBlock->insts.push_back(raMove);    
-    
-    auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
-    currentASMFunction->spRetIns = spAdd;
-    currentBlock->insts.push_back(spAdd);
+        
+    currentASMFunction->spRetIns = spRet;
+    currentBlock->insts.push_back(spRet);
     currentBlock->insts.push_back(new ASMRetInsNode);
 }
 
@@ -285,21 +284,14 @@ void ASMBuilder::setPhiVar(IRBlockNode* node, IRBlockNode* nextBlock) {
 }
 
 void ASMBuilder::visitBlock(IRBlockNode* node) {
-    ASMBlockNode* block = nullptr;
+    ASMBlockNode* block = nullptr;    
     if (node->label == "entry") {
         block = new ASMBlockNode(currentFunction->name);
         currentBlock = block;
         auto spAdd = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
         block->insts.push_back(spAdd);
-        currentASMFunction->spAddIns = spAdd;
-
-        // raVar = new ASMLocalVarNode("..ra" + currentFunction->name, false);
-        // varSet.insert(raVar);
-        // varMap["..ra" + currentFunction->name] = raVar;
-
-        // auto raMove = new ASMMoveInsNode(raVar, regAllocator.raReg);
-        // block->insts.push_back(raMove);        
-        
+        currentASMFunction->spAddIns = spAdd;        
+        spRet = new ASMImmInsNode("addi", regAllocator.spReg, regAllocator.spReg, 0);
         int cnt = 0;
         for (int i = 8, k = currentFunction->args.size(); i < k; ++i) {
             auto arg = currentFunction->args[i];
@@ -336,18 +328,17 @@ void ASMBuilder::visitBlock(IRBlockNode* node) {
     }
     else if (auto stmt = dynamic_cast<IRBrStmtNode*>(node->stmts.back())) {
         setPhiVar(node, blockMap[stmt->label]);
-    }
-    // for (auto p: phiVars) {
+    }    
     for (int i = phiVars.size() - 1; i >= 0; --i) {
         auto p = phiVars[i];
         auto mv = new ASMMoveInsNode(p.second, p.first);
         currentBlock->insts.push_back(mv);
     }    
-    currentBlock->insts.push_back(finalinst);
+    currentBlock->insts.push_back(finalinst);    
 }
 
 void ASMBuilder::visitFunction(IRFunctionNode* node) {
-    if (!node->blocks.size()) return;
+    if (!node->blocks.size()) return;    
     auto function = new ASMFunctionNode;
     program->text->functions.push_back(function);
     currentFunction = node;
@@ -359,6 +350,7 @@ void ASMBuilder::visitFunction(IRFunctionNode* node) {
     regAllocator.work(function);
     currentFunction = nullptr;
     currentASMFunction = nullptr;
+    
 }
 
 void ASMBuilder::visitGlobalVarStmt(IRGlobalVarStmtNode* node) {

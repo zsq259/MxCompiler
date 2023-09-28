@@ -8,10 +8,12 @@
 #include <vector>
 #include "IRNode.h"
 #include "CFGBuilder.h"
+#include "DeadCodeEliminator.h"
 
 class ConstantPropagator: public IRBaseVisitor {
 private:
     CFGBuilder cfgBuilder;
+    DeadCodeEliminator deadCodeEliminator;
     std::unordered_map<IRValueNode*, IRStmtNode*> defMap;
     std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;
     std::map<IRValueNode*, IRValueNode*> valueMap;
@@ -271,6 +273,7 @@ public:
             if (!deleted.count(block)) newBlocks.push_back(block);
         }
         node->blocks = newBlocks;
+        deadCodeEliminator.EliminateNoUse(node);
     }
     void visitProgram(IRProgramNode* node) override {
         for (auto func: node->functions) visitFunction(func);
