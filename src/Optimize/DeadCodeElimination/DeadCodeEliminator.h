@@ -109,14 +109,22 @@ public:
         std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;        
         std::set<IRValueNode*> varSet, visited;
         std::set<IRStmtNode*> deleted;        
+        std::queue<IRValueNode*> que;
         for (auto block: node->blocks) {
             auto &stmts = block->stmts;            
             for (int i = 0, k = stmts.size(); i < k; ++i) {
-                auto stmt = stmts[i];                
-                stmt->collectUse(useMap);
+                auto stmt = stmts[i];
                 stmt->collectDef(defMap);
                 stmt->getUse(useSet);
                 stmt->getDef(defSet);
+                bool flag = true;
+                flag &= !dynamic_cast<IRCallStmtNode*>(stmt);
+                flag &= !dynamic_cast<IRRetStmtNode*>(stmt);
+                flag &= !dynamic_cast<IRStoreStmtNode*>(stmt);
+                flag &= !dynamic_cast<IRBrCondStmtNode*>(stmt);
+                if (flag) continue;
+                stmt->collectUse(useMap);
+                // std::cerr << stmt->to_string() << '\n';
             }            
         }
         for (auto block: node->blocks)
@@ -124,9 +132,22 @@ public:
                 auto &tmpSet = defSet[stmt];
                 for (auto var: tmpSet) varSet.insert(var);
             }
-        std::queue<IRValueNode*> que;
+        for (auto var: varSet) {
+            if (!useMap[var].empty()) que.push(var);
+        }
+        while (!que.empty()) {
+            auto var = que.front();
+            que.pop();
+            if (visited.contains(var)) continue;
+            // std::cerr << var->to_string() << '\n';
+            visited.insert(var);
+            if (!defMap.contains(var)) continue;
+            auto def = defMap[var];
+            def->collectUse(useMap);
+            for (auto v: useSet[def]) que.push(v);
+        }
+        visited.clear();
         for (auto var: varSet) if (useMap[var].empty()) que.push(var);
-        // for (auto var: varSet) std::cerr << var->to_string() << ' ' << useMap[var].size() << '\n';
         while (!que.empty()) {
             auto var = que.front(); que.pop();            
             if (visited.contains(var)) continue;
