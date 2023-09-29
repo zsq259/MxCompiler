@@ -68,6 +68,9 @@ int main(int argc, char const *argv[]) {
 		irbuilder.visit(ast.root);
 		std::cerr << "okkkkk2\n";
 		
+		DeadCodeEliminator deadcodeeliminator;
+		deadcodeeliminator.visit(irbuilder.root());
+
 		Mem2RegBuilder mem2regbuilder;
 		mem2regbuilder.visit(irbuilder.root());
 		std::cerr << "okkkkk3\n";

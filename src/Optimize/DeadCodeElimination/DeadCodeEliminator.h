@@ -57,6 +57,52 @@ public:
         }
         node->blocks = newBlocks;        
     }
+    void EliminatePhi(IRFunctionNode* node) {
+        std::map<IRValueNode*, std::set<IRStmtNode*> > useMap;
+        std::unordered_map<IRValueNode*, IRStmtNode*> defMap;
+        std::map<IRNode*, std::set<IRValueNode*> > useSet, defSet;        
+        std::queue<IRStmtNode*> livePhi;
+        std::set<IRStmtNode*> deleted, visited;        
+        for (auto block: node->blocks) {
+            auto &stmts = block->stmts;            
+            for (int i = 0, k = stmts.size(); i < k; ++i) {
+                auto stmt = stmts[i];                
+                stmt->collectUse(useMap);
+                stmt->collectDef(defMap);
+                stmt->getUse(useSet);
+                stmt->getDef(defSet);
+            }            
+        }
+        for (auto block: node->blocks) {
+            for (auto stmt: block->stmts) {
+                if (auto phi = dynamic_cast<IRPhiStmtNode*>(stmt)) {
+                    deleted.insert(phi);
+                    auto var = *(defSet[phi].begin());
+                    bool flag = false;
+                    auto &uses = useMap[var];
+                    for (auto s: uses) {
+                        flag |= (!dynamic_cast<IRPhiStmtNode*>(s));
+                    }
+                    if (flag) livePhi.push(phi);
+                }
+            }
+        }
+        while (!livePhi.empty()) {
+            auto phi = livePhi.front();
+            livePhi.pop();
+            if (visited.contains(phi)) continue;
+            visited.insert(phi);
+            deleted.erase(phi);
+            auto &uses = useSet[phi];
+            for (auto v: uses) livePhi.push(defMap[v]);
+        }
+        for (auto block: node->blocks) {
+            auto &stmts = block->stmts;
+            for (int i = 0; i < stmts.size(); ++i) {
+                if (deleted.contains(stmts[i])) stmts.erase(stmts.begin() + i);
+            }
+        }
+    }
     void EliminateNoUse(IRFunctionNode* node) {
         std::map<IRValueNode*, std::set<IRStmtNode*> > useMap;
         std::unordered_map<IRValueNode*, IRStmtNode*> defMap;
@@ -108,7 +154,33 @@ public:
                 else ++i;
             }
         }
+        EliminatePhi(node);
     }    
+    void EliminateStoreLoad(IRFunctionNode* node) {
+        std::map<IRVarNode*, IRValueNode*> valueMap;
+        std::map<IRValueNode*, std::set<IRStmtNode*>> useMap;
+        std::vector<IRStmtNode*> deleted;
+        for (auto block: node->blocks) {
+            valueMap.clear();
+            useMap.clear();
+            deleted.clear();
+            for (auto stmt: block->stmts) stmt->collectUse(useMap);
+            for (auto stmt: block->stmts) {
+                if (auto load = dynamic_cast<IRLoadStmtNode*>(stmt)) {
+                    if (!valueMap.contains(load->ptr)) continue;
+                    auto value = valueMap[load->ptr];
+                    for (auto use: useMap[load->var]) use->replaceValue(load->var, value);
+                    deleted.push_back(load);
+                }
+                if (auto store = dynamic_cast<IRStoreStmtNode*>(stmt)) {
+                    valueMap[store->ptr] = store->value;
+                }
+            }
+        }
+    }
+    void visit(IRProgramNode* program) {
+        for (auto func: program->functions) EliminateStoreLoad(func);
+    }
 };
 
 #endif
